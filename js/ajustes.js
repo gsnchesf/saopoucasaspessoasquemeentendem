@@ -61,7 +61,7 @@ screens.ajustes = () => {
   const body = `<div class="settings">
     <section class="card card-pad">
       <h2>Conta</h2>
-      <div class="setting"><div><div>${esc(Auth.user.name)}</div><div class="desc">Usuário: ${esc(Auth.user.username)} · cada conta tem a própria agenda e os próprios dados</div></div>
+      <div class="setting"><div><div>${esc(Auth.user.name)}</div><div class="desc">Usuário: ${esc(Auth.user.username)}${Auth.isAdmin() ? ' · admin' : ''}</div></div>
         <div class="btn-row"><button class="btn" data-action="change-password">${icon('key')}Trocar senha</button>
         <button class="btn" data-action="logout">${icon('logout')}Sair</button></div></div>
     </section>

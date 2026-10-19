@@ -24,6 +24,7 @@ HTML + CSS + JavaScript puro, sem dependências nem etapa de build.
 | **Trabalho** | Entregas com prazo, detalhes, prioridade e checklist, num quadro por status (arraste os cartões) |
 | **Hábitos** | Hábitos personalizáveis (sim/não ou quantidade, dias da semana), sequência e tempo de tela com limite diário e gráfico |
 | **Metas** | Áreas (Fitness, Date, Projetos paralelos…) com atividades e metas de **tempo**, **frequência** (por semana — padrão — ou mês) ou **objetivos** |
+| **Admin** | Só para admins: criar usuários, mudar nome, redefinir senha, excluir |
 | **Ajustes** | Conta (trocar senha, sair), temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de compromisso, áreas, backup |
 
 Atalhos: `N` novo · `E` compromisso · `B` bloco na semana · `P` prazo da faculdade · `W` entrega · `1`–`8` telas · `←` `→` agenda e semana.
@@ -44,16 +45,21 @@ Júpiter e alimenta o limite de faltas (30%). Reimportar atualiza as matérias p
 duplicar. Toda a interpretação fica em `js/importar.js`; o favorito só coleta as tabelas, então
 correções não exigem reinstalar o favorito.
 
-## Contas
+## Contas e Admin
 
-O app abre numa tela de login. Cada conta tem a **sua própria agenda e os seus próprios dados**
-(um banco IndexedDB por conta). As contas ficam num banco separado (`organizador-contas`), e a
-senha **nunca é gravada**: só um hash PBKDF2-SHA256 (600 mil iterações) com sal aleatório.
-A primeira conta criada no aparelho herda os dados que já existiam antes do login.
+- A tela de entrada é só **usuário e senha**. Ninguém cria a própria conta.
+- **Admins** (lista em `js/config.js`, hoje só `gsanches`) veem a página **Admin**: criam usuários
+  (nome, usuário e senha inicial), mudam nomes, redefinem senhas e excluem contas.
+- Cada pessoa troca a própria senha em **Ajustes → Trocar senha**, só digitando a nova.
+- Cada conta tem a **sua própria agenda e os seus próprios dados** (um banco IndexedDB por conta).
+- As contas de `CONFIG.seedUsers` (hoje `gsanches`) são criadas sozinhas em todo aparelho que
+  ainda não as tem. A primeira conta do aparelho herda os dados de antes do login.
+- A senha **nunca é gravada**: só um hash PBKDF2-SHA256 (600 mil iterações) com sal. Em
+  `js/config.js` fica só o hash da senha inicial — mas, com o repositório público e uma senha
+  curta, troque-a depois do primeiro acesso.
 
-Por enquanto tudo é local: uma conta criada no computador não existe no celular, e quem tem
-acesso ao navegador consegue ler os dados pelas ferramentas de desenvolvedor (o login separa as
-contas, mas não criptografa os dados). Isso muda quando houver um servidor.
+**Limitação atual:** ainda não há servidor. Contas e dados ficam no navegador onde foram criados;
+um usuário criado no computador não existe no celular de outra pessoa.
 
 ## Estrutura
 
@@ -63,7 +69,8 @@ styles.css            temas (tokens de cor/tipografia) + componentes + responsiv
 js/core.js            utilidades de data/texto, ícones, constantes, estado
 js/db.js              banco de dados (IndexedDB) + Store (cópia em memória)
 js/ui.js              modal, diálogos, menus, toasts, campos de formulário
-js/auth.js            contas: cadastro, login, sessão, troca de senha
+js/config.js          admins e contas fixas (editável pelo dono do repositório)
+js/auth.js            contas: login, sessão, troca de senha
 js/agenda.js          recorrência, junção de itens, visões mês/semana/dia
 js/semana.js          "Essa semana": cronograma em blocos de horário
 js/faculdade.js       matérias, faltas, prazos, conteúdos, arquivos
@@ -73,6 +80,7 @@ js/habitos.js         hábitos, tempo de tela, gráfico
 js/metas.js           áreas, atividades, registros
 js/hoje.js            painel do dia
 js/ajustes.js         temas, preferências, exportações
+js/admin.js           página Admin: usuários
 js/app.js             rotas, eventos globais, lembretes, inicialização
 sw.js + manifest      funcionamento offline e instalação (PWA)
 ```

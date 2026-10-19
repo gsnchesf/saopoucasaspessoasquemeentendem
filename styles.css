@@ -303,7 +303,12 @@ h2 { font-size: 17px; }
 .sidebar-foot .btn { flex: none; color: var(--side-muted); }
 .sidebar-foot .btn:hover { background: var(--side-hover); color: var(--side-fg); }
 
-/* Tela de entrada (login / cadastro) */
+.user-row { padding: 8px 0; border-top: 1px solid var(--border); }
+.user-row:first-child { border-top: 0; }
+.user-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.user-main .desc { font-size: 13px; }
+
+/* Tela de entrada (login / primeiro acesso) */
 body.signed-out .app, body.signed-out .tabbar, body.signed-out .fab { display: none !important; }
 .auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); }
 .auth[hidden] { display: none; }

@@ -12,8 +12,11 @@ const VIEWS = [
   { id: 'trabalho', label: 'Trabalho', icon: 'briefcase' },
   { id: 'habitos', label: 'Hábitos', icon: 'flame' },
   { id: 'metas', label: 'Metas', icon: 'target' },
-  { id: 'ajustes', label: 'Ajustes', icon: 'gear' },
+  { id: 'ajustes', label: 'Ajustes', icon: 'gear', bottom: true },
+  { id: 'admin', label: 'Admin', icon: 'shield', bottom: true, adminOnly: true },
 ];
+/** Telas que o usuário logado pode ver (Admin só para admins). */
+const views = () => VIEWS.filter(v => !v.adminOnly || Auth.isAdmin());
 const TAB_VIEWS = ['hoje', 'semana', 'agenda', 'faculdade'];
 
 /* ---------- Renderização ---------- */
@@ -24,9 +27,10 @@ function navLink(v) {
 }
 
 function renderNav() {
-  $('#nav').innerHTML = VIEWS.slice(0, -1).map(navLink).join('') + '<div class="nav-sep"></div>' + navLink(VIEWS[VIEWS.length - 1]);
+  const vs = views();
+  $('#nav').innerHTML = vs.filter(v => !v.bottom).map(navLink).join('') + '<div class="nav-sep"></div>' + vs.filter(v => v.bottom).map(navLink).join('');
   const moreOn = !TAB_VIEWS.includes(state.view);
-  $('#tabbar').innerHTML = VIEWS.filter(v => TAB_VIEWS.includes(v.id)).map(navLink).join('')
+  $('#tabbar').innerHTML = vs.filter(v => TAB_VIEWS.includes(v.id)).map(navLink).join('')
     + `<button class="${moreOn ? 'active' : ''}" data-action="more-menu" aria-label="Mais seções">${icon('more')}<span>${moreOn ? VIEWS.find(v => v.id === state.view).label : 'Mais'}</span></button>`;
 }
 
@@ -42,7 +46,7 @@ function render() {
 
 function route() {
   const [v, param = ''] = location.hash.replace(/^#\/?/, '').split('/');
-  const view = VIEWS.some(x => x.id === v) ? v : 'hoje';
+  const view = views().some(x => x.id === v) ? v : 'hoje';
   const changed = view !== state.view || param !== state.param;
   state.view = view;
   state.param = decodeURIComponent(param);
@@ -69,7 +73,7 @@ function quickNew(anchor) {
 
 Object.assign(actions, {
   'quick-new': el => quickNew(el),
-  'more-menu': el => openMenu(el, VIEWS.filter(v => !TAB_VIEWS.includes(v.id)).map(v => ({
+  'more-menu': el => openMenu(el, views().filter(v => !TAB_VIEWS.includes(v.id)).map(v => ({
     label: v.label, icon: v.icon, run: () => { location.hash = `#/${v.id}`; },
   }))),
 });
@@ -180,7 +184,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'p') assessmentForm(null);
   else if (k === 'w') deliverableForm(null);
   else if (k === 'b') actions['new-block']();
-  else if (/^[1-8]$/.test(k)) location.hash = `#/${VIEWS[+k - 1].id}`;
+  else if (/^[1-9]$/.test(k) && views()[+k - 1]) location.hash = `#/${views()[+k - 1].id}`;
   else if (state.view === 'agenda' && k === 'arrowleft') navCal(-1);
   else if (state.view === 'agenda' && k === 'arrowright') navCal(1);
   else if (state.view === 'semana' && k === 'arrowleft') navPlan(-1);

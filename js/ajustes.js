@@ -60,6 +60,13 @@ screens.ajustes = () => {
   const head = `<div class="title-block"><h1>Ajustes</h1><p class="sub">Personalize o organizador do seu jeito</p></div>`;
   const body = `<div class="settings">
     <section class="card card-pad">
+      <h2>Conta</h2>
+      <div class="setting"><div><div>${esc(Auth.user.name)}</div><div class="desc">Usuário: ${esc(Auth.user.username)} · cada conta tem a própria agenda e os próprios dados</div></div>
+        <div class="btn-row"><button class="btn" data-action="change-password">${icon('key')}Trocar senha</button>
+        <button class="btn" data-action="logout">${icon('logout')}Sair</button></div></div>
+    </section>
+
+    <section class="card card-pad">
       <h2>Aparência</h2>
       <div class="theme-grid">${PALETTES.map(p => `<button class="theme-card ${s.palette === p.id ? 'active' : ''}" data-action="set-palette" data-id="${p.id}" aria-pressed="${s.palette === p.id}">
         <div class="theme-preview" data-palette="${p.id}" data-mode="${mode}">
@@ -101,7 +108,7 @@ screens.ajustes = () => {
 
     <section class="card card-pad">
       <h2>Dados</h2>
-      <p class="desc">Tudo fica no banco de dados deste navegador (IndexedDB): ${counts}. <span id="storage-info"></span></p>
+      <p class="desc">Os dados da sua conta ficam no banco de dados deste navegador (IndexedDB): ${counts}. <span id="storage-info"></span></p>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn" data-action="export-json">${icon('download')}Exportar backup</button>
         <label class="btn">${icon('upload')}Importar backup<input type="file" id="import-file" accept="application/json,.json" hidden></label>
@@ -120,8 +127,9 @@ screens.ajustes = () => {
         <dt><kbd>E</kbd></dt><dd>Novo compromisso</dd>
         <dt><kbd>P</kbd></dt><dd>Novo prazo da faculdade</dd>
         <dt><kbd>W</kbd></dt><dd>Nova entrega do trabalho</dd>
-        <dt><kbd>1</kbd>–<kbd>7</kbd></dt><dd>Trocar de tela</dd>
-        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Navegar na agenda</dd>
+        <dt><kbd>B</kbd></dt><dd>Novo bloco na semana</dd>
+        <dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>Trocar de tela</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Navegar na agenda e na semana</dd>
         <dt><kbd>Ctrl</kbd> + <kbd>Enter</kbd></dt><dd>Salvar formulário aberto</dd>
         <dt><kbd>Esc</kbd></dt><dd>Fechar janela</dd>
       </dl>
@@ -242,7 +250,7 @@ Object.assign(actions, {
     toast(ok ? 'Dados protegidos: o navegador não vai apagá-los automaticamente.' : 'O navegador não permitiu proteger os dados (instale como app para garantir).');
   },
   'wipe': async () => {
-    const ok = await ask('Apagar TODOS os dados (matérias, arquivos, hábitos, metas, agenda)? Exporte um backup antes se quiser guardar algo.', [
+    const ok = await ask('Apagar TODOS os dados desta conta (matérias, arquivos, hábitos, metas, agenda)? Exporte um backup antes se quiser guardar algo.', [
       { label: 'Cancelar', value: false }, { label: 'Apagar tudo', value: true, kind: 'danger' }]);
     if (!ok) return;
     await Store.wipe();

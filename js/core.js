@@ -103,7 +103,8 @@ const REMINDERS = [
   ['', 'Sem lembrete'], ['0', 'Na hora'], ['5', '5 min antes'], ['10', '10 min antes'], ['15', '15 min antes'],
   ['30', '30 min antes'], ['60', '1 hora antes'], ['120', '2 horas antes'], ['1440', '1 dia antes'],
 ];
-const ASSESSMENT_KINDS = { prova: 'Prova', trabalho: 'Trabalho', atividade: 'Atividade' };
+const ABSENCE_RATE = 0.3; // pode faltar até 30% das aulas do semestre
+const ASSESSMENT_KINDS ={ prova: 'Prova', trabalho: 'Trabalho', atividade: 'Atividade' };
 const DELIVERY_STATUS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['revisao', 'Em revisão'], ['entregue', 'Entregue']];
 const PRIORITIES = [['', 'Sem prioridade'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']];
 const GOAL_TYPES = { tempo: 'Tempo', vezes: 'Frequência', objetivo: 'Objetivos' };
@@ -142,6 +143,9 @@ const ICONS = {
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   more: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  week: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M9 9v12M15 9v12M5.5 12.5h1.5M11 15h2M17 12.5h1.5"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  key: '<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M17 6l3 3M14 9l2 2"/>',
   grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   spiral: '<path d="M12 12a1 1 0 0 1 2 0a2 2 0 0 1-4 0a3 3 0 0 1 6 0a4 4 0 0 1-8 0a5 5 0 0 1 10 0a6 6 0 0 1-12 0"/>',
@@ -161,6 +165,8 @@ const state = {
   selected: today(),    // dia selecionado na agenda
   calMode: 'mes',
   gridScroll: null,
+  planWeek: null,       // semana exibida em "Essa semana" (null = atual)
+  planScroll: null,
   facTab: 'materias',
   facSubject: '',
   workQuery: '',

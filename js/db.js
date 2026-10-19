@@ -8,7 +8,7 @@
    ========================================================== */
 
 const DB_NAME = 'organizador';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // 2: coleção 'blocks' (Essa semana)
 
 /** Coleções carregadas em memória. Arquivos binários ficam à parte em 'blobs'. */
 const COLLECTIONS = [
@@ -26,22 +26,29 @@ const COLLECTIONS = [
   'areas',         // áreas de metas: fitness, date, projetos…
   'activities',    // atividades com metas
   'activityLogs',  // registros das atividades
+  'blocks',        // blocos do cronograma "Essa semana"
 ];
 
 const DB = {
   db: null,
+  name: DB_NAME, // trocado pelo banco da conta logada (ver js/auth.js)
 
   open() {
     return new Promise((resolve, reject) => {
       if (!('indexedDB' in window)) return reject(new Error('IndexedDB indisponível'));
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      const req = indexedDB.open(this.name, DB_VERSION);
       req.onupgradeneeded = () => {
         const db = req.result;
         for (const name of COLLECTIONS) if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: 'id' });
         if (!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
       };
-      req.onsuccess = () => { this.db = req.result; resolve(this.db); };
+      req.onsuccess = () => {
+        this.db = req.result;
+        // Outra aba abriu uma versão nova do app: fecha e recarrega para não travar a atualização.
+        this.db.onversionchange = () => { this.db.close(); location.reload(); };
+        resolve(this.db);
+      };
       req.onerror = () => reject(req.error);
     });
   },

@@ -6,6 +6,7 @@
 
 const VIEWS = [
   { id: 'hoje', label: 'Hoje', icon: 'sun' },
+  { id: 'semana', label: 'Essa semana', icon: 'week' },
   { id: 'agenda', label: 'Agenda', icon: 'calendar' },
   { id: 'faculdade', label: 'Faculdade', icon: 'book' },
   { id: 'trabalho', label: 'Trabalho', icon: 'briefcase' },
@@ -13,7 +14,7 @@ const VIEWS = [
   { id: 'metas', label: 'Metas', icon: 'target' },
   { id: 'ajustes', label: 'Ajustes', icon: 'gear' },
 ];
-const TAB_VIEWS = ['hoje', 'agenda', 'faculdade', 'trabalho'];
+const TAB_VIEWS = ['hoje', 'semana', 'agenda', 'faculdade'];
 
 /* ---------- Renderização ---------- */
 
@@ -23,7 +24,7 @@ function navLink(v) {
 }
 
 function renderNav() {
-  $('#nav').innerHTML = VIEWS.slice(0, 6).map(navLink).join('') + '<div class="nav-sep"></div>' + navLink(VIEWS[6]);
+  $('#nav').innerHTML = VIEWS.slice(0, -1).map(navLink).join('') + '<div class="nav-sep"></div>' + navLink(VIEWS[VIEWS.length - 1]);
   const moreOn = !TAB_VIEWS.includes(state.view);
   $('#tabbar').innerHTML = VIEWS.filter(v => TAB_VIEWS.includes(v.id)).map(navLink).join('')
     + `<button class="${moreOn ? 'active' : ''}" data-action="more-menu" aria-label="Mais seções">${icon('more')}<span>${moreOn ? VIEWS.find(v => v.id === state.view).label : 'Mais'}</span></button>`;
@@ -56,6 +57,7 @@ function route() {
 function quickNew(anchor) {
   openMenu(anchor, [
     { label: 'Compromisso ou consulta', icon: 'calendar', key: 'E', run: () => eventForm(null, state.view === 'agenda' ? state.selected : today()) },
+    { label: 'Bloco no cronograma da semana', icon: 'week', key: 'B', run: () => actions['new-block']() },
     { label: 'Prova, trabalho ou atividade', icon: 'book', key: 'P', run: () => assessmentForm(null, { date: state.view === 'agenda' ? state.selected : '' }) },
     { label: 'Entrega do trabalho', icon: 'briefcase', key: 'W', run: () => deliverableForm(null, state.view === 'agenda' ? state.selected : '') },
     { sep: true },
@@ -81,11 +83,13 @@ document.addEventListener('click', e => {
     if (fn) { e.preventDefault(); fn(el, e); }
     return;
   }
-  // Clique num espaço vazio da grade semanal: novo compromisso naquele horário.
+  // Clique num espaço vazio da grade semanal: novo compromisso (Agenda) ou bloco (Essa semana) naquele horário.
   const col = e.target.closest('.tg-col');
   if (col) {
     const y = e.clientY - col.getBoundingClientRect().top;
-    eventForm(null, col.dataset.date, fromMin(Math.min(Math.floor(y / HOUR * 2) * 30, 23 * 60)));
+    const start = fromMin(Math.min(Math.floor(y / HOUR * 2) * 30, 23 * 60));
+    if (col.closest('.plan-grid')) blockForm(null, col.dataset.date, start);
+    else eventForm(null, col.dataset.date, start);
   }
 });
 
@@ -156,6 +160,7 @@ document.addEventListener('change', e => {
 });
 
 document.addEventListener('keydown', e => {
+  if (!Auth.user || !$('#auth').hidden) return; // tela de entrada: sem atalhos
   if (!$('#dialog').hidden) return; // o diálogo trata o próprio teclado
   if ($('#menu')) { if (e.key === 'Escape') closeMenu(); return; }
   if (!$('#modal').hidden) {
@@ -174,9 +179,12 @@ document.addEventListener('keydown', e => {
   else if (k === 'e') eventForm(null, state.view === 'agenda' ? state.selected : today());
   else if (k === 'p') assessmentForm(null);
   else if (k === 'w') deliverableForm(null);
-  else if (/^[1-7]$/.test(k)) location.hash = `#/${VIEWS[+k - 1].id}`;
+  else if (k === 'b') actions['new-block']();
+  else if (/^[1-8]$/.test(k)) location.hash = `#/${VIEWS[+k - 1].id}`;
   else if (state.view === 'agenda' && k === 'arrowleft') navCal(-1);
   else if (state.view === 'agenda' && k === 'arrowright') navCal(1);
+  else if (state.view === 'semana' && k === 'arrowleft') navPlan(-1);
+  else if (state.view === 'semana' && k === 'arrowright') navPlan(1);
   else return;
   e.preventDefault();
 });
@@ -225,18 +233,43 @@ function tick() {
   if (m === lastMinute) return;
   lastMinute = m;
   const busy = modalOpen() || $('#menu') || document.activeElement?.matches('input, textarea, select');
-  if (!busy && (state.view === 'hoje' || state.view === 'agenda')) render();
+  if (!busy && ['hoje', 'agenda', 'semana'].includes(state.view)) render();
+}
+
+function dbFailed(e) {
+  console.error(e);
+  document.body.classList.remove('signed-out');
+  $('#auth').hidden = true;
+  $('#view').innerHTML = `<div class="card card-pad"><h2>Não foi possível abrir o banco de dados</h2>
+    <p class="desc">O navegador bloqueou o armazenamento local (pode acontecer em janelas anônimas). Abra o organizador numa janela normal do Chrome, Edge ou Firefox.</p></div>`;
 }
 
 async function init() {
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
   try {
+    await Auth.open();
+    if (!await Auth.restore()) return showAuth();
+  } catch (e) {
+    return dbFailed(e);
+  }
+  await start();
+}
+
+/** Abre o banco da conta logada e liga o app (uma vez por carregamento da página). */
+async function start() {
+  try {
+    DB.name = Auth.user.dbName;
     await Store.load();
   } catch (e) {
-    console.error(e);
-    $('#view').innerHTML = `<div class="card card-pad"><h2>Não foi possível abrir o banco de dados</h2>
-      <p class="desc">O navegador bloqueou o armazenamento local (pode acontecer em janelas anônimas). Abra o organizador numa janela normal do Chrome, Edge ou Firefox.</p></div>`;
-    return;
+    return dbFailed(e);
   }
+  if (!Store.settings.name && Auth.user.name) {
+    Store.settings.name = Auth.user.name.split(' ')[0];
+    Store.saveSettings(true);
+  }
+  renderAccount();
   state.calMode = Store.settings.calMode || 'mes';
   applyTheme();
   route();
@@ -250,10 +283,11 @@ async function init() {
 
   checkReminders();
   setInterval(tick, 30e3);
+}
 
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  }
+function renderAccount() {
+  $('#account').innerHTML = `<span class="account-name" title="@${esc(Auth.user.username)}">${esc(Auth.user.name)}</span>
+    <button class="btn btn-ghost btn-sm" data-action="logout">${icon('logout')}Sair</button>`;
 }
 
 init();

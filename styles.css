@@ -294,7 +294,24 @@ h2 { font-size: 17px; }
 .nav a.active { background: var(--side-active-bg); color: var(--side-active-fg); }
 .nav-sep { height: 1px; margin: 8px 12px; background: var(--side-border); opacity: .8; }
 .sidebar .btn-primary { position: relative; z-index: 1; }
-.sidebar-foot { position: relative; z-index: 1; margin: auto 0 0; padding: 0 8px; font-size: 12px; color: var(--side-muted); }
+.sidebar-foot {
+  position: relative; z-index: 1; margin: auto 0 0; padding: 0 0 0 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 13px; color: var(--side-muted);
+}
+.account-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--side-fg); font-weight: 550; }
+.sidebar-foot .btn { flex: none; color: var(--side-muted); }
+.sidebar-foot .btn:hover { background: var(--side-hover); color: var(--side-fg); }
+
+/* Tela de entrada (login / cadastro) */
+body.signed-out .app, body.signed-out .tabbar, body.signed-out .fab { display: none !important; }
+.auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); }
+.auth[hidden] { display: none; }
+.auth-card { width: min(400px, 100%); display: flex; flex-direction: column; gap: 14px; padding: 28px 24px; }
+.auth-card h1 { margin: 6px 0 0; }
+.auth-card .desc { margin: 0; }
+.auth-brand { padding: 0; }
+.auth-switch { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 0; font-size: 14px; color: var(--muted); }
 
 .main { min-width: 0; padding: 26px 32px 56px; }
 .topbar { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; }
@@ -556,6 +573,25 @@ kbd {
 .tg-ev .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tg-ev .h { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tg-ev.short { flex-direction: row; align-items: center; gap: 6px; padding-top: 0; padding-bottom: 0; }
+/* Essa semana: blocos planejados em destaque; agenda ao fundo, mais apagada */
+.plan-grid .tg-dayhead:hover { background: none; }
+.tg-ev.blk { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 35%, transparent); }
+.tg-ev.blk.done { opacity: .6; }
+.tg-ev.blk.done .t { text-decoration: line-through; }
+.tg-ev .t .icon { width: 12px; height: 12px; margin-right: 3px; vertical-align: -2px; }
+.tg-ev.ctx { opacity: .6; border-left-style: dashed; }
+.tg-ev.ctx:not(.cls) { background: color-mix(in srgb, var(--c) 9%, var(--surface)); }
+.tg-ev.ctx:hover { opacity: 1; }
+.plan-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.plan-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.plan-chip.strong { color: var(--text); font-weight: 600; }
+.plan-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.plan-hint { margin-bottom: 12px; }
+
 .now-line { position: absolute; left: 0; right: 0; z-index: 3; height: 2px; background: var(--danger); pointer-events: none; }
 .now-line::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); }
 
@@ -873,7 +909,7 @@ kbd {
     border: 0; background: none; color: var(--side-muted); font-size: 11px; font-weight: 500; text-decoration: none;
   }
   .tabbar .icon { width: 22px; height: 22px; }
-  .tabbar .active { color: var(--side-active-bg); }
+  .tabbar .active { color: var(--accent); }
   [data-palette="grafite"] .tabbar .active { color: var(--side-active-fg); }
   .fab {
     position: fixed; right: 16px; bottom: calc(64px + 16px + env(safe-area-inset-bottom)); z-index: 21;

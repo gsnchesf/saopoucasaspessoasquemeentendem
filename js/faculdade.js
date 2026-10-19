@@ -8,13 +8,22 @@
 
 const absencesOf = id => Store.data.absences.filter(a => a.subjectId === id).sort((a, b) => b.date.localeCompare(a.date));
 
+/** O limite é sempre 30% das aulas do semestre, calculado pelos horários da matéria. */
 function absInfo(s) {
   const used = absencesOf(s.id).reduce((n, a) => n + (a.count || 1), 0);
-  const limit = +s.absenceLimit || 0;
+  const total = totalClasses(s.slots || []);
+  const limit = Math.floor(total * ABSENCE_RATE);
   const remaining = limit - used;
   const level = !limit ? '' : remaining <= 0 ? 'danger' : remaining / limit <= 0.25 ? 'warn' : 'ok';
-  return { used, limit, remaining, level };
+  return { used, total, limit, remaining, level };
 }
+
+/** Aulas que a matéria tem num dia (soma dos horários daquele dia da semana). */
+const classesOn = (s, date) => (s.slots || []).filter(x => x.weekday === weekday(date)).reduce((n, x) => n + (x.weight || 1), 0);
+
+const noLimitText = () => Store.settings.semesterStart && Store.settings.semesterEnd
+  ? 'Cadastre os horários da matéria para calcular o limite.'
+  : 'Defina o início e o fim do semestre para calcular o limite de 30%.';
 
 /** Quantas vezes ainda dá para faltar num dia que vale `weight` aulas. */
 const timesLeft = (info, weight) => Math.max(0, Math.floor(info.remaining / (weight || 1)));
@@ -68,7 +77,7 @@ function semesterLabel() {
   return `Semestre: ${f(a)} – ${f(b)}`;
 }
 
-/** Total de aulas da matéria no semestre (para sugerir o limite de 25%). */
+/** Total de aulas da matéria no semestre (base do limite de faltas). */
 function totalClasses(slots) {
   const { semesterStart: a, semesterEnd: b } = Store.settings;
   if (!a || !b || a > b) return 0;
@@ -128,7 +137,7 @@ screens.faculdade = () => {
 function subjectsTab() {
   const list = Store.data.subjects.slice().sort((a, b) => a.name.localeCompare(b.name));
   if (!list.length) {
-    return `<div class="card card-pad"><p class="empty">Cadastre suas matérias com horários, professor e limite de faltas. Elas aparecem automaticamente na agenda.</p>
+    return `<div class="card card-pad"><p class="empty">Cadastre suas matérias com horários e professor. Elas aparecem automaticamente na agenda, e o limite de faltas (30%) é calculado sozinho.</p>
       <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="new-subject">${icon('plus')}Adicionar matéria</button></div></div>`;
   }
   return `<div class="subject-grid">${list.map(s => {
@@ -142,7 +151,7 @@ function subjectsTab() {
         <div class="meta">${[s.professor && `Prof. ${esc(s.professor)}`, s.room && esc(s.room)].filter(Boolean).join(' · ') || 'Sem professor cadastrado'}</div></div>
       <div class="meta">${icon('clock')}${esc(slotsText(s) || 'Sem horários')}</div>
       ${info.limit ? `<div><div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> de ${info.limit} · <span class="badge ${info.level}">${info.remaining > 0 ? `restam ${info.remaining}` : 'limite atingido'}</span></span></div>${meter(info.used / info.limit, info.level)}</div>`
-        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> · sem limite definido</span></div>`}
+        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> · limite ainda não calculado</span></div>`}
       <div class="meta">${next ? `<span class="badge k-${next.kind}">${ASSESSMENT_KINDS[next.kind]}</span> ${esc(next.title)} · ${untilLabel(next.date)}` : 'Nenhum prazo pendente'}</div>
       <div class="meta"><span>${plural(nFiles, 'arquivo', 'arquivos')}</span><span>${studied}/${contents.length} conteúdos estudados</span></div>
     </button>`;
@@ -221,13 +230,13 @@ function subjectScreen(s) {
     ${info.limit ? `<div class="abs-hero">
         <div class="big-number ${info.level}">${Math.max(0, info.remaining)}</div>
         <p><b>${info.remaining > 0 ? 'aulas que você ainda pode faltar' : 'Limite de faltas atingido'}</b><br>
-        <span class="muted">${info.used} de ${info.limit} usadas</span></p>
+        <span class="muted">${info.used} de ${info.limit} usadas · 30% de ${info.total} aulas no semestre</span></p>
       </div>
       ${meter(info.used / info.limit, info.level)}
       ${perDay.length ? `<h3 class="section-label" style="margin-top:16px">Por dia de aula</h3><div class="list">${perDay.map(({ wd, w, n }) =>
         `<div class="task"><span class="task-main"><span class="task-title">${WEEKDAYS_LONG[wd]}</span><span class="task-meta">${plural(w, 'aula', 'aulas')} por dia</span></span>
           <span class="badge ${n ? info.level : 'danger'}">${n ? `pode faltar mais ${plural(n, 'vez', 'vezes')}` : 'não pode faltar'}</span></div>`).join('')}</div>` : ''}`
-      : `<p class="empty">Defina o limite de faltas em “Editar matéria” para ver quantas ainda pode ter. Faltas registradas: <b>${info.used}</b>.</p>`}
+      : `<p class="empty">${noLimitText()} Faltas registradas: <b>${info.used}</b>.</p>`}
     <h3 class="section-label" style="margin-top:16px">Histórico <span class="count">${absences.length}</span></h3>
     ${absences.length ? `<div class="list">${absences.map(a => `<div class="task">
         <span class="task-main"><span class="task-title">${relDay(a.date)}</span><span class="task-meta">${plural(a.count || 1, 'aula', 'aulas')}${a.note ? ' · ' + esc(a.note) : ''}</span></span>
@@ -322,7 +331,7 @@ async function fileBlob(id) {
 function subjectForm(s) {
   const isNew = !s;
   s = s ? structuredClone(s) : {
-    id: uid(), name: '', professor: '', room: '', notes: '', absenceLimit: '',
+    id: uid(), name: '', professor: '', room: '', notes: '',
     color: SWATCHES[Store.data.subjects.length % SWATCHES.length],
     slots: [{ id: uid(), weekday: 1, start: '19:00', end: '20:40', weight: 2, room: '' }],
   };
@@ -345,23 +354,25 @@ function subjectForm(s) {
           <button type="button" class="btn btn-sm" data-add-slot style="justify-self:start">${icon('plus')}Horário</button>
         </div>
       </div>
-      <div class="row">
-        <label class="field"><span>Limite de faltas (em aulas)</span><input type="number" min="0" max="999" name="absenceLimit" value="${esc(s.absenceLimit)}" placeholder="Ex.: 18"></label>
-        <button type="button" class="btn" data-calc-limit>Calcular 25% do semestre</button>
-      </div>
-      <p class="desc calc-hint" style="margin:-6px 0 0">“Aulas” conta cada aula do dia. Se o dia tem 2 aulas, faltar nele usa 2 do limite.</p>
+      <p class="hint-box calc-hint"></p>
       <label class="field"><span>Observações</span><textarea name="notes" rows="2" placeholder="Critérios de avaliação, contato do professor…">${esc(s.notes)}</textarea></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
   </form>`, {
     onMount(form) {
-      $('[data-calc-limit]', form).addEventListener('click', () => {
+      // Mostra, ao vivo, o limite de 30% que os horários preenchidos geram.
+      const hint = $('.calc-hint', form);
+      const update = () => {
         const total = totalClasses(readSlots(form));
-        if (!total) return formError(form, 'Defina o início e o fim do semestre (em Faculdade › alterar) para calcular.');
-        form.elements.absenceLimit.value = Math.floor(total * 0.25);
-        $('.calc-hint', form).textContent = `${total} aulas no semestre → limite de 25% = ${Math.floor(total * 0.25)} aulas.`;
-      });
+        hint.innerHTML = icon('clock') + esc(total
+          ? `${total} aulas no semestre → pode faltar até ${Math.floor(total * ABSENCE_RATE)} (30%). Se o dia tem 2 aulas, faltar nele conta 2.`
+          : noLimitText());
+      };
+      update();
+      form.addEventListener('input', update);
+      form.addEventListener('change', update);
+      form.addEventListener('click', () => setTimeout(update)); // adicionar/remover horário
     },
     onSubmit(form) {
       const f = formData(form);
@@ -370,8 +381,9 @@ function subjectForm(s) {
       if (slots.some(x => !x.start || !x.end || x.end <= x.start)) return formError(form, 'Confira os horários: o fim precisa ser depois do início.');
       Object.assign(s, {
         name: f.name.trim(), color: f.color, professor: f.professor.trim(), room: f.room.trim(),
-        absenceLimit: f.absenceLimit === '' ? '' : Math.max(0, +f.absenceLimit), notes: f.notes.trim(), slots,
+        notes: f.notes.trim(), slots,
       });
+      delete s.absenceLimit; // o limite agora é sempre calculado (30%)
       Store.upsert('subjects', s);
       closeModal();
       if (isNew) location.hash = `#/faculdade/${s.id}`;
@@ -452,8 +464,10 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
 }
 
 function absenceForm(s) {
-  const t = today();
-  const w = (s.slots || []).filter(x => x.weekday === weekday(t)).reduce((n, x) => n + (x.weight || 1), 0) || 1;
+  // Começa no dia de aula mais recente (hoje, se tiver aula hoje).
+  let t = today();
+  for (let i = 0; i < 7 && (s.slots || []).length && !classesOn(s, t); i++) t = addDays(t, -1);
+  const w = classesOn(s, t) || 1;
   openModal(`<form novalidate>
     ${modalHead(`Registrar falta · ${s.name}`)}
     <div class="modal-body">
@@ -471,13 +485,15 @@ function absenceForm(s) {
       form.elements.date.addEventListener('change', () => {
         const d = form.elements.date.value;
         if (!d) return;
-        const n = (s.slots || []).filter(x => x.weekday === weekday(d)).reduce((m, x) => m + (x.weight || 1), 0);
+        const n = classesOn(s, d);
         if (n) form.elements.count.value = n;
       });
     },
     onSubmit(form) {
       const f = formData(form);
       if (!f.date) return formError(form, 'Escolha a data.');
+      if (f.date > today()) return formError(form, 'Só dá para registrar falta de hoje ou de dias que já passaram.');
+      if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já existe uma falta registrada em ${relDay(f.date).toLowerCase()}.`);
       Store.upsert('absences', { id: uid(), subjectId: s.id, date: f.date, count: Math.max(1, +f.count || 1), note: f.note.trim() });
       closeModal();
       render();

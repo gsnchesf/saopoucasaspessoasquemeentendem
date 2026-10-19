@@ -18,14 +18,26 @@ HTML + CSS + JavaScript puro, sem dependências nem etapa de build.
 | Tela | Recursos |
 |---|---|
 | **Hoje** | Aulas e compromissos do dia, quantas vezes ainda pode faltar em cada aula, botão "Faltei", prazos atrasados e próximos, hábitos do dia, tempo de tela e progresso das metas |
+| **Essa semana** | Cronograma da semana em blocos de horário, de segunda a domingo: tudo o que você pretende fazer em cada hora. Blocos podem se repetir (toda semana, dias úteis, todo dia), ser marcados como feitos e mostram o total de horas planejadas por tipo. Aulas e compromissos aparecem ao fundo. Botão para esconder o fim de semana |
 | **Agenda** | Mês, semana e dia. Junta compromissos/consultas (com recorrência e lembrete), aulas da grade e prazos. Exporta `.ics` |
-| **Faculdade** | Matérias com horários por dia, professor, sala e limite de faltas (com cálculo automático de 25%). Provas, trabalhos e atividades com conteúdos cobrados e nota. Conteúdos estudados. Arquivos anexados (PDF, PPT, Word…) |
+| **Faculdade** | Matérias com horários por dia, professor, sala e faltas registradas dia a dia, com limite automático de 30% das aulas do semestre. Provas, trabalhos e atividades com conteúdos cobrados e nota. Conteúdos estudados. Arquivos anexados (PDF, PPT, Word…) |
 | **Trabalho** | Entregas com prazo, detalhes, prioridade e checklist, num quadro por status (arraste os cartões) |
 | **Hábitos** | Hábitos personalizáveis (sim/não ou quantidade, dias da semana), sequência e tempo de tela com limite diário e gráfico |
 | **Metas** | Áreas (Fitness, Date, Projetos paralelos…) com atividades e metas de **tempo**, **frequência** (por semana — padrão — ou mês) ou **objetivos** |
-| **Ajustes** | Temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de compromisso, áreas, backup |
+| **Ajustes** | Conta (trocar senha, sair), temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de compromisso, áreas, backup |
 
-Atalhos: `N` novo · `E` compromisso · `P` prazo da faculdade · `W` entrega · `1`–`7` telas · `←` `→` agenda.
+Atalhos: `N` novo · `E` compromisso · `B` bloco na semana · `P` prazo da faculdade · `W` entrega · `1`–`8` telas · `←` `→` agenda e semana.
+
+## Contas
+
+O app abre numa tela de login. Cada conta tem a **sua própria agenda e os seus próprios dados**
+(um banco IndexedDB por conta). As contas ficam num banco separado (`organizador-contas`), e a
+senha **nunca é gravada**: só um hash PBKDF2-SHA256 (600 mil iterações) com sal aleatório.
+A primeira conta criada no aparelho herda os dados que já existiam antes do login.
+
+Por enquanto tudo é local: uma conta criada no computador não existe no celular, e quem tem
+acesso ao navegador consegue ler os dados pelas ferramentas de desenvolvedor (o login separa as
+contas, mas não criptografa os dados). Isso muda quando houver um servidor.
 
 ## Estrutura
 
@@ -35,7 +47,9 @@ styles.css            temas (tokens de cor/tipografia) + componentes + responsiv
 js/core.js            utilidades de data/texto, ícones, constantes, estado
 js/db.js              banco de dados (IndexedDB) + Store (cópia em memória)
 js/ui.js              modal, diálogos, menus, toasts, campos de formulário
+js/auth.js            contas: cadastro, login, sessão, troca de senha
 js/agenda.js          recorrência, junção de itens, visões mês/semana/dia
+js/semana.js          "Essa semana": cronograma em blocos de horário
 js/faculdade.js       matérias, faltas, prazos, conteúdos, arquivos
 js/trabalho.js        entregas e quadro
 js/habitos.js         hábitos, tempo de tela, gráfico
@@ -54,7 +68,7 @@ um servidor:
 
 `events` · `categories` · `subjects` (com `slots` de horário) · `absences` · `assessments` ·
 `contents` · `files` (+ `blobs`) · `deliverables` · `habits` · `habitLogs` · `screenTime` ·
-`areas` · `activities` · `activityLogs`
+`areas` · `activities` · `activityLogs` · `blocks`
 
 As telas só conversam com o objeto `Store` (`js/db.js`). Para sincronizar entre o computador
 e o celular, basta trocar a implementação de `DB` por chamadas a um backend.

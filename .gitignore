@@ -1,0 +1,12 @@
+# Dados pessoais exportados pelo app — nunca devem ir para o repositório
+organizador-backup-*.json
+agenda-*.ics
+
+# Sistema / ferramentas
+node_modules/
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.cursor/

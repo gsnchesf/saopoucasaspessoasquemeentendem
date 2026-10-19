@@ -124,6 +124,7 @@ screens.faculdade = () => {
   const tabs = [['materias', 'Matérias'], ['grade', 'Grade semanal'], ['prazos', 'Provas e trabalhos']];
   const head = `<div class="title-block"><h1>Faculdade</h1><p class="sub">${esc(semesterLabel())} · <button class="link" data-action="edit-semester">alterar</button></p></div>
     <div class="toolbar">
+      <button class="btn" data-action="import-jupiter">${icon('download')}Importar do Júpiter</button>
       <button class="btn" data-action="new-assessment">${icon('plus')}Prazo</button>
       <button class="btn btn-primary" data-action="new-subject">${icon('plus')}Matéria</button>
     </div>`;
@@ -138,7 +139,8 @@ function subjectsTab() {
   const list = Store.data.subjects.slice().sort((a, b) => a.name.localeCompare(b.name));
   if (!list.length) {
     return `<div class="card card-pad"><p class="empty">Cadastre suas matérias com horários e professor. Elas aparecem automaticamente na agenda, e o limite de faltas (30%) é calculado sozinho.</p>
-      <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="new-subject">${icon('plus')}Adicionar matéria</button></div></div>`;
+      <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="import-jupiter">${icon('download')}Importar do JupiterWeb</button>
+        <button class="btn" data-action="new-subject">${icon('plus')}Adicionar manualmente</button></div></div>`;
   }
   return `<div class="subject-grid">${list.map(s => {
     const info = absInfo(s);

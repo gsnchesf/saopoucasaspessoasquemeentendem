@@ -245,6 +245,7 @@ function dbFailed(e) {
 }
 
 async function init() {
+  captureImportFromURL(); // dados do favorito do JupiterWeb saem do endereço antes de tudo
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
@@ -283,6 +284,7 @@ async function start() {
 
   checkReminders();
   setInterval(tick, 30e3);
+  runPendingImport();
 }
 
 function renderAccount() {

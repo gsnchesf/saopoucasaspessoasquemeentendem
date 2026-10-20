@@ -255,7 +255,15 @@ function dbFailed(e) {
 async function init() {
   captureImportFromURL(); // dados do favorito do JupiterWeb saem do endereço antes de tudo
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Versão nova do app assumiu: recarrega uma vez para não ficar mostrando a tela antiga.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded || modalOpen()) return;
+      reloaded = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
   }
   try {
     if (!await Auth.restore()) return showAuth();

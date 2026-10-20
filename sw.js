@@ -1,7 +1,7 @@
 /* Service worker: deixa o organizador funcionando offline quando
    servido por http(s) e permite instalá-lo como app no celular. */
 
-const CACHE = 'organizador-v19';
+const CACHE = 'organizador-v20';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
@@ -24,7 +24,8 @@ self.addEventListener('fetch', e => {
   // Só os arquivos do próprio app; chamadas ao servidor (Supabase) passam direto.
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: sempre confere com o servidor (o GitHub Pages manda 10 min de cache e a versão nova demorava a chegar).
+    fetch(e.request, { cache: 'no-cache' })
       .then(res => {
         if (res.ok) {
           const copy = res.clone();

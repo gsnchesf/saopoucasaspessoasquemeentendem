@@ -84,6 +84,9 @@ function absenceControls(it) {
       : marked.delivery ? `Exercício até ${shortDate(marked.delivery)}`
       : marked.aulas?.length ? `Faltei na ${aulasLabel(marked.aulas)}` : 'Falta marcada';
     html += `<button class="btn btn-sm ${marked && absWeight(marked, s) ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${!!marked}">${label}</button>`;
+  } else {
+    // Aula futura: só dá para avisar que foi cancelada.
+    html += `<button class="icon-btn ghost sm" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-label="Opções da aula" title="Aula cancelada?">${icon('more')}</button>`;
   }
   return html;
 }
@@ -183,6 +186,7 @@ function toggleAbsence(el) {
   if (!s) return;
   const date = el.dataset.date;
   if (isCanceled(s, date)) return openMenu(el, [{ label: 'Aula cancelada', icon: 'check', run: () => setCanceled(s, date, false) }]);
+  if (date > today()) return openMenu(el, [{ label: 'Aula cancelada', icon: '', run: () => setCanceled(s, date, true) }]);
   const cur = absenceOn(s.id, date);
   const n = dayClasses(s, date).length;
   const mode = attendance(s);
@@ -355,7 +359,11 @@ function subjectScreen(s) {
     </div>`;
 
   const faltas = `<section class="card card-pad">
-    <div class="card-head"><h2>Faltas</h2><button class="btn btn-sm" data-action="new-absence" data-id="${esc(s.id)}">${icon('plus')}Registrar falta</button></div>
+    <div class="card-head"><h2>Faltas</h2><div class="btn-row">
+      <button class="btn btn-sm" data-action="cancel-class" data-id="${esc(s.id)}">Aula cancelada</button>
+      <button class="btn btn-sm" data-action="new-absence" data-id="${esc(s.id)}">${icon('plus')}Registrar falta</button></div></div>
+    <label class="abs-mode"><span class="muted">Presença</span>
+      <select class="select" data-attendance="${esc(s.id)}">${options(Object.entries(ATTENDANCE).map(([k, v]) => [k, v.label]), attendance(s))}</select></label>
     ${info.limit ? `<div class="abs-hero">
         <div class="big-number ${info.level}">${absNum(Math.max(0, info.remaining))}</div>
         <p><b>${info.remaining > 0 ? 'Faltas restantes' : 'Limite atingido'}</b><br>
@@ -609,6 +617,7 @@ function absenceForm(s) {
       <label class="field"><span>Data</span><input type="date" name="date" value="${t}"></label>
       <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
       <label class="field"><span>Observação</span><input name="note" maxlength="140" placeholder="Opcional (ex.: atestado)"></label>
+      ${attendance(s) === 'exercicio' ? '<label class="field"><span>Entrega do exercício (se for outro dia)</span><input type="date" name="delivery"></label>' : ''}
       ${ATTENDANCE[attendance(s)].action ? `<label class="check"><input type="checkbox" name="present"> ${ATTENDANCE[attendance(s)].action}</label>` : ''}
       <p class="form-error" hidden></p>
     </div>
@@ -634,10 +643,37 @@ function absenceForm(s) {
       const rec = { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() };
       if (f.aulas && dayClasses(s, f.date).length > 1) rec.aulas = [+f.aulas];
       if (f.present) rec.present = true;
+      if (f.delivery && f.delivery !== f.date) rec.delivery = f.delivery;
       Store.upsert('absences', rec);
       closeModal();
       render();
-      toast('Falta registrada');
+      absenceToast(s, rec);
+    },
+  });
+}
+
+/** Próximo dia (a partir de hoje) com aula da matéria. */
+function nextClassDay(s) {
+  for (let i = 0, d = today(); i < 14; i++, d = addDays(d, 1)) if (dayClasses(s, d).length && !isCanceled(s, d)) return d;
+  return today();
+}
+
+function cancelForm(s) {
+  openModal(`<form novalidate>
+    ${modalHead(`Aula cancelada · ${s.name}`)}
+    <div class="modal-body">
+      <label class="field"><span>Data</span><input type="date" name="date" value="${nextClassDay(s)}"></label>
+      <p class="form-error" hidden></p>
+    </div>
+    ${modalFoot(false, 'Cancelar aula')}
+  </form>`, {
+    onSubmit(form) {
+      const { date } = formData(form);
+      if (!date) return formError(form, 'Falta a data.');
+      if (!dayClasses(s, date).length) return formError(form, 'Não tem aula dessa matéria nesse dia.');
+      if (isCanceled(s, date)) return formError(form, 'Essa aula já está cancelada.');
+      closeModal();
+      setCanceled(s, date, true);
     },
   });
 }
@@ -693,6 +729,7 @@ Object.assign(actions, {
     if (s) exerciseForm(s, a.date);
   },
   'uncancel-class': el => { const s = subject(el.dataset.id); if (s) setCanceled(s, el.dataset.date, false); },
+  'cancel-class': el => { const s = subject(el.dataset.id); if (s) cancelForm(s); },
   'new-absence': el => { const s = subject(el.dataset.id); if (s) absenceForm(s); },
   'del-absence': el => {
     const removed = Store.remove('absences', el.dataset.id);
@@ -732,4 +769,14 @@ Object.assign(actions, {
     render();
     toast('Arquivo excluído');
   },
+});
+
+// Presença da matéria trocada direto na tela dela.
+document.addEventListener('change', e => {
+  const id = e.target.dataset?.attendance;
+  const s = id && subject(id);
+  if (!s) return;
+  Store.upsert('subjects', { ...structuredClone(s), attendance: e.target.value });
+  render();
+  toast(`Presença: ${ATTENDANCE[e.target.value].label}`);
 });

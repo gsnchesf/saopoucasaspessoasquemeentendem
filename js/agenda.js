@@ -73,6 +73,7 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
     });
   }
   if (classes) classItems(from, to).forEach(add);
+  workoutItems(from, to).forEach(add);
   if (work) workItems(from, to).forEach(add);
   for (const a of Store.data.assessments) {
     if (a.date < from || a.date > to) continue;
@@ -100,7 +101,7 @@ const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) ||
 
 /* ---------- Componentes ---------- */
 
-const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', work: 'edit-work', commute: 'edit-work' };
+const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', work: 'edit-work', commute: 'edit-work' };
 const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"`;
 
 function itemRow(it) {
@@ -131,7 +132,8 @@ function itemRow(it) {
     </span>
     ${badge ? `<span class="ev-side">${badge}</span>` : ''}
   </button>`;
-  return it.kind === 'class' ? `<div class="row-wrap">${row}<div class="ev-side">${absenceControls(it)}</div></div>` : row;
+  const side = it.kind === 'class' ? absenceControls(it) : it.kind === 'workout' ? workoutControls(it) : '';
+  return side ? `<div class="row-wrap">${row}<div class="ev-side">${side}</div></div>` : row;
 }
 
 function itemChip(it) {

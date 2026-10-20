@@ -459,6 +459,8 @@ kbd {
 }
 .ev-row:hover { background: var(--surface-2); }
 .ev-row.past { opacity: .55; }
+.workout-list { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.abs-mode { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 14px; }
 /* Aula cancelada: riscada e apagada, mas visível para dar para desfazer. */
 .ev-row.canceled, .chip.canceled, .tg-ev.canceled { opacity: .45; }
 .ev-row.canceled .ev-title, .chip.canceled, .tg-ev.canceled .t { text-decoration: line-through; }

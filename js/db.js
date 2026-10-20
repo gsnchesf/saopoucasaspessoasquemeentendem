@@ -10,7 +10,7 @@
    ========================================================== */
 
 const DB_NAME = 'organizador';
-const DB_VERSION = 2; // 2: coleção 'blocks' (Essa semana)
+const DB_VERSION = 3; // 2: coleção 'blocks' (Essa semana); 3: 'workouts' (rotina de treinos)
 
 /** Coleções carregadas em memória. Arquivos binários ficam à parte em 'blobs' (só neste aparelho). */
 const COLLECTIONS = [
@@ -29,6 +29,7 @@ const COLLECTIONS = [
   'activities',    // atividades com metas
   'activityLogs',  // registros das atividades
   'blocks',        // blocos do cronograma "Essa semana"
+  'workouts',      // rotina de treinos (dias, horário, exercícios)
 ];
 
 /** Abre (ou cria) um banco local com todas as coleções. */
@@ -243,16 +244,10 @@ const Store = {
       ['Compromisso', '#4f46e5'], ['Consulta', '#0ea5e9'], ['Trabalho', '#f59e0b'],
       ['Faculdade', '#8b5cf6'], ['Date', '#ec4899'], ['Treino', '#10b981'], ['Pessoal', '#64748b'],
     ];
-    const areas = [['Fitness', '#10b981'], ['Date', '#ec4899'], ['Projetos paralelos', '#f97316']];
-    const habits = [
-      { name: 'Beber água', kind: 'qtd', target: 8, unit: 'copos', color: '#0ea5e9' },
-      { name: 'Ler 20 minutos', kind: 'check', color: '#8b5cf6' },
-      { name: 'Dormir antes da meia-noite', kind: 'check', color: '#4f46e5' },
-    ];
+    const areas = [['Fitness', '#10b981'], ['Projetos paralelos', '#f97316']];
     const writes = [
       ...cats.map(([name, color]) => this.upsert('categories', { id: uid(), name, color }, true)),
       ...areas.map(([name, color]) => this.upsert('areas', { id: uid(), name, color }, true)),
-      ...habits.map((h, i) => this.upsert('habits', { id: uid(), weekdays: [0, 1, 2, 3, 4, 5, 6], target: 1, unit: '', order: i, ...h }, true)),
     ];
     await Promise.all([...writes, this.saveSettings(true)]);
   },

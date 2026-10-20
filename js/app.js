@@ -67,6 +67,7 @@ function quickNew(anchor) {
     { label: 'Entrega', icon: 'briefcase', key: 'W', run: () => deliverableForm(null, state.view === 'agenda' ? state.selected : '') },
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },
+    { label: 'Treino', icon: 'dumbbell', run: () => workoutForm() },
     { label: 'Hábito', icon: 'flame', run: () => habitForm() },
     { label: 'Atividade / meta', icon: 'target', run: () => activityForm() },
   ]);

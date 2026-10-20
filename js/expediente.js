@@ -5,11 +5,14 @@
    Store.settings.work:
      undefined → ainda não respondeu (Hoje pergunta)
      { off: true } → não trabalha
-     { days: [1..5], start: 'HH:MM', end: 'HH:MM', commute: minutos de cada trecho }
+     { days: [1..5], start: 'HH:MM', end: 'HH:MM', commute: minutos de cada trecho, title: nome na agenda }
    ========================================================== */
 
 const COMMUTE_COLOR = '#64748b';
-const DEFAULT_WORK = { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', commute: 0 };
+const DEFAULT_WORK = { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', commute: 0, title: 'Trabalho' };
+
+/** Nome do expediente na agenda (ex.: Trabalho, Estágio). */
+const workTitle = w => (w?.title || '').trim() || DEFAULT_WORK.title;
 
 /** Expediente válido, ou null (não trabalha / não definido). */
 function workSchedule() {
@@ -27,7 +30,7 @@ function workItems(from, to) {
   for (let d = from; d <= to; d = addDays(d, 1)) {
     if (!w.days.includes(weekday(d))) continue;
     if (c) out.push({ ...base, kind: 'commute', id: 'ida', date: d, title: 'Ida para o trabalho', start: fromMin(Math.max(0, s - c)), end: w.start, color: COMMUTE_COLOR });
-    out.push({ ...base, kind: 'work', id: 'trabalho', date: d, title: 'Trabalho', start: w.start, end: w.end, color: workColor() });
+    out.push({ ...base, kind: 'work', id: 'trabalho', date: d, title: workTitle(w), start: w.start, end: w.end, color: workColor() });
     if (c) out.push({ ...base, kind: 'commute', id: 'volta', date: d, title: 'Volta do trabalho', start: w.end, end: fromMin(Math.min(23 * 60 + 59, e + c)), color: COMMUTE_COLOR });
   }
   return out;
@@ -46,7 +49,7 @@ function workSummary() {
   if (w.off) return 'Não trabalho';
   const sch = workSchedule();
   if (!sch) return 'Ainda não definido';
-  return `${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · deslocamento de ${fmtDuration(sch.commute)} na ida e na volta` : ''}`;
+  return `${workTitle(sch)} · ${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · deslocamento de ${fmtDuration(sch.commute)} na ida e na volta` : ''}`;
 }
 
 /** Cartão de Hoje para quem ainda não respondeu se trabalha. */
@@ -70,6 +73,7 @@ function workForm() {
     <div class="modal-body">
       <label class="check"><input type="checkbox" name="off" ${off ? 'checked' : ''}> Não trabalho</label>
       <div class="work-fields stack" ${off ? 'hidden' : ''}>
+        <label class="field"><span>Nome na agenda</span><input name="title" maxlength="40" value="${esc(workTitle(w))}" placeholder="Ex.: Trabalho, Estágio"></label>
         <div><span class="fieldset-label">Dias de trabalho</span><div style="margin-top:6px">${dayToggles('days', w.days)}</div></div>
         <div class="row">
           <label class="field"><span>Começo</span><input type="time" name="start" value="${esc(w.start)}"></label>
@@ -100,7 +104,7 @@ function workForm() {
         if (!days.length) return formError(form, 'Escolha pelo menos um dia.');
         if (!f.start || !f.end || f.end <= f.start) return formError(form, 'Confira os horários: o fim precisa ser depois do começo.');
         if (commute < 0 || commute > 5 * 60) return formError(form, 'O deslocamento precisa ficar entre 0 e 5 horas.');
-        Store.settings.work = { days, start: f.start, end: f.end, commute };
+        Store.settings.work = { days, start: f.start, end: f.end, commute, title: f.title.trim() || DEFAULT_WORK.title };
       }
       Store.saveSettings();
       closeModal();

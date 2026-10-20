@@ -1,144 +1,92 @@
 'use strict';
 /* ==========================================================
-   Contas: login, sessão e usuários.
-   - Admins (lista em js/config.js) criam os usuários (nome,
-     usuário e senha inicial); cada um troca a própria senha.
-   - As contas de CONFIG.seedUsers são criadas sozinhas em todo
-     aparelho que ainda não as tem.
-   - As contas ficam num banco próprio ('organizador-contas').
-   - Cada conta tem o seu banco de dados (agenda, faculdade…).
-   - A senha nunca é gravada: só um hash PBKDF2 com sal.
-   Tudo é local deste navegador até existir um servidor.
+   Contas: login, sessão e usuários, no Supabase.
+   - Login com usuário + senha (vira o e-mail interno do Supabase).
+   - Ninguém se cadastra: admins criam as contas (página Admin).
+   - Quem é admin fica no banco (profiles.is_admin), e as funções
+     de admin conferem isso no servidor (supabase/schema.sql).
+   - A sessão fica salva neste aparelho até clicar em "Sair".
    ========================================================== */
 
-const ACCOUNTS_DB = 'organizador-contas';
-const SESSION_KEY = 'organizador:sessao';
-const PBKDF2_ITERATIONS = 600000;
 const MIN_PASSWORD = 4;
+const PROFILE_KEY = 'organizador:perfil'; // último perfil, para abrir sem internet
 
-const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey, {
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'organizador:sessao' },
+});
+
 const normUser = s => String(s ?? '').trim().toLowerCase();
+const userEmail = u => `${normUser(u)}@${CONFIG.emailDomain}`;
+
+/** Erro do servidor com a mensagem em português das funções do banco. */
+function serverError(error) {
+  const msg = error?.message || '';
+  if (/fetch|network|Failed to/i.test(msg)) return new Error('Sem conexão com o servidor. Tente de novo.');
+  return new Error(msg || 'Erro no servidor.');
+}
 
 const Auth = {
-  db: null,
-  user: null,
+  user: null, // { id, username, name, isAdmin, dbName }
 
-  open() {
-    return new Promise((resolve, reject) => {
-      if (!('indexedDB' in window)) return reject(new Error('IndexedDB indisponível'));
-      const req = indexedDB.open(ACCOUNTS_DB, 1);
-      req.onupgradeneeded = () => {
-        const store = req.result.createObjectStore('users', { keyPath: 'id' });
-        store.createIndex('username', 'username', { unique: true });
-      };
-      req.onsuccess = () => { this.db = req.result; resolve(this.seed()); };
-      req.onerror = () => reject(req.error);
-    });
+  profileFrom(id, p) {
+    return { id, username: p.username, name: p.name, isAdmin: !!p.is_admin, dbName: `${DB_NAME}-${id}` };
   },
 
-  req(mode, fn) {
-    return new Promise((resolve, reject) => {
-      const r = fn(this.db.transaction('users', mode).objectStore('users'));
-      r.onsuccess = () => resolve(r.result);
-      r.onerror = () => reject(r.error);
-    });
-  },
-
-  all() { return this.req('readonly', s => s.getAll()); },
-  count() { return this.req('readonly', s => s.count()); },
-  byId(id) { return this.req('readonly', s => s.get(id)); },
-  byUsername(u) { return this.req('readonly', s => s.index('username').get(normUser(u))); },
-  save(user) { return this.req('readwrite', s => s.put(user)); },
-
-  isAdmin(user = this.user) { return !!user && CONFIG.admins.includes(user.username); },
-
-  /** Cria as contas fixas da configuração que ainda não existem neste aparelho. */
-  async seed() {
-    for (const s of CONFIG.seedUsers) {
-      if (await this.byUsername(s.username)) continue;
-      const id = uid();
-      const first = (await this.count()) === 0;
-      await this.save({
-        id, name: s.name, username: normUser(s.username), salt: s.salt, hash: s.hash, iterations: s.iterations || PBKDF2_ITERATIONS,
-        dbName: first ? DB_NAME : `${DB_NAME}-${id}`, createdAt: Date.now(),
-      });
+  /** Lê o perfil no servidor; sem internet, usa o último salvo neste aparelho. */
+  async loadProfile(id) {
+    const { data, error } = await sb.from('profiles').select('username, name, is_admin').eq('id', id).maybeSingle();
+    if (data) {
+      try { localStorage.setItem(PROFILE_KEY, JSON.stringify({ id, ...data })); } catch {}
+      return this.profileFrom(id, data);
     }
-  },
-
-  async hash(password, salt, iterations) {
-    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
-    return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: unb64(salt), iterations }, key, 256));
-  },
-
-  async setPassword(user, password) {
-    user.salt = b64(crypto.getRandomValues(new Uint8Array(16)));
-    user.iterations = PBKDF2_ITERATIONS;
-    user.hash = await this.hash(password, user.salt, user.iterations);
-  },
-
-  async checkPassword(user, password) {
-    return (await this.hash(password, user.salt, user.iterations)) === user.hash;
-  },
-
-  /** Cria a conta. A primeira do aparelho herda os dados de antes do login. */
-  async createUser({ name, username, password }) {
-    const id = uid();
-    const first = (await this.count()) === 0;
-    const user = { id, name: name.trim(), username: normUser(username), dbName: first ? DB_NAME : `${DB_NAME}-${id}`, createdAt: Date.now() };
-    await this.setPassword(user, password);
-    await this.save(user); // o índice único recusa nomes de usuário repetidos
-    return user;
-  },
-
-  async login(username, password) {
-    const user = await this.byUsername(username);
-    // Calcula o hash mesmo sem conta, para a resposta não revelar quais usuários existem.
-    const ok = user ? await this.checkPassword(user, password) : (await this.hash(password, b64(new Uint8Array(16)), PBKDF2_ITERATIONS), false);
-    return ok ? user : null;
-  },
-
-  /** Troca a senha de uma conta (a própria, ou qualquer uma por um admin). */
-  async resetPassword(id, password) {
-    const user = await this.byId(id);
-    await this.setPassword(user, password);
-    await this.save(user);
-    if (id === this.user?.id) this.user = user;
-  },
-
-  async rename(id, name) {
-    const user = await this.byId(id);
-    user.name = name.trim();
-    await this.save(user);
-    if (id === this.user?.id) this.user = user;
-  },
-
-  /** Exclui a conta e o banco de dados dela. */
-  async removeUser(id) {
-    const user = await this.byId(id);
-    if (!user || user.id === this.user?.id) return;
-    await this.req('readwrite', s => s.delete(id));
-    indexedDB.deleteDatabase(user.dbName);
-  },
-
-  /* ----- Sessão: fica conectado neste aparelho até clicar em "Sair" ----- */
-
-  startSession(user) {
-    this.user = user;
-    try { localStorage.setItem(SESSION_KEY, user.id); } catch {}
+    if (!error) return null; // conta excluída
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(PROFILE_KEY)); } catch {}
+    return cached?.id === id ? this.profileFrom(id, cached) : null;
   },
 
   async restore() {
-    let id = null;
-    try { id = localStorage.getItem(SESSION_KEY); } catch {}
-    this.user = id ? await this.byId(id) || null : null;
+    const { data } = await sb.auth.getSession();
+    const id = data.session?.user?.id;
+    this.user = id ? await this.loadProfile(id) : null;
+    if (id && !this.user) await sb.auth.signOut({ scope: 'local' });
     return this.user;
   },
 
-  logout() {
-    try { localStorage.removeItem(SESSION_KEY); } catch {}
+  async login(username, password) {
+    const { data, error } = await sb.auth.signInWithPassword({ email: userEmail(username), password });
+    if (error) {
+      if (error.status === 400) return null;
+      throw serverError(error);
+    }
+    this.user = await this.loadProfile(data.user.id);
+    return this.user;
+  },
+
+  isAdmin(user = this.user) { return !!user?.isAdmin; },
+
+  async logout() {
+    await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    try { localStorage.removeItem(PROFILE_KEY); } catch {}
     location.reload(); // recarregar garante que nada da conta anterior fica na memória
   },
+
+  /* ----- Funções do servidor (as de admin conferem a permissão lá) ----- */
+
+  async rpc(fn, args) {
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw serverError(error);
+    return data;
+  },
+  async listUsers() {
+    const { data, error } = await sb.from('profiles').select('id, username, name, is_admin').order('name');
+    if (error) throw serverError(error);
+    return data;
+  },
+  createUser: ({ name, username, password }) => Auth.rpc('admin_create_user', { p_username: normUser(username), p_name: name.trim(), p_password: password }),
+  setPassword: (id, password) => Auth.rpc('set_password', { p_user: id, p_password: password }),
+  rename: (id, name) => Auth.rpc('admin_rename_user', { p_user: id, p_name: name.trim() }),
+  removeUser: id => Auth.rpc('admin_delete_user', { p_user: id }),
 };
 
 /* ---------- Tela de entrada ---------- */
@@ -161,18 +109,18 @@ function showAuth() {
     e.preventDefault();
     const btn = $('button[type="submit"]', form);
     if (btn.disabled) return;
+    const f = formData(form);
+    if (!f.username.trim() || !f.password) return formError(form, 'Informe usuário e senha.');
     btn.disabled = true;
     let user;
     try {
-      user = await submitLogin(form);
+      user = await Auth.login(f.username, f.password);
     } catch (err) {
-      console.error(err);
-      return formError(form, 'Não foi possível acessar o banco deste navegador.');
+      return formError(form, err.message);
     } finally {
       btn.disabled = false;
     }
-    if (!user) return;
-    Auth.startSession(user);
+    if (!user) return formError(form, 'Usuário ou senha incorretos.');
     root.hidden = true;
     root.innerHTML = '';
     document.body.classList.remove('signed-out');
@@ -180,14 +128,7 @@ function showAuth() {
   });
 }
 
-async function submitLogin(form) {
-  const f = formData(form);
-  if (!crypto.subtle) return formError(form, 'Este endereço não é seguro (https), e o navegador bloqueia a criptografia da senha. Abra pelo endereço https ou por localhost.');
-  if (!f.username.trim() || !f.password) return formError(form, 'Informe usuário e senha.');
-  return await Auth.login(f.username, f.password) || formError(form, 'Usuário ou senha incorretos.');
-}
-
-/* ---------- Trocar a própria senha (Ajustes) ---------- */
+/* ---------- Trocar senha (a própria, ou a de alguém pela página Admin) ---------- */
 
 function passwordForm(user, self) {
   openModal(`<form novalidate>
@@ -203,7 +144,8 @@ function passwordForm(user, self) {
     onSubmit: async form => {
       const { password } = formData(form);
       if (password.length < MIN_PASSWORD) return formError(form, `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
-      await Auth.resetPassword(user.id, password);
+      try { await Auth.setPassword(user.id, password); }
+      catch (err) { return formError(form, err.message); }
       closeModal();
       toast('Senha alterada');
     },

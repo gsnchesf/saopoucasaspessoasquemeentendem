@@ -108,7 +108,7 @@ screens.ajustes = () => {
 
     <section class="card card-pad">
       <h2>Dados</h2>
-      <p class="desc">Os dados da sua conta ficam no banco de dados deste navegador (IndexedDB): ${counts}. <span id="storage-info"></span></p>
+      <p class="desc">Os dados da sua conta ficam no servidor, com uma cópia neste aparelho para abrir rápido e funcionar sem internet: ${counts}. <span id="storage-info"></span></p>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn" data-action="export-json">${icon('download')}Exportar backup</button>
         <label class="btn">${icon('upload')}Importar backup<input type="file" id="import-file" accept="application/json,.json" hidden></label>

@@ -45,21 +45,34 @@ Júpiter e alimenta o limite de faltas (30%). Reimportar atualiza as matérias p
 duplicar. Toda a interpretação fica em `js/importar.js`; o favorito só coleta as tabelas, então
 correções não exigem reinstalar o favorito.
 
-## Contas e Admin
+## Contas, Admin e servidor (Supabase)
 
-- A tela de entrada é só **usuário e senha**. Ninguém cria a própria conta.
-- **Admins** (lista em `js/config.js`, hoje só `gsanches`) veem a página **Admin**: criam usuários
-  (nome, usuário e senha inicial), mudam nomes, redefinem senhas e excluem contas.
-- Cada pessoa troca a própria senha em **Ajustes → Trocar senha**, só digitando a nova.
-- Cada conta tem a **sua própria agenda e os seus próprios dados** (um banco IndexedDB por conta).
-- As contas de `CONFIG.seedUsers` (hoje `gsanches`) são criadas sozinhas em todo aparelho que
-  ainda não as tem. A primeira conta do aparelho herda os dados de antes do login.
-- A senha **nunca é gravada**: só um hash PBKDF2-SHA256 (600 mil iterações) com sal. Em
-  `js/config.js` fica só o hash da senha inicial — mas, com o repositório público e uma senha
-  curta, troque-a depois do primeiro acesso.
+O app é estático (GitHub Pages) e usa o **Supabase** como servidor: login, banco de dados e as
+funções de admin. A estrutura do banco está em [`supabase/schema.sql`](supabase/schema.sql).
 
-**Limitação atual:** ainda não há servidor. Contas e dados ficam no navegador onde foram criados;
-um usuário criado no computador não existe no celular de outra pessoa.
+- A tela de entrada é só **usuário e senha**. Ninguém cria a própria conta (cadastro aberto
+  desligado no Supabase). No Supabase, cada usuário vira o e-mail interno
+  `<usuario>@usuarios.organizador.invalid`.
+- **Admins** (`profiles.is_admin` no banco; hoje só `gsanches`) veem a página **Admin**: criam
+  usuários (nome, usuário e senha inicial), mudam nomes, redefinem senhas e excluem contas. As
+  funções conferem no servidor se quem chama é admin.
+- Cada pessoa troca a própria senha em **Ajustes → Trocar senha**, só digitando a nova
+  (mínimo de 4 caracteres).
+- Os dados pessoais ficam na tabela `items` (um registro do app por linha, em JSON). As regras do
+  banco (RLS) só deixam cada pessoa ler e gravar as próprias linhas.
+- **Sincronização:** cada alteração vai para a cópia local (IndexedDB) e para uma fila, enviada ao
+  servidor em seguida. Sem internet, a fila espera. Ao abrir e ao voltar para o app, ele baixa o que
+  mudou em outros aparelhos. Exclusões viram linhas com `deleted = true`.
+- **Dados de antes do login:** se o navegador tem o banco local antigo, o app pergunta uma vez se
+  quer levar esses dados para a conta.
+- **Anexos** (PDFs etc.) ainda ficam só no aparelho onde foram adicionados.
+
+### Mexer no servidor pelo Claude Code
+
+O Claude Code usa a Management API do Supabase com um token pessoal guardado **fora do
+repositório** (`~/.supabase-token`). Assim dá para pedir, por exemplo, "cadastra o João",
+"torna a Maria admin" ou "aplica o schema de novo". A chave pública do projeto fica em
+`js/config.js` (é feita para ficar no site); chaves secretas nunca entram no repositório.
 
 ## Estrutura
 
@@ -67,10 +80,11 @@ um usuário criado no computador não existe no celular de outra pessoa.
 index.html            casca da página (menu lateral, barra inferior no celular)
 styles.css            temas (tokens de cor/tipografia) + componentes + responsivo
 js/core.js            utilidades de data/texto, ícones, constantes, estado
-js/db.js              banco de dados (IndexedDB) + Store (cópia em memória)
+js/db.js              cópia local (IndexedDB), fila de sincronização e Store
 js/ui.js              modal, diálogos, menus, toasts, campos de formulário
-js/config.js          admins e contas fixas (editável pelo dono do repositório)
-js/auth.js            contas: login, sessão, troca de senha
+js/vendor/supabase.js biblioteca do Supabase (cópia fixa, v2.117.2, para funcionar offline)
+js/config.js          endereço e chave pública do Supabase
+js/auth.js            contas: login, sessão, troca de senha (Supabase)
 js/agenda.js          recorrência, junção de itens, visões mês/semana/dia
 js/semana.js          "Essa semana": cronograma em blocos de horário
 js/faculdade.js       matérias, faltas, prazos, conteúdos, arquivos
@@ -80,7 +94,8 @@ js/habitos.js         hábitos, tempo de tela, gráfico
 js/metas.js           áreas, atividades, registros
 js/hoje.js            painel do dia
 js/ajustes.js         temas, preferências, exportações
-js/admin.js           página Admin: usuários
+js/admin.js           página Admin: usuários (funções do servidor)
+supabase/schema.sql   estrutura do banco, regras de acesso e funções de admin
 js/app.js             rotas, eventos globais, lembretes, inicialização
 sw.js + manifest      funcionamento offline e instalação (PWA)
 ```

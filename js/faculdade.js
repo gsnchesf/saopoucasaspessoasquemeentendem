@@ -324,7 +324,7 @@ async function addFiles(subjectId, fileList) {
 async function fileBlob(id) {
   const meta = Store.get('files', id);
   const blob = meta && await Store.getBlob(id);
-  if (!blob) { toast('Arquivo não encontrado neste dispositivo.'); return null; }
+  if (!blob) { toast('Este arquivo foi anexado em outro aparelho. Por enquanto, os anexos ficam só no aparelho onde foram adicionados.', null, 6000); return null; }
   return { meta, blob: meta.type && blob.type !== meta.type ? new Blob([blob], { type: meta.type }) : blob };
 }
 

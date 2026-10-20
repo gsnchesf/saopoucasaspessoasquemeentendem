@@ -254,19 +254,20 @@ async function init() {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   try {
-    await Auth.open();
     if (!await Auth.restore()) return showAuth();
   } catch (e) {
-    return dbFailed(e);
+    console.error(e);
+    return showAuth();
   }
   await start();
 }
 
 /** Abre o banco da conta logada e liga o app (uma vez por carregamento da página). */
 async function start() {
+  let synced;
   try {
     DB.name = Auth.user.dbName;
-    await Store.load();
+    ({ synced } = await Store.load());
   } catch (e) {
     return dbFailed(e);
   }
@@ -282,13 +283,44 @@ async function start() {
 
   window.addEventListener('hashchange', route);
   darkMQ.addEventListener?.('change', () => { if (Store.settings.theme === 'auto') applyTheme(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkReminders(); if (!modalOpen()) render(); } });
-  // Outra aba alterou os dados: recarrega do banco.
-  if (Store.channel) Store.channel.onmessage = async () => { await Store.load(); applyTheme(); if (!modalOpen()) render(); };
+  // Ao voltar para o app: baixa o que mudou em outros aparelhos.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkReminders(); refreshFromServer(); } });
+  window.addEventListener('online', () => refreshFromServer());
+  // Outra aba alterou os dados: relê a cópia local.
+  if (Store.channel) Store.channel.onmessage = async () => { await Store.loadLocal(); applyTheme(); if (!modalOpen()) render(); };
 
   checkReminders();
   setInterval(tick, 30e3);
   runPendingImport();
+  // Quando o servidor responder: redesenha com os dados dele e oferece trazer dados antigos.
+  synced.then(ok => {
+    if (ok && !modalOpen()) { applyTheme(); render(); }
+    offerLegacyImport();
+  });
+}
+
+async function refreshFromServer() {
+  if (await Store.syncNow() && !modalOpen()) { applyTheme(); render(); }
+}
+
+/** Dados salvos neste navegador antes do login: oferece (uma vez) levar para a conta. */
+async function offerLegacyImport() {
+  const flag = `organizador:legado:${Auth.user.id}`;
+  try { if (localStorage.getItem(flag)) return; } catch { return; }
+  let legacy = null;
+  try { legacy = await Store.legacySummary(); } catch (e) { console.warn(e); }
+  if (!legacy) return;
+  const n = c => legacy.data[c].length;
+  const parts = [[n('subjects'), 'matéria', 'matérias'], [n('events'), 'compromisso', 'compromissos'], [n('blocks'), 'bloco', 'blocos'], [n('deliverables'), 'entrega', 'entregas']]
+    .filter(([k]) => k).map(([k, one, many]) => plural(k, one, many));
+  const ok = await ask(`Este navegador tem dados de antes do login (${parts.join(', ') || 'alguns registros'}). Levar para a conta de ${Auth.user.name}? Eles passam a valer em qualquer aparelho.`, [
+    { label: 'Não', value: false }, { label: 'Levar para a minha conta', value: true, kind: 'primary' }]);
+  try { localStorage.setItem(flag, ok ? 'importado' : 'recusado'); } catch {}
+  if (!ok) return;
+  await Store.importLegacy(legacy);
+  applyTheme();
+  render();
+  toast('Dados levados para a sua conta');
 }
 
 function renderAccount() {

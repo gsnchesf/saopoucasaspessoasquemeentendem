@@ -36,7 +36,7 @@ function absenceControls(it) {
   let html = '';
   if (info.limit) {
     const n = Math.max(0, info.remaining);
-    html += `<span class="badge ${info.level}" title="${n} de ${info.limit} faltas restantes">${n ? `pode faltar ${plural(n, 'vez', 'vezes')}` : 'sem faltas'}</span>`;
+    html += `<span class="badge ${info.level}" title="${n} de ${info.limit} faltas restantes">${n ? `restam ${n}` : 'no limite'}</span>`;
   }
   if (it.date <= today()) {
     html += `<button class="btn btn-sm ${marked ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${marked}">${marked ? 'Falta marcada' : 'Faltei'}</button>`;
@@ -57,7 +57,7 @@ function toggleAbsence(subjectId, date) {
   Store.upsert('absences', { id: uid(), subjectId, date, note: '' });
   render();
   const info = absInfo(s);
-  toast(info.limit ? `Falta registrada em ${s.name} · restam ${Math.max(0, info.remaining)} de ${info.limit}` : `Falta registrada em ${s.name}`);
+  toast(info.limit ? `Falta em ${s.name} · restam ${Math.max(0, info.remaining)}` : `Falta em ${s.name}`);
 }
 
 /* ---------- Auxiliares ---------- */
@@ -130,7 +130,7 @@ function subjectsTab() {
   if (!list.length) {
     return `<div class="card card-pad"><p class="empty">Nenhuma matéria cadastrada.</p>
       <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="import-jupiter">${icon('download')}Importar do JupiterWeb</button>
-        <button class="btn" data-action="new-subject">${icon('plus')}Adicionar manualmente</button></div></div>`;
+        <button class="btn" data-action="new-subject">${icon('plus')}Adicionar</button></div></div>`;
   }
   return `<div class="subject-grid">${list.map(s => {
     const info = absInfo(s);
@@ -140,11 +140,11 @@ function subjectsTab() {
     const nFiles = filesOf(s.id).length;
     return `<button class="subject-card" style="--c:${esc(s.color)}" data-action="open-subject" data-id="${esc(s.id)}">
       <div><h3>${esc(s.name)}</h3>
-        <div class="meta">${[s.professor && `Prof. ${esc(s.professor)}`, s.room && esc(s.room)].filter(Boolean).join(' · ') || 'Sem professor cadastrado'}</div></div>
+        <div class="meta">${[s.professor && `Prof. ${esc(s.professor)}`, s.room && esc(s.room)].filter(Boolean).join(' · ')}</div></div>
       <div class="meta">${icon('clock')}${esc(slotsText(s) || 'Sem horários')}</div>
       ${info.limit ? `<div><div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> de ${info.limit} · <span class="badge ${info.level}">${info.remaining > 0 ? `restam ${info.remaining}` : 'limite atingido'}</span></span></div>${meter(info.used / info.limit, info.level)}</div>`
-        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> · limite ainda não calculado</span></div>`}
-      <div class="meta">${next ? `<span class="badge k-${next.kind}">${ASSESSMENT_KINDS[next.kind]}</span> ${esc(next.title)} · ${untilLabel(next.date)}` : 'Nenhum prazo pendente'}</div>
+        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> · sem limite</span></div>`}
+      <div class="meta">${next ? `<span class="badge k-${next.kind}">${ASSESSMENT_KINDS[next.kind]}</span> ${esc(next.title)} · ${untilLabel(next.date)}` : 'Sem prazos'}</div>
       <div class="meta"><span>${plural(nFiles, 'arquivo', 'arquivos')}</span><span>${studied}/${contents.length} conteúdos estudados</span></div>
     </button>`;
   }).join('')}</div>`;
@@ -186,7 +186,7 @@ function deadlinesTab() {
     </div>
     ${groups.length ? groups.map(([label, items, cls]) => `<h3 class="section-label ${cls || ''}">${label} <span class="count">${items.length}</span></h3>
       <div class="list">${items.map(a => assessmentRow(a)).join('')}</div>`).join('')
-      : '<p class="empty">Nenhuma prova, trabalho ou atividade cadastrada.</p>'}
+      : '<p class="empty">Nenhum prazo.</p>'}
   </div>`;
 }
 
@@ -224,12 +224,12 @@ function subjectScreen(s) {
     ${absences.length ? `<div class="list">${absences.map(a => `<div class="task">
         <span class="task-main"><span class="task-title">${relDay(a.date)}</span>${a.note ? `<span class="task-meta">${esc(a.note)}</span>` : ''}</span>
         <button class="icon-btn ghost sm" data-action="del-absence" data-id="${esc(a.id)}" aria-label="Remover falta">${icon('x')}</button></div>`).join('')}</div>`
-      : '<p class="empty">Nenhuma falta. Continue assim!</p>'}
+      : '<p class="empty">Nenhuma falta.</p>'}
   </section>`;
 
   const prazos = `<section class="card card-pad">
     <div class="card-head"><h2>Provas, trabalhos e atividades</h2><button class="btn btn-sm" data-action="new-assessment" data-subject="${esc(s.id)}">${icon('plus')}Prazo</button></div>
-    ${assessments.length ? `<div class="list">${assessments.map(a => assessmentRow(a, { showSubject: false })).join('')}</div>` : '<p class="empty">Nada cadastrado ainda.</p>'}
+    ${assessments.length ? `<div class="list">${assessments.map(a => assessmentRow(a, { showSubject: false })).join('')}</div>` : '<p class="empty">Nenhum prazo.</p>'}
   </section>`;
 
   const horarios = `<section class="card card-pad">
@@ -237,7 +237,7 @@ function subjectScreen(s) {
     ${slots.length ? `<div class="list">${slots.map(x => `<div class="task"><span class="task-main">
         <span class="task-title">${WEEKDAYS_LONG[x.weekday]} · ${x.start}–${x.end}</span>
         <span class="task-meta">${plural(x.weight || 1, 'aula', 'aulas')}${x.room || s.room ? ' · ' + esc(x.room || s.room) : ''}</span></span></div>`).join('')}</div>`
-      : '<p class="empty">Sem horários cadastrados.</p>'}
+      : '<p class="empty">Sem horários.</p>'}
     ${s.notes ? `<p class="hint-box" style="margin-top:10px;white-space:pre-wrap">${esc(s.notes)}</p>` : ''}
   </section>`;
 
@@ -249,12 +249,12 @@ function subjectScreen(s) {
       <span class="task-main"><span class="task-title">${esc(c.title)}</span>${c.date ? `<span class="task-meta">${relDay(c.date)}</span>` : ''}</span>
       <button class="icon-btn ghost sm" data-action="del-content" data-id="${esc(c.id)}" aria-label="Remover conteúdo">${icon('x')}</button>
     </div>`).join('')}</div>
-    <form class="quick-add" data-form="quick-content" data-id="${esc(s.id)}">${icon('plus')}<input name="q" autocomplete="off" placeholder="Adicionar conteúdo (Enter)" aria-label="Adicionar conteúdo"></form>
+    <form class="quick-add" data-form="quick-content" data-id="${esc(s.id)}">${icon('plus')}<input name="q" autocomplete="off" placeholder="Adicionar conteúdo" aria-label="Adicionar conteúdo"></form>
   </section>`;
 
   const arquivos = `<section class="card card-pad">
     <div class="card-head"><h2>Arquivos</h2><span class="sub">${plural(files.length, 'arquivo', 'arquivos')}</span></div>
-    <label class="dropzone" id="dropzone">${icon('upload')}<span><b>Clique para anexar</b> ou arraste arquivos aqui</span><span class="desc">PDF, PowerPoint, Word, planilhas, imagens…</span>
+    <label class="dropzone" id="dropzone">${icon('upload')}<span><b>Anexar arquivos</b></span>
       <input type="file" id="file-input" data-id="${esc(s.id)}" multiple hidden accept=".pdf,.ppt,.pptx,.pps,.ppsx,.doc,.docx,.odt,.rtf,.xls,.xlsx,.csv,.txt,.zip,image/*">
     </label>
     <div class="list">${files.map(f => {
@@ -305,7 +305,7 @@ async function addFiles(subjectId, fileList) {
 async function fileBlob(id) {
   const meta = Store.get('files', id);
   const blob = meta && await Store.getBlob(id);
-  if (!blob) { toast('Este arquivo foi anexado em outro aparelho. Por enquanto, os anexos ficam só no aparelho onde foram adicionados.', null, 6000); return null; }
+  if (!blob) { toast('Esse arquivo está em outro aparelho.', null, 6000); return null; }
   return { meta, blob: meta.type && blob.type !== meta.type ? new Blob([blob], { type: meta.type }) : blob };
 }
 
@@ -338,7 +338,7 @@ function subjectForm(s) {
         </div>
       </div>
       <p class="hint-box calc-hint"></p>
-      <label class="field"><span>Observações</span><textarea name="notes" rows="2" placeholder="Critérios de avaliação, contato do professor…">${esc(s.notes)}</textarea></label>
+      <label class="field"><span>Observações</span><textarea name="notes" rows="2">${esc(s.notes)}</textarea></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
@@ -359,9 +359,9 @@ function subjectForm(s) {
     },
     onSubmit(form) {
       const f = formData(form);
-      if (!f.name.trim()) return formError(form, 'Dê um nome à matéria.');
+      if (!f.name.trim()) return formError(form, 'Falta o nome.');
       const slots = readSlots(form);
-      if (slots.some(x => !x.start || !x.end || x.end <= x.start)) return formError(form, 'Confira os horários: o fim precisa ser depois do início.');
+      if (slots.some(x => !x.start || !x.end || x.end <= x.start)) return formError(form, 'O fim precisa ser depois do início.');
       Object.assign(s, {
         name: f.name.trim(), color: f.color, professor: f.professor.trim(), room: f.room.trim(),
         notes: f.notes.trim(), slots,
@@ -374,8 +374,8 @@ function subjectForm(s) {
       toast(isNew ? 'Matéria criada' : 'Matéria atualizada');
     },
     onDelete: async () => {
-      const ok = await ask(`Excluir “${s.name}”? Faltas, prazos, conteúdos e arquivos dela também serão apagados.`, [
-        { label: 'Cancelar', value: false }, { label: 'Excluir tudo', value: true, kind: 'danger' }]);
+      const ok = await ask(`Excluir “${s.name}” e tudo dela?`, [
+        { label: 'Cancelar', value: false }, { label: 'Excluir', value: true, kind: 'danger' }]);
       if (!ok) return;
       const byS = x => x.subjectId === s.id;
       Store.removeWhere('absences', byS);
@@ -402,7 +402,7 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
     title: '', date: date || addDays(today(), 7), time: '', topics: '', details: '', weight: '', grade: '', done: false,
   };
   openModal(`<form novalidate>
-    ${modalHead(isNew ? 'Novo prazo da faculdade' : 'Editar prazo')}
+    ${modalHead(isNew ? 'Novo prazo' : 'Editar prazo')}
     <div class="modal-body">
       <div class="row">
         <label class="field"><span>Matéria</span><select name="subjectId">${subjectOptions(a.subjectId)}</select></label>
@@ -413,8 +413,8 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
         <label class="field"><span>Data</span><input type="date" name="date" value="${a.date}"></label>
         <label class="field"><span>Horário (opcional)</span><input type="time" name="time" value="${a.time || ''}"></label>
       </div>
-      <label class="field"><span>Conteúdos cobrados</span><textarea name="topics" rows="3" placeholder="Capítulos, temas, listas…">${esc(a.topics)}</textarea></label>
-      <label class="field"><span>Detalhes</span><textarea name="details" rows="2" placeholder="Formato, onde entregar, em grupo…">${esc(a.details)}</textarea></label>
+      <label class="field"><span>Conteúdos cobrados</span><textarea name="topics" rows="3">${esc(a.topics)}</textarea></label>
+      <label class="field"><span>Detalhes</span><textarea name="details" rows="2">${esc(a.details)}</textarea></label>
       <div class="row">
         <label class="field"><span>Valor / peso</span><input name="weight" maxlength="30" value="${esc(a.weight)}" placeholder="Ex.: 3,0 pts"></label>
         <label class="field"><span>Nota</span><input name="grade" maxlength="30" value="${esc(a.grade)}" placeholder="Depois da correção"></label>
@@ -426,8 +426,8 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
   </form>`, {
     onSubmit(form) {
       const f = formData(form);
-      if (!f.title.trim()) return formError(form, 'Dê um título.');
-      if (!f.date) return formError(form, 'Escolha a data.');
+      if (!f.title.trim()) return formError(form, 'Falta o título.');
+      if (!f.date) return formError(form, 'Falta a data.');
       Object.assign(a, {
         subjectId: f.subjectId, kind: f.kind, title: f.title.trim(), date: f.date, time: f.time,
         topics: f.topics.trim(), details: f.details.trim(), weight: f.weight.trim(), grade: f.grade.trim(), done: !!f.done,
@@ -461,9 +461,9 @@ function absenceForm(s) {
   </form>`, {
     onSubmit(form) {
       const f = formData(form);
-      if (!f.date) return formError(form, 'Escolha a data.');
-      if (f.date > today()) return formError(form, 'Só dá para registrar falta de hoje ou de dias que já passaram.');
-      if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já existe uma falta registrada em ${relDay(f.date).toLowerCase()}.`);
+      if (!f.date) return formError(form, 'Falta a data.');
+      if (f.date > today()) return formError(form, 'Esse dia ainda não chegou.');
+      if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já tem falta em ${relDay(f.date).toLowerCase()}.`);
       Store.upsert('absences', { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() });
       closeModal();
       render();
@@ -477,7 +477,6 @@ function semesterForm() {
   openModal(`<form novalidate>
     ${modalHead('Semestre')}
     <div class="modal-body">
-      <p class="desc" style="margin:0">As aulas aparecem na agenda apenas dentro deste período.</p>
       <div class="row">
         <label class="field"><span>Início das aulas</span><input type="date" name="start" value="${st.semesterStart}"></label>
         <label class="field"><span>Fim das aulas</span><input type="date" name="end" value="${st.semesterEnd}"></label>
@@ -515,7 +514,7 @@ Object.assign(actions, {
     a.done = !a.done;
     Store.upsert('assessments', a);
     render();
-    if (a.done) toast(`${ASSESSMENT_KINDS[a.kind]} concluído(a)`, { label: 'Desfazer', fn: () => { a.done = false; Store.upsert('assessments', a); render(); } });
+    if (a.done) toast('Feito', { label: 'Desfazer', fn: () => { a.done = false; Store.upsert('assessments', a); render(); } });
   },
   'toggle-absence': el => toggleAbsence(el.dataset.id, el.dataset.date),
   'new-absence': el => { const s = subject(el.dataset.id); if (s) absenceForm(s); },

@@ -6,17 +6,16 @@
    ========================================================== */
 
 screens.admin = () => {
-  const head = `<div class="title-block"><h1>Admin</h1><p class="sub">Usuários e configurações que não são pessoais</p></div>
+  const head = `<div class="title-block"><h1>Admin</h1></div>
     <div class="toolbar"><button class="btn btn-primary" data-action="new-user">${icon('plus')}Novo usuário</button></div>`;
   const body = `<div class="settings">
     <section class="card card-pad">
       <h2>Usuários</h2>
-      <p class="desc" style="margin:0 0 6px">Você cria o nome, o usuário e a senha inicial. Cada pessoa tem a própria agenda, entra de qualquer aparelho e pode trocar a senha depois em Ajustes.</p>
       <div class="cats" id="users-admin"><p class="empty">Carregando…</p></div>
     </section>
     <section class="card card-pad">
       <h2>Administradores</h2>
-      <p class="desc" style="margin:0" id="admins-list">Quem é admin fica no banco de dados. Para mudar, peça ao Claude Code.</p>
+      <p class="desc" style="margin:0" id="admins-list"></p>
     </section>
   </div>`;
   return { head, body, after: renderUsers };
@@ -39,7 +38,7 @@ async function renderUsers() {
     </div>`;
   }).join('');
   const admins = users.filter(u => u.is_admin).map(u => `<b>${esc(u.username)}</b>`).join(', ');
-  $('#admins-list').innerHTML = `${admins}. Quem é admin fica no banco de dados; para mudar, peça ao Claude Code.`;
+  $('#admins-list').innerHTML = admins;
 }
 
 function newUserForm() {
@@ -56,8 +55,8 @@ function newUserForm() {
     onSubmit: async form => {
       const f = formData(form);
       if (!f.name.trim()) return formError(form, 'Informe o nome.');
-      if (!/^[a-z0-9._-]{3,30}$/.test(normUser(f.username))) return formError(form, 'O usuário precisa ter de 3 a 30 caracteres: letras sem acento, números, ponto, hífen ou sublinhado.');
-      if (f.password.length < MIN_PASSWORD) return formError(form, `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+      if (!/^[a-z0-9._-]{3,30}$/.test(normUser(f.username))) return formError(form, 'Usuário: 3 a 30 caracteres, sem acento nem espaço.');
+      if (f.password.length < MIN_PASSWORD) return formError(form, `Mínimo de ${MIN_PASSWORD} caracteres.`);
       try { await Auth.createUser(f); }
       catch (err) { return formError(form, err.message); }
       closeModal();
@@ -99,7 +98,7 @@ Object.assign(actions, {
   'remove-user': async el => {
     const u = targetUser(el);
     if (!u) return;
-    const ok = await ask(`Excluir o usuário ${u.username} (${u.name})? A agenda e todos os dados dele serão apagados do servidor.`, [
+    const ok = await ask(`Excluir ${u.name} (${u.username}) e todos os dados da conta?`, [
       { label: 'Cancelar', value: false }, { label: 'Excluir', value: true, kind: 'danger' }]);
     if (!ok) return;
     try { await Auth.removeUser(u.id); }

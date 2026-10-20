@@ -99,7 +99,7 @@ function ask(message, buttons) {
   });
 }
 
-const confirmDelete = (what) => ask(`Excluir ${what}? Esta ação não pode ser desfeita.`, [
+const confirmDelete = (what) => ask(`Excluir ${what}?`, [
   { label: 'Cancelar', value: false },
   { label: 'Excluir', value: true, kind: 'danger' },
 ]);

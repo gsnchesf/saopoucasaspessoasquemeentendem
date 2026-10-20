@@ -49,7 +49,7 @@ function workSummary() {
   if (w.off) return 'Não trabalho';
   const sch = workSchedule();
   if (!sch) return 'Ainda não definido';
-  return `${workTitle(sch)} · ${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · deslocamento de ${fmtDuration(sch.commute)} na ida e na volta` : ''}`;
+  return `${workTitle(sch)} · ${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · ${fmtDuration(sch.commute)} de deslocamento` : ''}`;
 }
 
 /** Cartão de Hoje para quem ainda não respondeu se trabalha. */
@@ -57,8 +57,7 @@ function workPrompt() {
   if (Store.settings.work !== undefined) return '';
   return `<section class="card card-pad work-prompt">
     <span class="work-prompt-icon">${icon('briefcase')}</span>
-    <div class="work-prompt-text"><h2>Você trabalha?</h2>
-      <p class="desc">Horário e deslocamento aparecem no fundo de Essa semana.</p></div>
+    <div class="work-prompt-text"><h2>Você trabalha?</h2></div>
     <div class="btn-row"><button class="btn btn-primary" data-action="edit-work">Colocar horário</button><button class="btn" data-action="no-work">Não trabalho</button></div>
   </section>`;
 }
@@ -80,7 +79,7 @@ function workForm() {
           <label class="field"><span>Fim</span><input type="time" name="end" value="${esc(w.end)}"></label>
         </div>
         <div>
-          <span class="fieldset-label">Deslocamento (cada trecho: ida e volta)</span>
+          <span class="fieldset-label">Deslocamento (cada trecho)</span>
           <div class="row" style="margin-top:6px">
             <label class="field xs"><span>Horas</span><input type="number" name="ch" min="0" max="5" value="${Math.floor(c / 60)}"></label>
             <label class="field xs"><span>Minutos</span><input type="number" name="cm" min="0" max="59" step="5" value="${c % 60}"></label>
@@ -102,14 +101,14 @@ function workForm() {
         const days = readDays(form, 'days');
         const commute = (+f.ch || 0) * 60 + (+f.cm || 0);
         if (!days.length) return formError(form, 'Escolha pelo menos um dia.');
-        if (!f.start || !f.end || f.end <= f.start) return formError(form, 'Confira os horários: o fim precisa ser depois do começo.');
-        if (commute < 0 || commute > 5 * 60) return formError(form, 'O deslocamento precisa ficar entre 0 e 5 horas.');
+        if (!f.start || !f.end || f.end <= f.start) return formError(form, 'O fim precisa ser depois do começo.');
+        if (commute < 0 || commute > 5 * 60) return formError(form, 'Deslocamento: até 5 horas.');
         Store.settings.work = { days, start: f.start, end: f.end, commute, title: f.title.trim() || DEFAULT_WORK.title };
       }
       Store.saveSettings();
       closeModal();
       render();
-      toast(Store.settings.work.off ? 'Ok: sem horário de trabalho' : 'Horário de trabalho salvo');
+      toast(Store.settings.work.off ? 'Ok' : 'Horário salvo');
     },
   });
 }
@@ -120,6 +119,6 @@ Object.assign(actions, {
     Store.settings.work = { off: true };
     Store.saveSettings();
     render();
-    toast('Ok! Se mudar, é só ir em Ajustes → Horário de trabalho.');
+    toast('Ok');
   },
 });

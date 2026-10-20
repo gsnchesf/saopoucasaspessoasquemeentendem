@@ -133,26 +133,25 @@ function importForm() {
     <div class="modal-body">
       <h3 class="section-label" style="padding:0;margin:0">No computador: favorito</h3>
       <ol class="steps-list">
-        <li>Arraste o botão abaixo para a barra de favoritos (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> mostra a barra).</li>
-        <li>No JupiterWeb, abra a sua <b>Grade Horária</b>.</li>
-        <li>Clique no favorito. O organizador abre numa aba nova com nomes, professores, salas e o semestre para você conferir.</li>
+        <li>Arraste o botão para os favoritos.</li>
+        <li>Abra a <b>Grade Horária</b> no JupiterWeb.</li>
+        <li>Clique no favorito.</li>
       </ol>
       <div class="btn-row">
         <a class="btn btn-primary bookmarklet" href="${esc(bookmarkletHref())}" draggable="true" title="Arraste para a barra de favoritos">${icon('upload')}Grade → Organizador</a>
         <button type="button" class="btn" data-copy-bookmarklet>Copiar código do favorito</button>
       </div>
-      <p class="desc" style="margin:0">No iPhone: salve qualquer página nos favoritos, edite esse favorito e cole o código copiado no lugar do endereço.</p>
+      <p class="desc" style="margin:0">No iPhone: crie um favorito e cole o código no endereço.</p>
       <h3 class="section-label" style="padding:0;margin:8px 0 0">Ou cole a grade</h3>
-      <div class="paste-box" contenteditable="true" role="textbox" aria-label="Cole aqui a grade copiada do JupiterWeb" data-placeholder="No JupiterWeb, selecione a Grade Horária (Ctrl + A), copie (Ctrl + C) e cole aqui (Ctrl + V)."></div>
-      <p class="desc" style="margin:0">Colando, só vêm os códigos e horários; você completa os nomes na revisão.</p>
+      <div class="paste-box" contenteditable="true" role="textbox" aria-label="Cole aqui a grade copiada do JupiterWeb" data-placeholder="Copie a Grade Horária do JupiterWeb e cole aqui."></div>
       <p class="form-error" hidden></p>
     </div>
   </form>`, {
     onMount(form) {
-      $('.bookmarklet', form).addEventListener('click', e => { e.preventDefault(); toast('Esse botão funciona na página do JupiterWeb: arraste-o para a barra de favoritos.'); });
+      $('.bookmarklet', form).addEventListener('click', e => { e.preventDefault(); toast('Arraste para os favoritos.'); });
       $('[data-copy-bookmarklet]', form).addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(decodeURIComponent(bookmarkletHref())); toast('Código do favorito copiado'); }
-        catch { toast('Não foi possível copiar. Arraste o botão para os favoritos.'); }
+        catch { toast('Não deu para copiar.'); }
       });
       $('.paste-box', form).addEventListener('paste', e => {
         e.preventDefault();
@@ -160,7 +159,7 @@ function importForm() {
         const text = e.clipboardData.getData('text/plain');
         let list = html ? buildImport({ grade: htmlToTables(html) }) : [];
         if (!list.length && text) list = buildImport({ grade: textToTables(text) });
-        if (!list.length) return formError(form, 'Não reconheci uma grade no que foi colado. Copie a tabela da Grade Horária inteira, com a linha “Início Fim Seg Ter…”.');
+        if (!list.length) return formError(form, 'Não achei uma grade aí. Copie a tabela inteira.');
         importReview(list);
       });
     },
@@ -204,7 +203,7 @@ function importReview(list) {
       const f = formData(form);
       const chosen = list.map((s, i) => ({ s, i })).filter(({ i }) => f[`use-${i}`]);
       if (!chosen.length) return formError(form, 'Marque pelo menos uma disciplina.');
-      if (chosen.some(({ i }) => !f[`name-${i}`].trim())) return formError(form, 'Dê um nome a cada disciplina marcada.');
+      if (chosen.some(({ i }) => !f[`name-${i}`].trim())) return formError(form, 'Falta o nome de alguma matéria.');
       let created = 0;
       for (const { s, i } of chosen) {
         const ex = existing(s);

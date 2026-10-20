@@ -49,7 +49,7 @@ screens.semana = () => {
         <span class="plan-chip strong">${fmtDuration(total)} planejadas${done ? ` · ${fmtDuration(done)} feitas` : ''}</span>
         ${Object.values(byCat).sort((a, b) => b.min - a.min).map(c => `<span class="plan-chip" style="--c:${esc(c.color)}"><i></i>${esc(c.name)} · ${fmtDuration(c.min)}</span>`).join('')}
       </div>`
-    : `<p class="hint-box plan-hint">${icon('clock')}Clique num horário vazio para criar um bloco. Com “Repetir: toda semana”, você monta a rotina uma vez só.</p>`;
+    : '';
 
   const head = `<div class="title-block"><h1>${isThisWeek ? 'Essa semana' : esc(weekTitle(first, last))}</h1>
       <p class="sub">${isThisWeek ? esc(weekTitle(first, last)) : 'Cronograma da semana'}</p></div>
@@ -130,8 +130,8 @@ function blockForm(b, date, startTime) {
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Novo bloco' : 'Editar bloco')}
     <div class="modal-body">
-      ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Bloco que se repete: as alterações valem para todas as semanas.</p>` : ''}
-      <label class="field"><span>O que vai fazer</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Estudar Cálculo, Academia, Projeto pessoal"></label>
+      ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as semanas.</p>` : ''}
+      <label class="field"><span>O que vai fazer</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Estudar Cálculo"></label>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="category">${catOptions(b.category)}</select></label>
         <label class="field"><span>${repeats ? 'A partir de' : 'Dia'}</span><input type="date" name="date" value="${b.date}"></label>
@@ -149,9 +149,9 @@ function blockForm(b, date, startTime) {
   </form>`, {
     onSubmit(form) {
       const f = formData(form);
-      if (!f.title.trim()) return formError(form, 'Diga o que vai fazer nesse bloco.');
-      if (!f.date) return formError(form, 'Escolha o dia.');
-      if (!f.start || !f.end || f.end <= f.start) return formError(form, 'Confira os horários: o fim precisa ser depois do início.');
+      if (!f.title.trim()) return formError(form, 'Falta o título.');
+      if (!f.date) return formError(form, 'Falta o dia.');
+      if (!f.start || !f.end || f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
       const doneDates = new Set(b.doneDates || []);
       if (!isNew) f.done ? doneDates.add(occDate) : doneDates.delete(occDate);
       Object.assign(b, {

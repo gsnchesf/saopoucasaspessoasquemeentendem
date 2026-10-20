@@ -213,7 +213,7 @@ function dayPanel(d, showClasses = true) {
     ${items.length ? `<div class="list">${items.map(itemRow).join('')}</div>` : '<p class="empty">Dia livre.</p>'}
     <div class="panel-actions">
       <button class="btn btn-sm" data-action="new-event" data-date="${d}">${icon('plus')}Compromisso</button>
-      <button class="btn btn-sm" data-action="new-assessment" data-date="${d}">${icon('plus')}Prazo faculdade</button>
+      <button class="btn btn-sm" data-action="new-assessment" data-date="${d}">${icon('plus')}Prova</button>
       <button class="btn btn-sm" data-action="new-deliverable" data-date="${d}">${icon('plus')}Entrega</button>
     </div>
   </aside>`;
@@ -303,7 +303,7 @@ function eventForm(ev, date, startTime) {
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Novo compromisso' : 'Editar compromisso')}
     <div class="modal-body">
-      ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Compromisso recorrente: as alterações valem para todas as ocorrências.</p>` : ''}
+      ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as repetições.</p>` : ''}
       <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Consulta no dentista"></label>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="category">${catOptions(ev.category)}</select></label>
@@ -344,9 +344,9 @@ function eventForm(ev, date, startTime) {
     onSubmit(form) {
       const f = formData(form);
       const allDay = !!f.allDay;
-      if (!f.title.trim()) return formError(form, 'Dê um título ao compromisso.');
-      if (!f.date) return formError(form, 'Escolha uma data.');
-      if (!allDay && !f.start) return formError(form, 'Informe o horário de início.');
+      if (!f.title.trim()) return formError(form, 'Falta o título.');
+      if (!f.date) return formError(form, 'Falta a data.');
+      if (!allDay && !f.start) return formError(form, 'Falta o horário.');
       if (!allDay && f.end && f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
       if (f.repeat !== 'none' && f.until && f.until < f.date) return formError(form, 'A repetição termina antes de começar.');
       Object.assign(ev, {
@@ -368,7 +368,7 @@ async function deleteEvent(id, occDate) {
   const ev = Store.get('events', id);
   if (!ev) return;
   if (ev.repeat && ev.repeat !== 'none' && occDate) {
-    const v = await ask('Este compromisso se repete. O que deseja excluir?', [
+    const v = await ask('Excluir só este dia ou todos?', [
       { label: 'Cancelar', value: null },
       { label: 'Só este dia', value: 'one' },
       { label: 'Toda a série', value: 'all', kind: 'danger' },

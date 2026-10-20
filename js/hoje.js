@@ -55,7 +55,7 @@ screens.hoje = () => {
 
   const agenda = `<section class="card card-pad">
     <div class="card-head"><h2>Agenda de hoje</h2><button class="btn btn-sm" data-action="new-event" data-date="${t}">${icon('plus')}Compromisso</button></div>
-    ${timeline.length ? `<div class="list">${timeline.map(itemRow).join('')}</div>` : '<p class="empty">Nenhuma aula ou compromisso hoje.</p>'}
+    ${timeline.length ? `<div class="list">${timeline.map(itemRow).join('')}</div>` : '<p class="empty">Dia livre.</p>'}
     ${tomorrow.length ? `<h3 class="section-label" style="margin-top:16px">Amanhã</h3><div class="list">${tomorrow.map(itemRow).join('')}</div>` : ''}
   </section>`;
 
@@ -63,7 +63,7 @@ screens.hoje = () => {
     <div class="card-head"><h2>Prazos</h2><a class="link" href="#/agenda">Ver agenda</a></div>
     ${overdue.length ? `<h3 class="section-label danger">Atrasados</h3><div class="list">${overdue.sort((a, b) => a.date.localeCompare(b.date)).map(i => deadlineRow(i)).join('')}</div>` : ''}
     ${upcoming.map(([d, items]) => `<h3 class="section-label">${relDay(d)} <span class="count">${untilLabel(d)}</span></h3><div class="list">${items.map(i => deadlineRow(i)).join('')}</div>`).join('')}
-    ${!overdue.length && !upcoming.length ? '<p class="empty">Nenhum prazo nas próximas duas semanas.</p>' : ''}
+    ${!overdue.length && !upcoming.length ? '<p class="empty">Nada nas próximas duas semanas.</p>' : ''}
     <div class="panel-actions">
       <button class="btn btn-sm" data-action="new-assessment">${icon('plus')}Prova/trabalho</button>
       <button class="btn btn-sm" data-action="new-deliverable">${icon('plus')}Entrega</button>

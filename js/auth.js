@@ -136,14 +136,13 @@ function passwordForm(user, self) {
     <div class="modal-body">
       <input type="text" name="username" value="${esc(user.username)}" autocomplete="username" hidden>
       <label class="field"><span>Nova senha</span><input type="password" name="password" autocomplete="new-password" autofocus></label>
-      ${self ? '' : '<p class="desc" style="margin:0">Passe a senha para a pessoa; ela pode trocar depois em Ajustes.</p>'}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false)}
   </form>`, {
     onSubmit: async form => {
       const { password } = formData(form);
-      if (password.length < MIN_PASSWORD) return formError(form, `A senha precisa ter pelo menos ${MIN_PASSWORD} caracteres.`);
+      if (password.length < MIN_PASSWORD) return formError(form, `Mínimo de ${MIN_PASSWORD} caracteres.`);
       try { await Auth.setPassword(user.id, password); }
       catch (err) { return formError(form, err.message); }
       closeModal();

@@ -50,7 +50,7 @@ function goalCard(a) {
     main = `${meter(g.p, g.p >= 1 ? 'ok' : '', color)}
       <div class="list">${(a.objectives || []).map(o => `<div class="task ${o.done ? 'done' : ''}">
         <button class="checkbox ${o.done ? 'on' : ''}" data-action="toggle-objective" data-id="${esc(a.id)}" data-obj="${esc(o.id)}" role="checkbox" aria-checked="${!!o.done}" aria-label="${esc(o.text)}"></button>
-        <span class="task-main"><span class="task-title">${esc(o.text)}</span></span></div>`).join('') || '<p class="empty">Adicione objetivos editando a atividade.</p>'}</div>`;
+        <span class="task-main"><span class="task-title">${esc(o.text)}</span></span></div>`).join('') || '<p class="empty">Sem objetivos.</p>'}</div>`;
   } else {
     main = `<div class="goal-progress"><span><b>${g.text}</b> de ${a.goalType === 'tempo' ? fmtDuration(g.target) : g.target + '×'}</span>
         <span class="badge ${statusClass(g.status)}">${g.status}</span></div>
@@ -61,7 +61,7 @@ function goalCard(a) {
     ? `<button class="btn btn-sm btn-primary" data-action="log-activity" data-id="${esc(a.id)}">${icon('clock')}Registrar tempo</button>`
     : a.goalType === 'vezes'
       ? `<button class="btn btn-sm btn-primary" data-action="quick-log" data-id="${esc(a.id)}">${icon('plus')}Fiz hoje</button>
-         <button class="btn btn-sm" data-action="log-activity" data-id="${esc(a.id)}">Registrar com detalhes</button>`
+         <button class="btn btn-sm" data-action="log-activity" data-id="${esc(a.id)}">Detalhes</button>`
       : '';
   return `<article class="card goal-card">
     <div class="goal-top">
@@ -98,7 +98,7 @@ screens.metas = () => {
   const onTrack = periodic.filter(a => goalProgress(a).status !== 'Abaixo do ritmo').length;
 
   const head = `<div class="title-block"><h1>Metas</h1>
-      <p class="sub">${periodic.length ? `${onTrack} de ${periodic.length} metas no ritmo nesta semana/mês` : 'Fitness, date, projetos paralelos e o que mais importar'}</p></div>
+      <p class="sub">${periodic.length ? `${onTrack} de ${periodic.length} no ritmo` : ''}</p></div>
     <div class="toolbar"><button class="btn btn-primary" data-action="new-activity">${icon('plus')}Atividade</button></div>`;
 
   const filter = `<div class="segmented">
@@ -108,7 +108,7 @@ screens.metas = () => {
 
   let content;
   if (!list.length) {
-    content = `<div class="card card-pad"><p class="empty">Nenhuma atividade${sel ? ' nesta área' : ''}. Exemplos: “Academia — 4× por semana”, “Corrida — 2h por semana”, “App pessoal — lançar MVP (objetivos)”.</p>
+    content = `<div class="card card-pad"><p class="empty">Nenhuma atividade${sel ? ' nesta área' : ''}.</p>
       <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="new-activity">${icon('plus')}Criar atividade</button></div></div>`;
   } else {
     const groups = (sel ? areas.filter(a => a.id === sel) : [...areas, { id: '', name: 'Sem área' }])
@@ -135,7 +135,7 @@ function activityForm(a) {
         <label class="field"><span>Área</span><select name="areaId">${areaOptions(a.areaId)}</select></label>
       </div>
       <label class="field"><span>Tipo de meta</span><select name="goalType">${options([
-        ['vezes', 'Frequência — número de vezes'], ['tempo', 'Tempo — horas/minutos'], ['objetivo', 'Objetivos — ações específicas']], a.goalType)}</select></label>
+        ['vezes', 'Vezes'], ['tempo', 'Tempo'], ['objetivo', 'Objetivos']], a.goalType)}</select></label>
       <div class="row g-vezes" ${a.goalType === 'vezes' ? '' : 'hidden'}>
         <label class="field xs"><span>Vezes</span><input type="number" name="times" min="1" max="99" value="${a.goalType === 'vezes' ? a.target : 3}"></label>
       </div>
@@ -146,7 +146,7 @@ function activityForm(a) {
       <label class="field g-period" ${a.goalType === 'objetivo' ? 'hidden' : ''}><span>Período</span><select name="period">${options([['semana', 'Por semana'], ['mes', 'Por mês']], a.period || 'semana')}</select></label>
       <div class="g-objetivo" ${a.goalType === 'objetivo' ? '' : 'hidden'}><span class="fieldset-label">Objetivos</span>
         <div style="margin-top:6px">${listEditor('objectives', a.objectives || [], { addLabel: 'Adicionar objetivo' })}</div></div>
-      <label class="field"><span>Notas</span><textarea name="notes" rows="2" placeholder="Opcional">${esc(a.notes)}</textarea></label>
+      <label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
@@ -163,11 +163,11 @@ function activityForm(a) {
     },
     onSubmit(form) {
       const f = formData(form);
-      if (!f.name.trim()) return formError(form, 'Dê um nome à atividade.');
+      if (!f.name.trim()) return formError(form, 'Falta o nome.');
       let target = 0;
       if (f.goalType === 'vezes') target = Math.max(1, +f.times || 1);
       if (f.goalType === 'tempo') target = (+f.h || 0) * 60 + (+f.m || 0);
-      if (f.goalType === 'tempo' && !target) return formError(form, 'Defina quanto tempo quer dedicar.');
+      if (f.goalType === 'tempo' && !target) return formError(form, 'Falta o tempo.');
       const objectives = readList(form, 'objectives');
       if (f.goalType === 'objetivo' && !objectives.length) return formError(form, 'Adicione pelo menos um objetivo.');
       Object.assign(a, { name: f.name.trim(), areaId: f.areaId, goalType: f.goalType, target, period: f.period || 'semana', objectives, notes: f.notes.trim() });
@@ -205,8 +205,8 @@ function logForm(a) {
     onSubmit(form) {
       const f = formData(form);
       const minutes = (+f.h || 0) * 60 + (+f.m || 0);
-      if (!f.date) return formError(form, 'Escolha a data.');
-      if (needMinutes && !minutes) return formError(form, 'Informe quanto tempo durou.');
+      if (!f.date) return formError(form, 'Falta a data.');
+      if (needMinutes && !minutes) return formError(form, 'Falta o tempo.');
       addLog(a, { date: f.date, minutes, note: f.note.trim() });
       closeModal();
     },

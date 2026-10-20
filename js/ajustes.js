@@ -100,7 +100,7 @@ screens.ajustes = () => {
   const permText = { granted: 'ativadas', denied: 'bloqueadas no navegador', default: 'desativadas', unsupported: 'não suportadas aqui' }[perm];
   const counts = `${Store.data.subjects.length} matérias · ${Store.data.events.length} compromissos · ${Store.data.deliverables.length} entregas · ${Store.data.files.length} arquivos`;
 
-  const head = `<div class="title-block"><h1>Ajustes</h1><p class="sub">Personalize o organizador do seu jeito</p></div>`;
+  const head = `<div class="title-block"><h1>Ajustes</h1></div>`;
   const body = `<div class="settings">
     <section class="card card-pad">
       <h2>Conta</h2>
@@ -118,17 +118,17 @@ screens.ajustes = () => {
         </div>
         <strong>${esc(p.name)}</strong><small>${esc(p.desc)}</small>
       </button>`).join('')}</div>
-      <div class="setting"><div><div>Modo</div><div class="desc">Automático acompanha o sistema.</div></div>
+      <div class="setting"><div><div>Modo</div></div>
         <select class="select" data-setting="theme">${options([['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']], s.theme)}</select></div>
-      <div class="setting"><div><div>Cor de destaque</div><div class="desc">Troque a cor principal do tema escolhido.</div></div>
+      <div class="setting"><div><div>Cor de destaque</div></div>
         <div class="btn-row"><input type="color" class="color-input" id="accent-input" value="${esc(s.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4f46e5')}" aria-label="Cor de destaque">
         ${s.accent ? '<button class="btn btn-sm" data-action="reset-accent">Usar a do tema</button>' : ''}</div></div>
       <div class="setting"><div><div>Ilustração</div><div class="desc">Imagem da barra lateral (no celular, no topo de Hoje).</div></div>
         <div class="btn-row">${Store.illustration ? `<span class="art-thumb" style="background-image:url('${Store.illustration}')"></span>` : ''}
         <label class="btn">${icon('upload')}${Store.illustration ? 'Trocar' : 'Escolher imagem'}<input type="file" id="art-input" accept="image/*" hidden></label>
         ${Store.illustration ? '<button class="btn btn-ghost" data-action="remove-art">Remover</button>' : ''}</div></div>
-      <div class="setting"><div><div>Seu nome</div><div class="desc">Usado na saudação da tela Hoje.</div></div>
-        <input class="input" data-setting="name" value="${esc(s.name)}" maxlength="30" placeholder="Como quer ser chamado(a)?"></div>
+      <div class="setting"><div><div>Seu nome</div></div>
+        <input class="input" data-setting="name" value="${esc(s.name)}" maxlength="30"></div>
     </section>
 
     <section class="card card-pad">
@@ -136,9 +136,9 @@ screens.ajustes = () => {
       <div class="setting"><div><div>A semana começa</div></div>
         <select class="select" data-setting="weekStart">${options([['0', 'No domingo'], ['1', 'Na segunda-feira']], s.weekStart)}</select></div>
       <div class="setting"><div><div>Horário de trabalho</div><div class="desc">${esc(workSummary())}</div></div><button class="btn" data-action="edit-work">Alterar</button></div>
-      <div class="setting"><div><div>Horário inicial da visão semanal</div><div class="desc">Onde a grade começa rolada ao abrir.</div></div>
+      <div class="setting"><div><div>A grade da semana começa às</div></div>
         <select class="select" data-setting="dayStart">${options(Array.from({ length: 13 }, (_, h) => [h, `${pad(h)}:00`]), s.dayStart)}</select></div>
-      <div class="setting"><div><div>Lembretes de compromissos</div><div class="desc">Notificações do sistema enquanto o organizador estiver aberto (${permText}).</div></div>
+      <div class="setting"><div><div>Lembretes</div><div class="desc">Notificações ${permText}</div></div>
         ${perm === 'default' ? '<button class="btn" data-action="notify-perm">Ativar</button>' : ''}</div>
       <h3 class="section-label" style="margin-top:12px;padding:0">Tipos de compromisso</h3>
       <div class="cats">${colorNameRows('categories', 'do tipo')}</div>
@@ -156,7 +156,7 @@ screens.ajustes = () => {
 
     <section class="card card-pad">
       <h2>Dados</h2>
-      <p class="desc">Os dados da sua conta ficam no servidor, com uma cópia neste aparelho para abrir rápido e funcionar sem internet: ${counts}. <span id="storage-info"></span></p>
+      <p class="desc">${counts}. <span id="storage-info"></span></p>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn" data-action="export-json">${icon('download')}Exportar backup</button>
         <label class="btn">${icon('upload')}Importar backup<input type="file" id="import-file" accept="application/json,.json" hidden></label>
@@ -165,7 +165,6 @@ screens.ajustes = () => {
         <span class="spacer"></span>
         <button class="btn btn-danger-ghost" data-action="wipe">Apagar tudo</button>
       </div>
-      <p class="desc" style="margin-top:10px">O backup não inclui os arquivos anexados. O .ics pode ser importado no Google Agenda, Outlook ou no calendário do celular.</p>
     </section>
 
     <section class="card card-pad">
@@ -173,8 +172,8 @@ screens.ajustes = () => {
       <dl class="shortcuts">
         <dt><kbd>N</kbd></dt><dd>Menu “Novo”</dd>
         <dt><kbd>E</kbd></dt><dd>Novo compromisso</dd>
-        <dt><kbd>P</kbd></dt><dd>Novo prazo da faculdade</dd>
-        <dt><kbd>W</kbd></dt><dd>Nova entrega do trabalho</dd>
+        <dt><kbd>P</kbd></dt><dd>Novo prazo</dd>
+        <dt><kbd>W</kbd></dt><dd>Nova entrega</dd>
         <dt><kbd>B</kbd></dt><dd>Novo bloco na semana</dd>
         <dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>Trocar de tela</dd>
         <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Navegar na agenda e na semana</dd>
@@ -187,7 +186,7 @@ screens.ajustes = () => {
   const after = () => {
     navigator.storage?.estimate?.().then(e => {
       const el = $('#storage-info');
-      if (el && e.quota) el.textContent = `Uso: ${fmtSize(e.usage || 0)} de ${fmtSize(e.quota)} disponíveis.`;
+      if (el && e.quota) el.textContent = `${fmtSize(e.usage || 0)} de ${fmtSize(e.quota)} usados.`;
     }).catch(() => {});
   };
   return { head, body, after };
@@ -247,9 +246,9 @@ async function importFile(file) {
   if (!file) return;
   let obj;
   try { obj = JSON.parse(await file.text()); }
-  catch { return toast('Arquivo inválido. Use um backup exportado por este app.'); }
-  if (obj?.app !== 'organizador') return toast('Este arquivo não é um backup do organizador.');
-  const ok = await ask('Importar este backup substitui TODOS os dados atuais, inclusive os arquivos anexados. Continuar?', [
+  catch { return toast('Arquivo inválido.'); }
+  if (obj?.app !== 'organizador') return toast('Isso não é um backup do organizador.');
+  const ok = await ask('Substituir todos os dados atuais por este backup?', [
     { label: 'Cancelar', value: false }, { label: 'Substituir', value: true, kind: 'primary' }]);
   if (!ok) return;
   try {
@@ -287,7 +286,7 @@ Object.assign(actions, {
     const item = Store.get(coll, id);
     if (!item) return;
     const used = coll === 'areas' ? Store.data.activities.filter(a => a.areaId === id).length : Store.data.events.filter(e => e.category === id).length;
-    if (used && !await ask(`“${item.name}” está em uso por ${plural(used, 'item', 'itens')}. Excluir mesmo assim? Eles ficarão sem ${coll === 'areas' ? 'área' : 'tipo'}.`, [
+    if (used && !await ask(`“${item.name}” está em ${plural(used, 'item', 'itens')}. Excluir mesmo assim?`, [
       { label: 'Cancelar', value: false }, { label: 'Excluir', value: true, kind: 'danger' }])) return;
     Store.remove(coll, id);
     render();
@@ -296,10 +295,10 @@ Object.assign(actions, {
   'export-ics': () => exportICS(),
   'persist-storage': async () => {
     const ok = await navigator.storage?.persist?.();
-    toast(ok ? 'Dados protegidos: o navegador não vai apagá-los automaticamente.' : 'O navegador não permitiu proteger os dados (instale como app para garantir).');
+    toast(ok ? 'Dados protegidos' : 'O navegador não deixou. Instalar como app resolve.');
   },
   'wipe': async () => {
-    const ok = await ask('Apagar TODOS os dados desta conta (matérias, arquivos, hábitos, metas, agenda)? Exporte um backup antes se quiser guardar algo.', [
+    const ok = await ask('Apagar todos os dados desta conta? Não tem volta.', [
       { label: 'Cancelar', value: false }, { label: 'Apagar tudo', value: true, kind: 'danger' }]);
     if (!ok) return;
     await Store.wipe();
@@ -307,6 +306,6 @@ Object.assign(actions, {
     applyTheme();
     location.hash = '#/hoje';
     render();
-    toast('Todos os dados foram apagados');
+    toast('Dados apagados');
   },
 });

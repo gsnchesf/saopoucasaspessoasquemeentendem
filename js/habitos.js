@@ -109,7 +109,7 @@ function screenChart(n = 14) {
   const t = today(), limit = +Store.settings.screenLimit || 0;
   const days = Array.from({ length: n }, (_, i) => addDays(t, i - n + 1));
   const vals = days.map(d => screenMinutes(d));
-  if (!vals.some(v => v != null)) return '<p class="empty">Registre seu tempo de tela para ver o gráfico.</p>';
+  if (!vals.some(v => v != null)) return '<p class="empty">Sem registros ainda.</p>';
 
   // Desenha na largura real disponível para o texto não escalar junto com o SVG.
   const W = clamp(($('#view')?.clientWidth || 700) - 40, 300, 1100);
@@ -221,7 +221,7 @@ screens.habitos = () => {
   }).join('');
 
   const isThisWeek = weekStart === startOfWeek(t);
-  const head = `<div class="title-block"><h1>Hábitos</h1><p class="sub">${todayList.length ? `${done} de ${todayList.length} feitos hoje` : 'Crie hábitos para acompanhar diariamente'}</p></div>
+  const head = `<div class="title-block"><h1>Hábitos</h1><p class="sub">${todayList.length ? `${done} de ${todayList.length} feitos hoje` : ''}</p></div>
     <div class="toolbar"><button class="btn btn-primary" data-action="new-habit">${icon('plus')}Hábito</button></div>`;
   const body = `<div class="stack">
     <section class="card card-pad">
@@ -235,9 +235,8 @@ screens.habitos = () => {
       </div>
       ${list.length ? `<div style="overflow-x:auto"><table class="habit-table">
         <thead><tr><th>Hábito</th>${days.map(d => `<th class="${d === t ? 'today' : ''}">${WEEKDAYS[weekday(d)]}<br>${+d.slice(8)}</th>`).join('')}<th>Seq.</th></tr></thead>
-        <tbody>${rows}</tbody></table></div>
-        <p class="desc" style="margin:10px 8px 0">Clique num dia para marcar.</p>`
-        : `<p class="empty">Nenhum hábito ainda. Exemplos: beber água, ler, meditar, alongar, dormir cedo.</p>`}
+        <tbody>${rows}</tbody></table></div>`
+        : `<p class="empty">Nenhum hábito ainda.</p>`}
     </section>
     ${screenCard()}
   </div>`;
@@ -272,7 +271,7 @@ function habitForm(h) {
     onSubmit(form) {
       const f = formData(form);
       const weekdays = readDays(form, 'days');
-      if (!f.name.trim()) return formError(form, 'Dê um nome ao hábito.');
+      if (!f.name.trim()) return formError(form, 'Falta o nome.');
       if (!weekdays.length) return formError(form, 'Escolha pelo menos um dia.');
       Object.assign(h, { name: f.name.trim(), color: f.color, kind: f.kind, target: f.kind === 'qtd' ? Math.max(1, +f.target || 1) : 1, unit: f.kind === 'qtd' ? f.unit.trim() : '', weekdays });
       Store.upsert('habits', h);
@@ -281,7 +280,7 @@ function habitForm(h) {
       toast(isNew ? 'Hábito criado' : 'Hábito atualizado');
     },
     onDelete: async () => {
-      if (!await confirmDelete(`o hábito “${h.name}” e todo o histórico dele`)) return;
+      if (!await confirmDelete(`“${h.name}” e o histórico`)) return;
       Store.removeWhere('habitLogs', l => l.habitId === h.id);
       Store.remove('habits', h.id);
       closeModal();
@@ -300,7 +299,7 @@ function screenLimitForm() {
         <label class="field"><span>Horas</span><input type="number" name="h" min="0" max="24" value="${Math.floor(v / 60)}"></label>
         <label class="field"><span>Minutos</span><input type="number" name="m" min="0" max="59" value="${v % 60}"></label>
       </div>
-      <p class="desc" style="margin:0">Deixe 0 para não usar limite.</p>
+      <p class="desc" style="margin:0">0 = sem limite.</p>
     </div>
     ${modalFoot(false)}
   </form>`, {

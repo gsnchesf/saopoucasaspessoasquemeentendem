@@ -61,10 +61,10 @@ function route() {
 
 function quickNew(anchor) {
   openMenu(anchor, [
-    { label: 'Compromisso ou consulta', icon: 'calendar', key: 'E', run: () => eventForm(null, state.view === 'agenda' ? state.selected : today()) },
-    { label: 'Bloco no cronograma da semana', icon: 'week', key: 'B', run: () => actions['new-block']() },
+    { label: 'Compromisso', icon: 'calendar', key: 'E', run: () => eventForm(null, state.view === 'agenda' ? state.selected : today()) },
+    { label: 'Bloco na semana', icon: 'week', key: 'B', run: () => actions['new-block']() },
     { label: 'Prova, trabalho ou atividade', icon: 'book', key: 'P', run: () => assessmentForm(null, { date: state.view === 'agenda' ? state.selected : '' }) },
-    { label: 'Entrega do trabalho', icon: 'briefcase', key: 'W', run: () => deliverableForm(null, state.view === 'agenda' ? state.selected : '') },
+    { label: 'Entrega', icon: 'briefcase', key: 'W', run: () => deliverableForm(null, state.view === 'agenda' ? state.selected : '') },
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },
     { label: 'Hábito', icon: 'flame', run: () => habitForm() },
@@ -248,8 +248,8 @@ function dbFailed(e) {
   console.error(e);
   document.body.classList.remove('signed-out');
   $('#auth').hidden = true;
-  $('#view').innerHTML = `<div class="card card-pad"><h2>Não foi possível abrir o banco de dados</h2>
-    <p class="desc">O navegador bloqueou o armazenamento local (pode acontecer em janelas anônimas). Abra o organizador numa janela normal do Chrome, Edge ou Firefox.</p></div>`;
+  $('#view').innerHTML = `<div class="card card-pad"><h2>Não deu para abrir os dados</h2>
+    <p class="desc">O navegador bloqueou o armazenamento. Em janela anônima, abra numa janela normal.</p></div>`;
 }
 
 async function init() {
@@ -317,8 +317,8 @@ async function offerLegacyImport() {
   const n = c => legacy.data[c].length;
   const parts = [[n('subjects'), 'matéria', 'matérias'], [n('events'), 'compromisso', 'compromissos'], [n('blocks'), 'bloco', 'blocos'], [n('deliverables'), 'entrega', 'entregas']]
     .filter(([k]) => k).map(([k, one, many]) => plural(k, one, many));
-  const ok = await ask(`Este navegador tem dados de antes do login (${parts.join(', ') || 'alguns registros'}). Levar para a conta de ${Auth.user.name}? Eles passam a valer em qualquer aparelho.`, [
-    { label: 'Não', value: false }, { label: 'Levar para a minha conta', value: true, kind: 'primary' }]);
+  const ok = await ask(`Achei dados antigos neste navegador (${parts.join(', ') || 'alguns registros'}). Levar para a sua conta?`, [
+    { label: 'Não', value: false }, { label: 'Levar', value: true, kind: 'primary' }]);
   try { localStorage.setItem(flag, ok ? 'importado' : 'recusado'); } catch {}
   if (!ok) return;
   await Store.importLegacy(legacy);

@@ -42,7 +42,7 @@ function kanbanHTML() {
     return `<section class="kcol" data-status="${status}">
       <div class="kcol-head"><h3>${label} <span class="count">${items.length}</span></h3>
         ${status === 'afazer' ? `<button class="icon-btn ghost sm" data-action="new-deliverable" aria-label="Nova entrega">${icon('plus')}</button>` : ''}</div>
-      ${items.map(deliveryCard).join('') || '<p class="desc" style="padding:0 4px 6px">Arraste uma entrega para cá.</p>'}${extra}
+      ${items.map(deliveryCard).join('') || '<p class="desc" style="padding:0 4px 6px">Nada aqui.</p>'}${extra}
     </section>`;
   }).join('');
 }
@@ -123,7 +123,7 @@ function deliverableForm(d, date = '') {
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Nova entrega' : 'Editar entrega')}
     <div class="modal-body">
-      <label class="field"><span>O que precisa ser entregue</span><input name="title" maxlength="160" value="${esc(d.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Relatório mensal de vendas"></label>
+      <label class="field"><span>Entrega</span><input name="title" maxlength="160" value="${esc(d.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Relatório mensal de vendas"></label>
       <label class="field"><span>Projeto / cliente</span><input name="project" maxlength="80" value="${esc(d.project)}" list="project-list" placeholder="Opcional"></label>
       <datalist id="project-list">${projects.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
       <div class="row">
@@ -134,7 +134,7 @@ function deliverableForm(d, date = '') {
         <label class="field"><span>Status</span><select name="status">${options(DELIVERY_STATUS, d.status)}</select></label>
         <label class="field"><span>Prioridade</span><select name="priority">${options(PRIORITIES, d.priority)}</select></label>
       </div>
-      <label class="field"><span>Detalhes da entrega</span><textarea name="details" rows="4" placeholder="Escopo, formato, para quem entregar, links…">${esc(d.details)}</textarea></label>
+      <label class="field"><span>Detalhes</span><textarea name="details" rows="4">${esc(d.details)}</textarea></label>
       <div><span class="fieldset-label">Checklist</span><div style="margin-top:6px">${listEditor('checklist', d.checklist || [], { addLabel: 'Adicionar etapa' })}</div></div>
       <p class="form-error" hidden></p>
     </div>
@@ -142,8 +142,8 @@ function deliverableForm(d, date = '') {
   </form>`, {
     onSubmit(form) {
       const f = formData(form);
-      if (!f.title.trim()) return formError(form, 'Descreva a entrega.');
-      if (f.time && !f.due) return formError(form, 'Para definir o horário, escolha também a data.');
+      if (!f.title.trim()) return formError(form, 'Falta o título.');
+      if (f.time && !f.due) return formError(form, 'Escolha a data também.');
       const wasDelivered = d.status === 'entregue';
       Object.assign(d, {
         title: f.title.trim(), project: f.project.trim(), due: f.due, time: f.time, status: f.status,

@@ -35,9 +35,52 @@ function applyTheme() {
   renderBrand();
 }
 
+/** Mostra a ilustração da conta na barra lateral. */
+function renderIllustration() {
+  const el = $('#side-art');
+  if (!el) return;
+  el.hidden = !Store.illustration;
+  el.style.backgroundImage = Store.illustration ? `url("${Store.illustration}")` : '';
+  $('.sidebar')?.classList.toggle('has-art', !!Store.illustration);
+}
+
+/** Reduz a imagem (até 900 px no lado maior) para caber no banco sem pesar. */
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 900 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      const webp = c.toDataURL('image/webp', 0.85);
+      resolve(webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => reject(new Error('imagem'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function setIllustration(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) return toast('Escolha um arquivo de imagem.');
+  try {
+    const src = await shrinkImage(file);
+    if (src.length > 1.5e6) return toast('A imagem ficou grande demais. Tente outra menor.');
+    await Store.saveIllustration(src);
+    renderIllustration();
+    render();
+    toast('Ilustração salva');
+  } catch {
+    toast('Não foi possível abrir essa imagem.');
+  }
+}
+
 function renderBrand() {
   const el = $('#brand');
-  if (el) el.innerHTML = `<span class="brand-mark">${icon(Store.settings.palette === 'naruto' ? 'spiral' : 'logo')}</span><span>Organizador</span>`;
+  if (el) el.innerHTML = `<span class="brand-mark">${icon(Store.settings.palette === 'naruto' ? 'konoha' : 'logo')}</span><span>Organizador</span>`;
 }
 
 /* ---------- Tela ---------- */
@@ -80,6 +123,10 @@ screens.ajustes = () => {
       <div class="setting"><div><div>Cor de destaque</div><div class="desc">Troque a cor principal do tema escolhido.</div></div>
         <div class="btn-row"><input type="color" class="color-input" id="accent-input" value="${esc(s.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4f46e5')}" aria-label="Cor de destaque">
         ${s.accent ? '<button class="btn btn-sm" data-action="reset-accent">Usar a do tema</button>' : ''}</div></div>
+      <div class="setting"><div><div>Ilustração</div><div class="desc">Uma imagem sua que aparece na barra lateral (no celular, no topo de Hoje). Vale em todos os aparelhos.</div></div>
+        <div class="btn-row">${Store.illustration ? `<span class="art-thumb" style="background-image:url('${Store.illustration}')"></span>` : ''}
+        <label class="btn">${icon('upload')}${Store.illustration ? 'Trocar' : 'Escolher imagem'}<input type="file" id="art-input" accept="image/*" hidden></label>
+        ${Store.illustration ? '<button class="btn btn-ghost" data-action="remove-art">Remover</button>' : ''}</div></div>
       <div class="setting"><div><div>Seu nome</div><div class="desc">Usado na saudação da tela Hoje.</div></div>
         <input class="input" data-setting="name" value="${esc(s.name)}" maxlength="30" placeholder="Como quer ser chamado(a)?"></div>
     </section>
@@ -88,6 +135,7 @@ screens.ajustes = () => {
       <h2>Agenda</h2>
       <div class="setting"><div><div>A semana começa</div></div>
         <select class="select" data-setting="weekStart">${options([['0', 'No domingo'], ['1', 'Na segunda-feira']], s.weekStart)}</select></div>
+      <div class="setting"><div><div>Horário de trabalho</div><div class="desc">${esc(workSummary())}</div></div><button class="btn" data-action="edit-work">Alterar</button></div>
       <div class="setting"><div><div>Horário inicial da visão semanal</div><div class="desc">Onde a grade começa rolada ao abrir.</div></div>
         <select class="select" data-setting="dayStart">${options(Array.from({ length: 13 }, (_, h) => [h, `${pad(h)}:00`]), s.dayStart)}</select></div>
       <div class="setting"><div><div>Lembretes de compromissos</div><div class="desc">Notificações do sistema enquanto o organizador estiver aberto (${permText}).</div></div>
@@ -225,6 +273,7 @@ Object.assign(actions, {
     applyTheme();
     render();
   },
+  'remove-art': async () => { await Store.saveIllustration(''); renderIllustration(); render(); toast('Ilustração removida'); },
   'reset-accent': () => { Store.settings.accent = ''; Store.saveSettings(); applyTheme(); render(); },
   'notify-perm': async () => { await Notification.requestPermission(); render(); },
   'add-row': el => {

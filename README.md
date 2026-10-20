@@ -19,13 +19,14 @@ HTML + CSS + JavaScript puro, sem dependências nem etapa de build.
 |---|---|
 | **Hoje** | Aulas e compromissos do dia, quantas vezes ainda pode faltar em cada aula, botão "Faltei", prazos atrasados e próximos, hábitos do dia, tempo de tela e progresso das metas |
 | **Essa semana** | Cronograma da semana em blocos de horário, de segunda a domingo: tudo o que você pretende fazer em cada hora. Blocos podem se repetir (toda semana, dias úteis, todo dia), ser marcados como feitos e mostram o total de horas planejadas por tipo. Aulas e compromissos aparecem ao fundo. Botão para esconder o fim de semana |
+| **Horário de trabalho** | Cada pessoa informa dias, horário e tempo de deslocamento (ou "Não trabalho"); ida, trabalho e volta entram sozinhos na Agenda, em Hoje e em Essa semana. Quem ainda não respondeu vê a pergunta em Hoje |
 | **Agenda** | Mês, semana e dia. Junta compromissos/consultas (com recorrência e lembrete), aulas da grade e prazos. Exporta `.ics` |
 | **Faculdade** | Matérias com horários por dia, professor, sala e faltas registradas dia a dia, com limite automático de 4 faltas por dia de aula na semana (1 dia = 4, 2 dias = 8). Provas, trabalhos e atividades com conteúdos cobrados e nota. Conteúdos estudados. Arquivos anexados (PDF, PPT, Word…). **Importa a grade do JupiterWeb** (USP) |
 | **Trabalho** | Entregas com prazo, detalhes, prioridade e checklist, num quadro por status (arraste os cartões) |
 | **Hábitos** | Hábitos personalizáveis (sim/não ou quantidade, dias da semana), sequência e tempo de tela com limite diário e gráfico |
 | **Metas** | Áreas (Fitness, Date, Projetos paralelos…) com atividades e metas de **tempo**, **frequência** (por semana — padrão — ou mês) ou **objetivos** |
 | **Admin** | Só para admins: criar usuários, mudar nome, redefinir senha, excluir |
-| **Ajustes** | Conta (trocar senha, sair), temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de compromisso, áreas, backup |
+| **Ajustes** | Conta (trocar senha, sair), horário de trabalho, ilustração da conta (imagem própria na barra lateral), temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de compromisso, áreas, backup |
 
 Atalhos: `N` novo · `E` compromisso · `B` bloco na semana · `P` prazo da faculdade · `W` entrega · `1`–`8` telas · `←` `→` agenda e semana.
 
@@ -86,6 +87,7 @@ js/vendor/supabase.js biblioteca do Supabase (cópia fixa, v2.117.2, para funcio
 js/config.js          endereço e chave pública do Supabase
 js/auth.js            contas: login, sessão, troca de senha (Supabase)
 js/agenda.js          recorrência, junção de itens, visões mês/semana/dia
+js/expediente.js      horário de trabalho e deslocamento
 js/semana.js          "Essa semana": cronograma em blocos de horário
 js/faculdade.js       matérias, faltas, prazos, conteúdos, arquivos
 js/importar.js        importar a grade do JupiterWeb (favorito ou colar)

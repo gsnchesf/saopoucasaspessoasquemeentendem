@@ -60,7 +60,7 @@ screens.semana = () => {
         <button class="icon-btn" data-action="plan-nav" data-dir="1" aria-label="Próxima semana" title="Próxima semana (→)">${icon('right')}</button>
       </div>
       <button class="btn ${s.planHideWeekend ? 'btn-ghost' : ''}" data-action="plan-weekend" aria-pressed="${!s.planHideWeekend}" title="Mostrar/esconder sábado e domingo">${icon('calendar')}Fim de semana</button>
-      <button class="btn ${showAgenda ? '' : 'btn-ghost'}" data-action="plan-agenda" aria-pressed="${showAgenda}" title="Mostrar/esconder aulas e compromissos">${icon('book')}Aulas e compromissos</button>
+      <button class="btn ${showAgenda ? '' : 'btn-ghost'}" data-action="plan-agenda" aria-pressed="${showAgenda}" title="Mostrar/esconder aulas, trabalho e compromissos">${icon('book')}Agenda ao fundo</button>
       <button class="btn btn-primary hide-mobile" data-action="new-block">${icon('plus')}Bloco</button>
     </div>`;
 
@@ -94,7 +94,7 @@ function planGrid(days, blocks, showAgenda) {
     const els = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
       const isBlock = it.kind === 'block';
-      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.done && 'done'].filter(Boolean).join(' ');
+      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.kind === 'commute' && 'commute', it.done && 'done'].filter(Boolean).join(' ');
       const attrs = isBlock ? `data-action="edit-block" data-id="${esc(it.id)}" data-date="${it.date}"` : itemAttrs(it);
       return `<button class="${cls}" ${attrs} title="${esc(`${it.title} · ${it.start}${it.end ? '–' + it.end : ''}${isBlock ? '' : ' (agenda)'}`)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">

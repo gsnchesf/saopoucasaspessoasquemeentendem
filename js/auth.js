@@ -96,7 +96,7 @@ function showAuth() {
   const root = $('#auth');
   root.hidden = false;
   root.innerHTML = `<form class="auth-card card" novalidate data-mode="entrar">
-    <div class="brand auth-brand"><span class="brand-mark">${icon(document.documentElement.dataset.palette === 'naruto' ? 'spiral' : 'logo')}</span><span>Organizador</span></div>
+    <div class="brand auth-brand"><span class="brand-mark">${icon(document.documentElement.dataset.palette === 'naruto' ? 'konoha' : 'logo')}</span><span>Organizador</span></div>
     <label class="field"><span>Usuário</span><input name="username" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus></label>
     <label class="field"><span>Senha</span><input type="password" name="password" autocomplete="current-password"></label>
     <p class="form-error" hidden></p>

@@ -59,7 +59,7 @@ function classItems(from, to) {
 const workColor = () => Store.data.categories.find(c => norm(c.name) === 'trabalho')?.color || '#f59e0b';
 
 /** Todos os itens da agenda entre duas datas, agrupados por dia. */
-function agendaItems(from, to, { classes = true } = {}) {
+function agendaItems(from, to, { classes = true, work = true } = {}) {
   const map = {};
   const add = it => (map[it.date] ||= []).push(it);
 
@@ -72,6 +72,7 @@ function agendaItems(from, to, { classes = true } = {}) {
     });
   }
   if (classes) classItems(from, to).forEach(add);
+  if (work) workItems(from, to).forEach(add);
   for (const a of Store.data.assessments) {
     if (a.date < from || a.date > to) continue;
     const s = subject(a.subjectId);
@@ -91,7 +92,7 @@ const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) ||
 
 /* ---------- Componentes ---------- */
 
-const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable' };
+const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', work: 'edit-work', commute: 'edit-work' };
 const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"`;
 
 function itemRow(it) {
@@ -186,12 +187,13 @@ function monthView(showClasses) {
   const map = agendaItems(start, end, { classes: showClasses });
   const t = today(), month = first.slice(0, 7), ws = +Store.settings.weekStart;
 
-  // No mês, aulas ficam por último para não esconder prazos e compromissos.
-  const rank = it => it.deadline ? 0 : it.kind === 'class' ? 2 : 1;
+  // No mês, aulas e trabalho ficam por último para não esconder prazos e compromissos;
+  // o deslocamento só aparece nas visões com horário.
+  const rank = it => it.deadline ? 0 : it.kind === 'class' ? 2 : it.kind === 'work' ? 3 : 1;
   let cells = '';
   for (let i = 0; i < weeks * 7; i++) {
     const d = addDays(start, i);
-    const items = (map[d] || []).slice().sort((a, b) => rank(a) - rank(b) || itemSort(a, b));
+    const items = (map[d] || []).filter(it => it.kind !== 'commute').sort((a, b) => rank(a) - rank(b) || itemSort(a, b));
     const cls = ['mcell', d.slice(0, 7) !== month && 'out', d === t && 'today', d === state.selected && 'selected'].filter(Boolean).join(' ');
     cells += `<div class="${cls}" data-action="select-day" data-date="${d}" aria-label="${esc(fmt(d, { day: 'numeric', month: 'long' }))}${items.length ? `, ${plural(items.length, 'item', 'itens')}` : ''}">
       <span class="mday">${+d.slice(8)}</span>
@@ -253,7 +255,7 @@ function timeGrid(days, showClasses) {
     });
     const blocks = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
-      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''}" ${itemAttrs(it)}
+      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''} ${it.kind === 'commute' ? 'commute' : ''}" ${itemAttrs(it)}
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="t">${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}</span></button>`;
     }).join('');

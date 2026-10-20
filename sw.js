@@ -1,11 +1,11 @@
 /* Service worker: deixa o organizador funcionando offline quando
    servido por http(s) e permite instalá-lo como app no celular. */
 
-const CACHE = 'organizador-v7';
+const CACHE = 'organizador-v8';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
-  './js/core.js', './js/db.js', './js/ui.js', './js/vendor/supabase.js', './js/config.js', './js/auth.js', './js/agenda.js', './js/semana.js', './js/faculdade.js', './js/importar.js', './js/trabalho.js',
+  './js/core.js', './js/db.js', './js/ui.js', './js/vendor/supabase.js', './js/config.js', './js/auth.js', './js/agenda.js', './js/expediente.js', './js/semana.js', './js/faculdade.js', './js/importar.js', './js/trabalho.js',
   './js/habitos.js', './js/metas.js', './js/hoje.js', './js/ajustes.js', './js/admin.js', './js/app.js',
 ];
 

@@ -36,6 +36,7 @@ function renderNav() {
 
 function render() {
   renderNav();
+  renderIllustration();
   const r = (screens[state.view] || screens.hoje)();
   $('#topbar').innerHTML = r.head;
   const view = $('#view');
@@ -149,6 +150,9 @@ document.addEventListener('change', e => {
     item[t.dataset.field] = v;
     Store.upsert(t.dataset.editColl, item);
     render();
+  } else if (t.id === 'art-input') {
+    setIllustration(t.files[0]);
+    t.value = '';
   } else if (t.id === 'import-file') {
     importFile(t.files[0]);
     t.value = '';

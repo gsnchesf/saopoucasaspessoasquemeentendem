@@ -12,7 +12,7 @@ screens.hoje = () => {
   const tomorrow = (map[addDays(t, 1)] || []).filter(i => !i.deadline);
   const classesToday = timeline.filter(i => i.kind === 'class');
 
-  const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false });
+  const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false, work: false });
   const overdue = Object.values(overdueMap).flat().filter(i => i.deadline && !i.done);
   const upcoming = [];
   for (let i = 0; i <= 14; i++) {
@@ -80,7 +80,8 @@ screens.hoje = () => {
     ${goalsMini()}
   </section>`;
 
-  const body = `${onboarding}${stats}
+  const art = Store.illustration ? `<div class="mobile-art" style="background-image:url('${Store.illustration}')"></div>` : '';
+  const body = `${art}${workPrompt()}${onboarding}${stats}
     <div class="home-grid">
       <div class="home-col">${agenda}${prazos}</div>
       <div class="home-col">${habitsCard}${screenCard({ compact: true })}${goals}</div>

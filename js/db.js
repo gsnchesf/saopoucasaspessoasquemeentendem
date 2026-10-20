@@ -147,6 +147,7 @@ const Store = {
   data: Object.fromEntries(COLLECTIONS.map(c => [c, []])),
   settings: { ...DEFAULT_SETTINGS },
   hasSettings: false,
+  illustration: '', // imagem escolhida pela pessoa (data URL), sincronizada como meta/illustration
   channel: 'BroadcastChannel' in window ? new BroadcastChannel('organizador') : null,
 
   /** Abre a cópia local e sincroniza com o servidor. Com cópia local, o app já abre com ela e a
@@ -171,6 +172,7 @@ const Store = {
     const saved = await DB.get('meta', 'settings');
     this.settings = { ...DEFAULT_SETTINGS, ...(saved?.value || {}) };
     this.hasSettings = !!saved;
+    this.illustration = (await DB.get('meta', 'illustration'))?.value || '';
     await Sync.loadOutbox();
   },
 
@@ -189,20 +191,28 @@ const Store = {
 
   /** Assinatura do conteúdo (ids + data de alteração), para saber se o servidor trouxe algo novo. */
   signature() {
-    return JSON.stringify([COLLECTIONS.map(c => this.data[c].map(x => `${x.id}:${x.updatedAt || 0}`).sort().join(',')), this.settings]);
+    return JSON.stringify([COLLECTIONS.map(c => this.data[c].map(x => `${x.id}:${x.updatedAt || 0}`).sort().join(',')), this.settings, this.illustration.length]);
   },
 
   async applyRemote(rows) {
     const before = this.signature();
     const by = Object.fromEntries(COLLECTIONS.map(c => [c, new Map()]));
-    let settings = null;
+    let settings = null, illustration = '';
     for (const r of rows) {
-      if (r.coll === 'meta') { if (r.id === 'settings' && !r.deleted) settings = r.data; continue; }
+      if (r.coll === 'meta') {
+        if (r.id === 'settings' && !r.deleted) settings = r.data;
+        if (r.id === 'illustration' && !r.deleted) illustration = r.data?.src || '';
+        continue;
+      }
       if (!r.deleted && by[r.coll]) by[r.coll].set(r.id, r.data);
     }
     // O que foi alterado durante o download ainda está na fila e vale mais.
     for (const o of Sync.outbox) {
-      if (o.coll === 'meta') { if (o.id === 'settings' && !o.deleted) settings = o.data; continue; }
+      if (o.coll === 'meta') {
+        if (o.id === 'settings' && !o.deleted) settings = o.data;
+        if (o.id === 'illustration') illustration = o.deleted ? '' : o.data?.src || '';
+        continue;
+      }
       if (!by[o.coll]) continue;
       if (o.deleted) by[o.coll].delete(o.id); else by[o.coll].set(o.id, o.data);
     }
@@ -213,6 +223,10 @@ const Store = {
       lists[c].forEach(x => s.put(x));
     }));
     COLLECTIONS.forEach(c => { this.data[c] = lists[c]; });
+    if (illustration !== this.illustration) {
+      this.illustration = illustration;
+      await (illustration ? DB.put('meta', { key: 'illustration', value: illustration }) : DB.del('meta', 'illustration'));
+    }
     if (settings) {
       const { updatedAt, ...s } = settings;
       this.settings = { ...DEFAULT_SETTINGS, ...s };
@@ -285,6 +299,13 @@ const Store = {
     this.hasSettings = true;
     Sync.enqueue('meta', 'settings', { ...this.settings, updatedAt: Date.now() });
     return this.write(DB.put('meta', { key: 'settings', value: this.settings }), quiet);
+  },
+
+  /** Troca (ou remove, com '') a ilustração da conta. */
+  saveIllustration(src) {
+    this.illustration = src;
+    Sync.enqueue('meta', 'illustration', src ? { src, updatedAt: Date.now() } : null, !src);
+    return this.write(src ? DB.put('meta', { key: 'illustration', value: src }) : DB.del('meta', 'illustration'));
   },
 
   write(promise, quiet = false) {

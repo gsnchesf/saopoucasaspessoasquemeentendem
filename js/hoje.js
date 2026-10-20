@@ -12,7 +12,7 @@ screens.hoje = () => {
   const tomorrow = (map[addDays(t, 1)] || []).filter(i => !i.deadline);
   const classesToday = timeline.filter(i => i.kind === 'class');
 
-  const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false, work: false });
+  const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false });
   const overdue = Object.values(overdueMap).flat().filter(i => i.deadline && !i.done);
   const upcoming = [];
   for (let i = 0; i <= 14; i++) {

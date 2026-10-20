@@ -75,7 +75,7 @@ screens.semana = () => {
 };
 
 function planGrid(days, blocks, showAgenda) {
-  const map = showAgenda ? agendaItems(days[0], days[days.length - 1]) : {};
+  const map = showAgenda ? agendaItems(days[0], days[days.length - 1], { work: true }) : {};
   for (const b of blocks) (map[b.date] ||= []).push(b);
   const t = today();
 

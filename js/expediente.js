@@ -1,17 +1,17 @@
 'use strict';
 /* ==========================================================
    Expediente: horário de trabalho e deslocamento de cada pessoa.
-   Entra sozinho na Agenda, em Hoje e em Essa semana.
+   Aparece no fundo de Essa semana (não na Agenda nem em Hoje: é igual todo dia).
    Store.settings.work:
      undefined → ainda não respondeu (Hoje pergunta)
      { off: true } → não trabalha
-     { days: [1..5], start: 'HH:MM', end: 'HH:MM', commute: minutos de cada trecho, title: nome na agenda }
+     { days: [1..5], start: 'HH:MM', end: 'HH:MM', commute: minutos de cada trecho, title: nome exibido }
    ========================================================== */
 
 const COMMUTE_COLOR = '#64748b';
 const DEFAULT_WORK = { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00', commute: 0, title: 'Trabalho' };
 
-/** Nome do expediente na agenda (ex.: Trabalho, Estágio). */
+/** Nome do expediente (ex.: Trabalho, Estágio). */
 const workTitle = w => (w?.title || '').trim() || DEFAULT_WORK.title;
 
 /** Expediente válido, ou null (não trabalha / não definido). */
@@ -58,7 +58,7 @@ function workPrompt() {
   return `<section class="card card-pad work-prompt">
     <span class="work-prompt-icon">${icon('briefcase')}</span>
     <div class="work-prompt-text"><h2>Você trabalha?</h2>
-      <p class="desc">Horário e deslocamento entram sozinhos na agenda.</p></div>
+      <p class="desc">Horário e deslocamento aparecem no fundo de Essa semana.</p></div>
     <div class="btn-row"><button class="btn btn-primary" data-action="edit-work">Colocar horário</button><button class="btn" data-action="no-work">Não trabalho</button></div>
   </section>`;
 }
@@ -73,7 +73,7 @@ function workForm() {
     <div class="modal-body">
       <label class="check"><input type="checkbox" name="off" ${off ? 'checked' : ''}> Não trabalho</label>
       <div class="work-fields stack" ${off ? 'hidden' : ''}>
-        <label class="field"><span>Nome na agenda</span><input name="title" maxlength="40" value="${esc(workTitle(w))}" placeholder="Ex.: Trabalho, Estágio"></label>
+        <label class="field"><span>Nome</span><input name="title" maxlength="40" value="${esc(workTitle(w))}" placeholder="Ex.: Trabalho, Estágio"></label>
         <div><span class="fieldset-label">Dias de trabalho</span><div style="margin-top:6px">${dayToggles('days', w.days)}</div></div>
         <div class="row">
           <label class="field"><span>Começo</span><input type="time" name="start" value="${esc(w.start)}"></label>
@@ -109,7 +109,7 @@ function workForm() {
       Store.saveSettings();
       closeModal();
       render();
-      toast(Store.settings.work.off ? 'Ok: sem horário de trabalho na agenda' : 'Horário de trabalho na agenda');
+      toast(Store.settings.work.off ? 'Ok: sem horário de trabalho' : 'Horário de trabalho salvo');
     },
   });
 }

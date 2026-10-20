@@ -19,7 +19,7 @@ HTML + CSS + JavaScript puro, sem dependências nem etapa de build.
 |---|---|
 | **Hoje** | Aulas e compromissos do dia, quantas vezes ainda pode faltar em cada aula, botão "Faltei", prazos atrasados e próximos, hábitos do dia, tempo de tela e progresso das metas |
 | **Essa semana** | Cronograma da semana em blocos de horário, de segunda a domingo: tudo o que você pretende fazer em cada hora. Blocos podem se repetir (toda semana, dias úteis, todo dia), ser marcados como feitos e mostram o total de horas planejadas por tipo. Aulas e compromissos aparecem ao fundo. Botão para esconder o fim de semana |
-| **Horário de trabalho** | Cada pessoa informa dias, horário e tempo de deslocamento (ou "Não trabalho"); ida, trabalho e volta entram sozinhos na Agenda, em Hoje e em Essa semana. Quem ainda não respondeu vê a pergunta em Hoje |
+| **Horário de trabalho** | Cada pessoa informa dias, horário e tempo de deslocamento (ou "Não trabalho"); ida, trabalho e volta aparecem no fundo de Essa semana (fora da Agenda e de Hoje, porque é igual todo dia). Quem ainda não respondeu vê a pergunta em Hoje |
 | **Agenda** | Mês, semana e dia. Junta compromissos/consultas (com recorrência e lembrete), aulas da grade e prazos. Exporta `.ics` |
 | **Faculdade** | Matérias com horários por dia, professor, sala e faltas registradas dia a dia, com limite automático de 4 faltas por dia de aula na semana (1 dia = 4, 2 dias = 8). Provas, trabalhos e atividades com conteúdos cobrados e nota. Conteúdos estudados. Arquivos anexados (PDF, PPT, Word…). **Importa a grade do JupiterWeb** (USP) |
 | **Trabalho** | Entregas com prazo, detalhes, prioridade e checklist, num quadro por status (arraste os cartões) |

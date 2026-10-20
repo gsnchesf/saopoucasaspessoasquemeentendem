@@ -58,8 +58,9 @@ function classItems(from, to) {
 
 const workColor = () => Store.data.categories.find(c => norm(c.name) === 'trabalho')?.color || '#f59e0b';
 
-/** Todos os itens da agenda entre duas datas, agrupados por dia. */
-function agendaItems(from, to, { classes = true, work = true } = {}) {
+/** Todos os itens da agenda entre duas datas, agrupados por dia. O expediente (seg–sex, todo dia igual)
+    só entra quando pedido, no fundo de Essa semana. */
+function agendaItems(from, to, { classes = true, work = false } = {}) {
   const map = {};
   const add = it => (map[it.date] ||= []).push(it);
 

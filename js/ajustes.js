@@ -123,7 +123,7 @@ screens.ajustes = () => {
       <div class="setting"><div><div>Cor de destaque</div><div class="desc">Troque a cor principal do tema escolhido.</div></div>
         <div class="btn-row"><input type="color" class="color-input" id="accent-input" value="${esc(s.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4f46e5')}" aria-label="Cor de destaque">
         ${s.accent ? '<button class="btn btn-sm" data-action="reset-accent">Usar a do tema</button>' : ''}</div></div>
-      <div class="setting"><div><div>Ilustração</div><div class="desc">Uma imagem sua que aparece na barra lateral (no celular, no topo de Hoje). Vale em todos os aparelhos.</div></div>
+      <div class="setting"><div><div>Ilustração</div><div class="desc">Imagem da barra lateral (no celular, no topo de Hoje).</div></div>
         <div class="btn-row">${Store.illustration ? `<span class="art-thumb" style="background-image:url('${Store.illustration}')"></span>` : ''}
         <label class="btn">${icon('upload')}${Store.illustration ? 'Trocar' : 'Escolher imagem'}<input type="file" id="art-input" accept="image/*" hidden></label>
         ${Store.illustration ? '<button class="btn btn-ghost" data-action="remove-art">Remover</button>' : ''}</div></div>

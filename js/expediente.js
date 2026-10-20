@@ -58,7 +58,7 @@ function workPrompt() {
   return `<section class="card card-pad work-prompt">
     <span class="work-prompt-icon">${icon('briefcase')}</span>
     <div class="work-prompt-text"><h2>Você trabalha?</h2>
-      <p class="desc">Coloque o horário de trabalho e o tempo de deslocamento. Eles entram sozinhos na agenda, em todos os dias de trabalho.</p></div>
+      <p class="desc">Horário e deslocamento entram sozinhos na agenda.</p></div>
     <div class="btn-row"><button class="btn btn-primary" data-action="edit-work">Colocar horário</button><button class="btn" data-action="no-work">Não trabalho</button></div>
   </section>`;
 }

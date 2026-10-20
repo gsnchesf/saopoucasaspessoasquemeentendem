@@ -25,7 +25,7 @@ function absInfo(s) {
 /** Aulas que a matéria tem num dia (soma dos horários daquele dia da semana). */
 const classesOn = (s, date) => (s.slots || []).filter(x => x.weekday === weekday(date)).reduce((n, x) => n + (x.weight || 1), 0);
 
-const noLimitText = () => 'Cadastre os horários da matéria para calcular o limite de faltas.';
+const noLimitText = () => 'Cadastre os horários para calcular o limite.';
 
 /** Selo "pode faltar N vezes" + botão de marcar falta, usado nas linhas de aula. */
 function absenceControls(it) {
@@ -128,7 +128,7 @@ screens.faculdade = () => {
 function subjectsTab() {
   const list = Store.data.subjects.slice().sort((a, b) => a.name.localeCompare(b.name));
   if (!list.length) {
-    return `<div class="card card-pad"><p class="empty">Cadastre suas matérias com horários e professor. Elas aparecem automaticamente na agenda, e o limite de faltas é calculado sozinho.</p>
+    return `<div class="card card-pad"><p class="empty">Nenhuma matéria cadastrada.</p>
       <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="import-jupiter">${icon('download')}Importar do JupiterWeb</button>
         <button class="btn" data-action="new-subject">${icon('plus')}Adicionar manualmente</button></div></div>`;
   }
@@ -152,7 +152,7 @@ function subjectsTab() {
 
 function timetableTab() {
   const slots = Store.data.subjects.flatMap(s => (s.slots || []).map(sl => ({ s, sl })));
-  if (!slots.length) return `<div class="card card-pad"><p class="empty">Nenhum horário cadastrado. Edite uma matéria para adicionar os dias e horários das aulas.</p></div>`;
+  if (!slots.length) return `<div class="card card-pad"><p class="empty">Nenhum horário cadastrado.</p></div>`;
   const ws = +Store.settings.weekStart;
   // Segunda a sexta sempre; sábado e domingo só se houver aula.
   const days = Array.from({ length: 7 }, (_, i) => (i + ws) % 7)
@@ -215,8 +215,8 @@ function subjectScreen(s) {
     <div class="card-head"><h2>Faltas</h2><button class="btn btn-sm" data-action="new-absence" data-id="${esc(s.id)}">${icon('plus')}Registrar falta</button></div>
     ${info.limit ? `<div class="abs-hero">
         <div class="big-number ${info.level}">${Math.max(0, info.remaining)}</div>
-        <p><b>${info.remaining > 0 ? 'faltas que você ainda pode ter' : 'Limite de faltas atingido'}</b><br>
-        <span class="muted">${info.used} de ${info.limit} usadas · ${ABSENCES_PER_DAY} por dia de aula na semana (${plural(info.days, 'dia', 'dias')})</span></p>
+        <p><b>${info.remaining > 0 ? 'Faltas restantes' : 'Limite atingido'}</b><br>
+        <span class="muted">${info.used} de ${info.limit} usadas</span></p>
       </div>
       ${meter(info.used / info.limit, info.level)}`
       : `<p class="empty">${noLimitText()} Faltas registradas: <b>${info.used}</b>.</p>`}
@@ -349,7 +349,7 @@ function subjectForm(s) {
       const update = () => {
         const days = classDays(readSlots(form));
         hint.innerHTML = icon('clock') + esc(days
-          ? `Aulas em ${plural(days, 'dia', 'dias')} da semana → pode faltar até ${days * ABSENCES_PER_DAY} (${ABSENCES_PER_DAY} por dia de aula). Cada dia faltado conta 1.`
+          ? `Limite: ${days * ABSENCES_PER_DAY} faltas (${ABSENCES_PER_DAY} por dia de aula).`
           : noLimitText());
       };
       update();

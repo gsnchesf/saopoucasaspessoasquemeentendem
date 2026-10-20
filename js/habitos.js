@@ -236,7 +236,7 @@ screens.habitos = () => {
       ${list.length ? `<div style="overflow-x:auto"><table class="habit-table">
         <thead><tr><th>Hábito</th>${days.map(d => `<th class="${d === t ? 'today' : ''}">${WEEKDAYS[weekday(d)]}<br>${+d.slice(8)}</th>`).join('')}<th>Seq.</th></tr></thead>
         <tbody>${rows}</tbody></table></div>
-        <p class="desc" style="margin:10px 8px 0">Clique num dia para marcar. Em hábitos de quantidade, cada clique soma 1 (depois da meta, zera).</p>`
+        <p class="desc" style="margin:10px 8px 0">Clique num dia para marcar.</p>`
         : `<p class="empty">Nenhum hábito ainda. Exemplos: beber água, ler, meditar, alongar, dormir cedo.</p>`}
     </section>
     ${screenCard()}

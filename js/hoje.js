@@ -42,7 +42,7 @@ screens.hoje = () => {
       <button class="step" data-action="new-subject">${icon('book')}<span><b>2.</b> Cadastre suas matérias e horários (o limite de faltas é calculado sozinho)</span></button>
       <button class="step" data-action="new-deliverable">${icon('briefcase')}<span><b>3.</b> Adicione as entregas do trabalho</span></button>
       <button class="step" data-action="new-activity">${icon('target')}<span><b>4.</b> Crie metas para fitness, date e projetos</span></button>
-      <a class="step" href="#/ajustes">${icon('gear')}<span><b>5.</b> Escolha seu tema (tem Naruto!)</span></a>
+      <a class="step" href="#/ajustes">${icon('gear')}<span><b>5.</b> Escolha seu tema</span></a>
     </div>
   </section>` : '';
 

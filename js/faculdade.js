@@ -21,11 +21,23 @@ function dayClasses(s, date) {
   return out;
 }
 
-/** Quanto uma falta conta: o dia inteiro vale 1; faltar em parte das aulas vale a fração (1 de 2 = 0,5). */
-function absWeight(a, s) {
+/** Como a matéria conta presença. Na lista ou no exercício dá para ter presença sem assistir a aula;
+    sem controle, a aula é faltável e falta não conta. */
+const ATTENDANCE = {
+  lista: { label: 'Lista para assinar', action: 'Assinaram por mim', state: 'Lista assinada' },
+  exercicio: { label: 'Exercício entregue', action: 'Entreguei o exercício', state: 'Exercício entregue' },
+  livre: { label: 'Não controla (faltável)' },
+};
+const attendance = s => ATTENDANCE[s.attendance] ? s.attendance : 'lista';
+
+/** Quanto do dia a pessoa perdeu: o dia inteiro vale 1; parte das aulas vale a fração (1 de 2 = 0,5). */
+function absShare(a, s) {
   if (!a.aulas?.length) return 1;
   return Math.min(1, a.aulas.length / Math.max(1, dayClasses(s, a.date).length));
 }
+
+/** Quanto conta no limite: com presença sem ter assistido (present) ou em matéria faltável, nada. */
+const absWeight = (a, s) => a.present || attendance(s) === 'livre' ? 0 : absShare(a, s);
 
 /** "1ª aula", "1ª e 2ª aulas". */
 const aulasLabel = aulas => `${aulas.map(i => `${i + 1}ª`).join(' e ')} ${aulas.length > 1 ? 'aulas' : 'aula'}`;
@@ -36,12 +48,16 @@ const absNum = n => String(Math.round(n * 10) / 10).replace('.', ',');
 /** Limite: 4 faltas por dia de aula na semana (1 dia = 4, 2 dias = 8). Cada dia faltado conta 1,
     não importa quantas aulas tenha naquele dia; faltar só em parte delas conta a fração. */
 function absInfo(s) {
-  const used = absencesOf(s.id).reduce((n, a) => n + absWeight(a, s), 0);
+  const list = absencesOf(s.id);
+  const free = attendance(s) === 'livre';
+  const used = list.reduce((n, a) => n + absWeight(a, s), 0);
+  const missed = list.reduce((n, a) => n + absShare(a, s), 0); // aulas não assistidas, contando ou não
+  const pending = list.filter(a => a.delivery && !a.present).length; // exercícios ainda por entregar
   const days = classDays(s.slots || []);
-  const limit = days * ABSENCES_PER_DAY;
+  const limit = free ? 0 : days * ABSENCES_PER_DAY;
   const remaining = limit - used;
   const level = !limit ? '' : remaining <= 0 ? 'danger' : remaining / limit <= 0.25 ? 'warn' : 'ok';
-  return { used, days, limit, remaining, level };
+  return { used, missed, pending, free, days, limit, remaining, level };
 }
 
 /** Aulas que a matéria tem num dia (soma dos horários daquele dia da semana). */
@@ -56,21 +72,47 @@ function absenceControls(it) {
   const info = absInfo(s);
   const marked = absenceOn(s.id, it.date);
   let html = '';
-  if (info.limit) {
+  if (info.free) html += '<span class="badge ok">faltável</span>';
+  else if (info.limit) {
     const n = Math.max(0, info.remaining);
     html += `<span class="badge ${info.level}" title="${absNum(n)} de ${info.limit} faltas restantes">${n ? `restam ${absNum(n)}` : 'no limite'}</span>`;
   }
-  if (it.date <= today()) {
-    const label = !marked ? 'Faltei' : marked.aulas?.length ? `Faltei na ${aulasLabel(marked.aulas)}` : 'Falta marcada';
-    html += `<button class="btn btn-sm ${marked ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${!!marked}">${label}</button>`;
+  if (it.canceled) {
+    html += `<button class="btn btn-sm" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}">Cancelada</button>`;
+  } else if (it.date <= today()) {
+    const label = !marked ? 'Faltei' : marked.present ? ATTENDANCE[attendance(s)].state
+      : marked.delivery ? `Exercício até ${shortDate(marked.delivery)}`
+      : marked.aulas?.length ? `Faltei na ${aulasLabel(marked.aulas)}` : 'Falta marcada';
+    html += `<button class="btn btn-sm ${marked && absWeight(marked, s) ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${!!marked}">${label}</button>`;
   }
   return html;
 }
 
+const shortDate = d => fmt(d, { day: 'numeric', month: 'short' });
+
 const absenceOn = (subjectId, date) => Store.data.absences.find(a => a.subjectId === subjectId && a.date === date);
 
-/** Grava a falta do dia: aulas = null (sem falta), [] (todas) ou os índices das aulas faltadas. */
-function setAbsence(s, date, aulas) {
+/* ---------- Aula cancelada (fica na matéria: s.canceled = datas) ---------- */
+
+const isCanceled = (s, date) => (s.canceled || []).includes(date);
+
+function setCanceled(s, date, on) {
+  const next = structuredClone(s);
+  next.canceled = (s.canceled || []).filter(d => d !== date);
+  if (on) next.canceled = [...next.canceled, date].sort();
+  if (!next.canceled.length) delete next.canceled;
+  // Aula que não houve não tem falta (o Desfazer devolve).
+  const removed = on ? Store.data.absences.filter(a => a.subjectId === s.id && a.date === date) : [];
+  if (removed.length) Store.removeWhere('absences', a => a.subjectId === s.id && a.date === date);
+  Store.upsert('subjects', next);
+  render();
+  const undo = () => { setCanceled(next, date, false); removed.forEach(a => Store.upsert('absences', a)); render(); };
+  toast(on ? `Aula de ${s.name} cancelada` : 'Aula de volta', on ? { label: 'Desfazer', fn: undo } : null);
+}
+
+/** Grava a falta do dia: aulas = null (sem falta), [] (todas) ou os índices das aulas faltadas.
+    extra: outros campos do registro (present, delivery); undefined/false apaga o campo. */
+function setAbsence(s, date, aulas, extra = {}) {
   const cur = absenceOn(s.id, date);
   const total = dayClasses(s, date).length;
   if (aulas && aulas.length >= total) aulas = [];
@@ -83,27 +125,82 @@ function setAbsence(s, date, aulas) {
   }
   const rec = cur ? { ...cur } : { id: uid(), subjectId: s.id, date, note: '' };
   if (aulas.length) rec.aulas = aulas.slice().sort(); else delete rec.aulas;
+  for (const [k, v] of Object.entries(extra)) { if (v === undefined || v === false) delete rec[k]; else rec[k] = v; }
   Store.upsert('absences', rec);
   render();
-  const info = absInfo(s);
-  toast(info.limit ? `Falta em ${s.name} · restam ${absNum(Math.max(0, info.remaining))}` : `Falta em ${s.name}`);
+  absenceToast(s, rec);
 }
 
-/** Botão "Faltei": dia com uma aula marca direto; com aulas seguidas, deixa escolher qual. */
+/** Presença sem ter assistido (assinaram a lista, entregou o exercício): fica registrado, mas não conta falta. */
+function setPresent(s, date, on) {
+  const cur = absenceOn(s.id, date);
+  if (!cur) return;
+  const rec = { ...cur };
+  if (on) rec.present = true; else delete rec.present;
+  if (on && rec.delivery > today()) rec.delivery = today(); // entregou antes do combinado
+  Store.upsert('absences', rec);
+  render();
+  absenceToast(s, rec);
+}
+
+function absenceToast(s, rec) {
+  const info = absInfo(s);
+  const mode = ATTENDANCE[attendance(s)];
+  if (info.free) return toast(`Falta em ${s.name} · faltável`);
+  const left = info.limit ? ` · restam ${absNum(Math.max(0, info.remaining))}` : '';
+  if (rec.present) return toast(`${mode.state} em ${s.name}${left}`);
+  if (rec.delivery) return toast(`Exercício de ${s.name} até ${shortDate(rec.delivery)}`);
+  toast(`Falta em ${s.name}${left}`, { label: mode.action, fn: () => setPresent(s, rec.date, true) });
+}
+
+/** Exercício de uma aula faltada, entregue (ou a entregar) em outro dia. Pendente, vira prazo na agenda. */
+function exerciseForm(s, date) {
+  const cur = absenceOn(s.id, date);
+  const when = cur?.delivery || (date < today() ? today() : addDays(date, 7));
+  openModal(`<form novalidate>
+    ${modalHead(`Exercício · ${s.name}`)}
+    <div class="modal-body">
+      <p class="desc" style="margin:0">Aula de ${esc(relDay(date).toLowerCase())}</p>
+      <label class="field"><span>Entrega</span><input type="date" name="delivery" value="${when}"></label>
+      <label class="check"><input type="checkbox" name="done" ${cur?.present || (!cur && when <= today()) ? 'checked' : ''}> Já entreguei</label>
+      <p class="form-error" hidden></p>
+    </div>
+    ${modalFoot(false)}
+  </form>`, {
+    onSubmit(form) {
+      const f = formData(form);
+      if (!f.delivery) return formError(form, 'Falta a data.');
+      closeModal();
+      setAbsence(s, date, cur?.aulas?.length ? cur.aulas : [], { delivery: f.delivery === date ? undefined : f.delivery, present: !!f.done });
+    },
+  });
+}
+
+/** Botão "Faltei": dia com uma aula marca direto; com aulas seguidas, deixa escolher qual.
+    Com falta marcada, o menu também tem a presença sem assistir ("Assinaram por mim"). */
 function toggleAbsence(el) {
   const s = subject(el.dataset.id);
   if (!s) return;
   const date = el.dataset.date;
+  if (isCanceled(s, date)) return openMenu(el, [{ label: 'Aula cancelada', icon: 'check', run: () => setCanceled(s, date, false) }]);
   const cur = absenceOn(s.id, date);
   const n = dayClasses(s, date).length;
-  if (n < 2) return setAbsence(s, date, cur ? null : []);
+  const mode = attendance(s);
   const all = !!cur && !cur.aulas?.length;
   const only = i => cur?.aulas?.length === 1 && cur.aulas[0] === i;
-  // Clicar de novo na opção marcada desmarca a falta.
-  openMenu(el, [
-    { label: n === 2 ? 'Nas duas' : 'Em todas', icon: all ? 'check' : '', run: () => setAbsence(s, date, all ? null : []) },
+  const keep = cur?.aulas?.length ? cur.aulas : []; // presença sem assistir: mantém as aulas já marcadas
+  // Clicar de novo na opção marcada desmarca.
+  const items = n < 2 ? [{ label: 'Faltei', icon: cur ? 'check' : '', run: () => setAbsence(s, date, cur ? null : []) }] : [
+    { label: n === 2 ? 'Faltei nas duas' : 'Faltei em todas', icon: all ? 'check' : '', run: () => setAbsence(s, date, all ? null : []) },
     ...Array.from({ length: n }, (_, i) => ({ label: `Só na ${i + 1}ª aula`, icon: only(i) ? 'check' : '', run: () => setAbsence(s, date, only(i) ? null : [i]) })),
-  ]);
+  ];
+  if (mode === 'lista') items.push({ sep: true },
+    { label: 'Assinaram por mim', icon: cur?.present ? 'check' : '', run: () => setAbsence(s, date, keep, { present: !cur?.present }) });
+  if (mode === 'exercicio') items.push({ sep: true },
+    { label: 'Entreguei o exercício', icon: cur?.present && !cur.delivery ? 'check' : '', run: () => setAbsence(s, date, keep, { present: !(cur?.present && !cur.delivery), delivery: undefined }) },
+    { label: cur?.delivery ? `Entrega em ${shortDate(cur.delivery)}…` : 'Entrega em outro dia…', icon: cur?.delivery ? 'check' : '', run: () => exerciseForm(s, date) });
+  items.push({ sep: true }, { label: 'Aula cancelada', icon: '', run: () => setCanceled(s, date, true) });
+  openMenu(el, items);
 }
 
 /* ---------- Auxiliares ---------- */
@@ -189,7 +286,7 @@ function subjectsTab() {
         <div class="meta">${[s.professor && `Prof. ${esc(s.professor)}`, s.room && esc(s.room)].filter(Boolean).join(' · ')}</div></div>
       <div class="meta">${icon('clock')}${esc(slotsText(s) || 'Sem horários')}</div>
       ${info.limit ? `<div><div class="abs-line"><span class="muted">Faltas</span><span><b>${absNum(info.used)}</b> de ${info.limit} · <span class="badge ${info.level}">${info.remaining > 0 ? `restam ${absNum(info.remaining)}` : 'limite atingido'}</span></span></div>${meter(info.used / info.limit, info.level)}</div>`
-        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${absNum(info.used)}</b> · sem limite</span></div>`}
+        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${absNum(info.missed)}</b> · ${info.free ? 'faltável' : 'sem limite'}</span></div>`}
       <div class="meta">${next ? `<span class="badge k-${next.kind}">${ASSESSMENT_KINDS[next.kind]}</span> ${esc(next.title)} · ${untilLabel(next.date)}` : 'Sem prazos'}</div>
       <div class="meta"><span>${plural(nFiles, 'arquivo', 'arquivos')}</span><span>${studied}/${contents.length} conteúdos estudados</span></div>
     </button>`;
@@ -262,18 +359,24 @@ function subjectScreen(s) {
     ${info.limit ? `<div class="abs-hero">
         <div class="big-number ${info.level}">${absNum(Math.max(0, info.remaining))}</div>
         <p><b>${info.remaining > 0 ? 'Faltas restantes' : 'Limite atingido'}</b><br>
-        <span class="muted">${absNum(info.used)} de ${info.limit} usadas</span></p>
+        <span class="muted">${absNum(info.used)} de ${info.limit} usadas${info.missed > info.used ? ` · ${absNum(info.missed - info.used)} com ${ATTENDANCE[attendance(s)].state.toLowerCase()}` : ''}${info.pending ? ` · ${plural(info.pending, 'exercício pendente', 'exercícios pendentes')}` : ''}</span></p>
       </div>
       ${meter(info.used / info.limit, info.level)}`
-      : `<p class="empty">${noLimitText()} Faltas registradas: <b>${absNum(info.used)}</b>.</p>`}
+      : `<p class="empty">${info.free ? `Faltável. Aulas perdidas: <b>${absNum(info.missed)}</b>.` : `${noLimitText()} Faltas registradas: <b>${absNum(info.missed)}</b>.`}</p>`}
     <h3 class="section-label" style="margin-top:16px">Histórico <span class="count">${absences.length}</span></h3>
     ${absences.length ? `<div class="list">${absences.map(a => {
-        const meta = [a.aulas?.length && `Só na ${aulasLabel(a.aulas)}`, a.note && esc(a.note)].filter(Boolean).join(' · ');
+        const delivery = a.delivery && (a.present ? `Entregue em ${shortDate(a.delivery)}` : `<span class="${a.delivery < today() ? 'late' : ''}">Entregar até ${shortDate(a.delivery)}</span>`);
+        const meta = [a.aulas?.length && `Só na ${aulasLabel(a.aulas)}`, delivery || (a.present && (ATTENDANCE[attendance(s)].state || 'Com presença')), a.note && esc(a.note)].filter(Boolean).join(' · ');
         return `<div class="task">
         <span class="task-main"><span class="task-title">${relDay(a.date)}</span>${meta ? `<span class="task-meta">${meta}</span>` : ''}</span>
+        ${attendance(s) === 'exercicio' ? `<button class="btn btn-sm" data-action="edit-exercise" data-id="${esc(a.id)}">Exercício</button>` : ''}
         <button class="icon-btn ghost sm" data-action="del-absence" data-id="${esc(a.id)}" aria-label="Remover falta">${icon('x')}</button></div>`;
       }).join('')}</div>`
       : '<p class="empty">Nenhuma falta.</p>'}
+    ${(s.canceled || []).length ? `<h3 class="section-label" style="margin-top:16px">Canceladas <span class="count">${s.canceled.length}</span></h3>
+      <div class="list">${s.canceled.slice().reverse().map(d => `<div class="task">
+        <span class="task-main"><span class="task-title">${relDay(d)}</span></span>
+        <button class="icon-btn ghost sm" data-action="uncancel-class" data-id="${esc(s.id)}" data-date="${d}" aria-label="Desfazer cancelamento">${icon('x')}</button></div>`).join('')}</div>` : ''}
   </section>`;
 
   const prazos = `<section class="card card-pad">
@@ -386,6 +489,7 @@ function subjectForm(s) {
           <button type="button" class="btn btn-sm" data-add-slot style="justify-self:start">${icon('plus')}Horário</button>
         </div>
       </div>
+      <label class="field"><span>Presença</span><select name="attendance">${options(Object.entries(ATTENDANCE).map(([k, v]) => [k, v.label]), attendance(s))}</select></label>
       <p class="hint-box calc-hint"></p>
       <label class="field"><span>Observações</span><textarea name="notes" rows="2">${esc(s.notes)}</textarea></label>
       <p class="form-error" hidden></p>
@@ -397,8 +501,8 @@ function subjectForm(s) {
       const hint = $('.calc-hint', form);
       const update = () => {
         const days = classDays(readSlots(form));
-        hint.innerHTML = icon('clock') + esc(days
-          ? `Limite: ${days * ABSENCES_PER_DAY} faltas (${ABSENCES_PER_DAY} por dia de aula).`
+        hint.innerHTML = icon('clock') + esc(form.elements.attendance.value === 'livre' ? 'Faltável: sem limite de faltas.'
+          : days ? `Limite: ${days * ABSENCES_PER_DAY} faltas (${ABSENCES_PER_DAY} por dia de aula).`
           : noLimitText());
       };
       update();
@@ -413,7 +517,7 @@ function subjectForm(s) {
       if (slots.some(x => !x.start || !x.end || x.end <= x.start)) return formError(form, 'O fim precisa ser depois do início.');
       Object.assign(s, {
         name: f.name.trim(), color: f.color, professor: f.professor.trim(), room: f.room.trim(),
-        notes: f.notes.trim(), slots,
+        notes: f.notes.trim(), slots, attendance: f.attendance,
       });
       delete s.absenceLimit; // o limite agora é sempre calculado pelos dias de aula
       Store.upsert('subjects', s);
@@ -505,6 +609,7 @@ function absenceForm(s) {
       <label class="field"><span>Data</span><input type="date" name="date" value="${t}"></label>
       <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
       <label class="field"><span>Observação</span><input name="note" maxlength="140" placeholder="Opcional (ex.: atestado)"></label>
+      ${ATTENDANCE[attendance(s)].action ? `<label class="check"><input type="checkbox" name="present"> ${ATTENDANCE[attendance(s)].action}</label>` : ''}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false, 'Registrar')}
@@ -525,8 +630,10 @@ function absenceForm(s) {
       if (!f.date) return formError(form, 'Falta a data.');
       if (f.date > today()) return formError(form, 'Esse dia ainda não chegou.');
       if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já tem falta em ${relDay(f.date).toLowerCase()}.`);
+      if (isCanceled(s, f.date)) return formError(form, 'A aula desse dia foi cancelada.');
       const rec = { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() };
       if (f.aulas && dayClasses(s, f.date).length > 1) rec.aulas = [+f.aulas];
+      if (f.present) rec.present = true;
       Store.upsert('absences', rec);
       closeModal();
       render();
@@ -580,6 +687,12 @@ Object.assign(actions, {
     if (a.done) toast('Feito', { label: 'Desfazer', fn: () => { a.done = false; Store.upsert('assessments', a); render(); } });
   },
   'toggle-absence': el => toggleAbsence(el),
+  'edit-exercise': el => {
+    const a = Store.get('absences', el.dataset.id);
+    const s = a && subject(a.subjectId);
+    if (s) exerciseForm(s, a.date);
+  },
+  'uncancel-class': el => { const s = subject(el.dataset.id); if (s) setCanceled(s, el.dataset.date, false); },
   'new-absence': el => { const s = subject(el.dataset.id); if (s) absenceForm(s); },
   'del-absence': el => {
     const removed = Store.remove('absences', el.dataset.id);

@@ -437,6 +437,7 @@ kbd {
 .badge.k-trabalho { background: var(--accent-soft); color: var(--accent); }
 .badge.k-atividade { background: var(--ok-soft); color: var(--ok); }
 .badge.k-entrega { background: var(--warn-soft); color: var(--warn); }
+.badge.k-exercicio { background: var(--ok-soft); color: var(--ok); }
 .badge.ok { background: var(--ok-soft); color: var(--ok); }
 .badge.warn { background: var(--warn-soft); color: var(--warn); }
 .badge.danger { background: var(--danger-soft); color: var(--danger); }
@@ -458,6 +459,9 @@ kbd {
 }
 .ev-row:hover { background: var(--surface-2); }
 .ev-row.past { opacity: .55; }
+/* Aula cancelada: riscada e apagada, mas visível para dar para desfazer. */
+.ev-row.canceled, .chip.canceled, .tg-ev.canceled { opacity: .45; }
+.ev-row.canceled .ev-title, .chip.canceled, .tg-ev.canceled .t { text-decoration: line-through; }
 .ev-time { display: flex; flex-direction: column; justify-content: center; width: 54px; flex: none; font-size: 13px; font-variant-numeric: tabular-nums; }
 .ev-time b { font-weight: 600; }
 .ev-time small { color: var(--muted); font-size: 12px; }

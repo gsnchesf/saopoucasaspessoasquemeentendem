@@ -19,7 +19,7 @@ function blockItems(from, to) {
   for (const b of Store.data.blocks) {
     for (const d of occurrences(b, from, to)) out.push({
       kind: 'block', id: b.id, date: d, title: b.title, start: b.start, end: b.end,
-      color: catColor(b.category), category: b.category, done: (b.doneDates || []).includes(d),
+      color: catColor(b.category), category: b.category, done: dayState(b, d) === 'done', skipped: dayState(b, d) === 'skipped',
       repeats: b.repeat && b.repeat !== 'none',
     });
   }
@@ -94,7 +94,7 @@ function planGrid(days, blocks, showAgenda) {
     const els = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
       const isBlock = it.kind === 'block';
-      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.canceled && 'canceled', it.kind === 'commute' && 'commute', it.done && 'done'].filter(Boolean).join(' ');
+      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.canceled && 'canceled', it.kind === 'commute' && 'commute', it.done && 'done', it.skipped && 'skipped'].filter(Boolean).join(' ');
       const attrs = isBlock ? `data-action="edit-block" data-id="${esc(it.id)}" data-date="${it.date}"` : itemAttrs(it);
       return `<button class="${cls}" ${attrs} title="${esc(`${it.title} · ${it.start}${it.end ? '–' + it.end : ''}${isBlock ? '' : ' (agenda)'}`)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
@@ -131,7 +131,7 @@ function blockForm(b, date, startTime) {
     ${modalHead(isNew ? 'Novo bloco' : 'Editar bloco')}
     <div class="modal-body">
       ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as semanas.</p>` : ''}
-      <label class="field"><span>O que vai fazer</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Estudar Cálculo"></label>
+      <label class="field"><span>O que vai fazer</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''}></label>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="category">${catOptions(b.category)}</select></label>
         <label class="field"><span>${repeats ? 'A partir de' : 'Dia'}</span><input type="date" name="date" value="${b.date}"></label>
@@ -141,8 +141,7 @@ function blockForm(b, date, startTime) {
         <label class="field"><span>Fim</span><input type="time" name="end" value="${b.end}"></label>
         <label class="field"><span>Repetir</span><select name="repeat">${options(BLOCK_REPEAT, b.repeat)}</select></label>
       </div>
-      <label class="field"><span>Observações</span><textarea name="notes" rows="2" placeholder="Opcional">${esc(b.notes)}</textarea></label>
-      ${isNew ? '' : `<label class="check"><input type="checkbox" name="done" ${(b.doneDates || []).includes(occDate) ? 'checked' : ''}> Feito ${repeats ? `em ${esc(relDay(occDate).toLowerCase())}` : ''}</label>`}
+      <label class="field"><span>Observações</span><textarea name="notes" rows="2">${esc(b.notes)}</textarea></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
@@ -152,11 +151,9 @@ function blockForm(b, date, startTime) {
       if (!f.title.trim()) return formError(form, 'Falta o título.');
       if (!f.date) return formError(form, 'Falta o dia.');
       if (!f.start || !f.end || f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
-      const doneDates = new Set(b.doneDates || []);
-      if (!isNew) f.done ? doneDates.add(occDate) : doneDates.delete(occDate);
       Object.assign(b, {
         title: f.title.trim(), category: f.category, date: f.date, start: f.start, end: f.end,
-        repeat: f.repeat, notes: f.notes.trim(), doneDates: [...doneDates],
+        repeat: f.repeat, notes: f.notes.trim(),
       });
       Store.upsert('blocks', b);
       closeModal();
@@ -184,6 +181,28 @@ function blockForm(b, date, startTime) {
   });
 }
 
+/** Ficha do bloco no dia clicado, com Fiz / Não fiz. */
+function blockView(b, date) {
+  const d = date || b.date;
+  const st = dayState(b, d);
+  const set = next => {
+    Store.upsert('blocks', withDayState(Store.get('blocks', b.id) || b, d, next));
+    render();
+    toast(next === 'done' ? 'Feito' : next === 'skipped' ? 'Marcado como não feito' : 'Desmarcado');
+  };
+  openSheet({
+    title: b.title, color: catColor(b.category), sub: esc(cat(b.category)?.name || 'Bloco'),
+    rows: [
+      ['Quando', esc(`${cap(relDay(d))} · ${b.start}–${b.end}`)],
+      ['Repete', b.repeat && b.repeat !== 'none' ? esc(BLOCK_REPEAT.find(([v]) => v === b.repeat)?.[1] || '') : ''],
+      ['Situação', st === 'done' ? 'Feito' : st === 'skipped' ? 'Não feito' : ''],
+      ['Observações', sheetText(b.notes)],
+    ],
+    buttons: d <= today() ? dayStateButtons(st, set) : [],
+    onEdit: () => blockForm(b, date),
+  });
+}
+
 function navPlan(dir) {
   state.planWeek = dir ? addDays(startOfWeek(state.planWeek || today(), 1), dir * 7) : today();
   render();
@@ -194,5 +213,5 @@ Object.assign(actions, {
   'plan-weekend': () => { Store.settings.planHideWeekend = !Store.settings.planHideWeekend; Store.saveSettings(); render(); },
   'plan-agenda': () => { Store.settings.planShowAgenda = Store.settings.planShowAgenda === false; Store.saveSettings(); render(); },
   'new-block': () => blockForm(null, planDays().includes(today()) ? today() : planDays()[0]),
-  'edit-block': el => { const b = Store.get('blocks', el.dataset.id); if (b) blockForm(b, el.dataset.date); },
+  'edit-block': el => { const b = Store.get('blocks', el.dataset.id); if (b) blockView(b, el.dataset.date); },
 });

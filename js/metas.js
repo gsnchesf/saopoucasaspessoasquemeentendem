@@ -39,6 +39,9 @@ function goalProgress(a) {
   return { value, target, p, text, status, leftText, period };
 }
 
+/** Registro de hoje feito pelo "Fiz hoje" (não conta os que vieram de treino). */
+const doneToday = a => Store.data.activityLogs.find(l => l.activityId === a.id && l.date === today() && !l.workoutId);
+
 const statusClass = s => s === 'Meta batida' ? 'ok' : s === 'No ritmo' ? '' : 'warn';
 
 function goalCard(a) {
@@ -60,8 +63,10 @@ function goalCard(a) {
   const buttons = a.goalType === 'tempo'
     ? `<button class="btn btn-sm btn-primary" data-action="log-activity" data-id="${esc(a.id)}">${icon('clock')}Registrar tempo</button>`
     : a.goalType === 'vezes'
-      ? `<button class="btn btn-sm btn-primary" data-action="quick-log" data-id="${esc(a.id)}">${icon('plus')}Fiz hoje</button>
-         <button class="btn btn-sm" data-action="log-activity" data-id="${esc(a.id)}">Detalhes</button>`
+      ? (doneToday(a)
+        ? `<button class="btn btn-sm" data-action="quick-log" data-id="${esc(a.id)}" aria-pressed="true" title="Clique para desmarcar">${icon('check')}Fiz hoje</button>`
+        : `<button class="btn btn-sm btn-primary" data-action="quick-log" data-id="${esc(a.id)}">${icon('plus')}Fiz hoje</button>`)
+        + `<button class="btn btn-sm" data-action="log-activity" data-id="${esc(a.id)}">Detalhes</button>`
       : '';
   return `<article class="card goal-card">
     <div class="goal-top">
@@ -132,7 +137,7 @@ function activityForm(a) {
     ${modalHead(isNew ? 'Nova atividade' : 'Editar atividade')}
     <div class="modal-body">
       <div class="row">
-        <label class="field"><span>Atividade</span><input name="name" maxlength="80" value="${esc(a.name)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Academia, Corrida, App pessoal"></label>
+        <label class="field"><span>Atividade</span><input name="name" maxlength="80" value="${esc(a.name)}" ${isNew ? 'autofocus' : ''}></label>
         <label class="field"><span>Área</span><select name="areaId">${areaOptions(a.areaId)}</select></label>
       </div>
       <label class="field"><span>Tipo de meta</span><select name="goalType">${options([
@@ -198,7 +203,7 @@ function logForm(a) {
         <label class="field xs"><span>Horas</span><input type="number" name="h" min="0" max="24" ${needMinutes ? 'autofocus' : ''} placeholder="0"></label>
         <label class="field xs"><span>Minutos</span><input type="number" name="m" min="0" max="59" placeholder="0"></label>
       </div>
-      <label class="field"><span>Nota</span><input name="note" maxlength="140" placeholder="Ex.: treino de pernas, 5 km, capítulo 3…"></label>
+      <label class="field"><span>Nota</span><input name="note" maxlength="140"></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false, 'Registrar')}
@@ -230,7 +235,16 @@ Object.assign(actions, {
   'edit-activity': el => { const a = Store.get('activities', el.dataset.id); if (a) activityForm(a); },
   'goal-area': el => { state.goalArea = el.dataset.id; render(); },
   'log-activity': el => { const a = Store.get('activities', el.dataset.id); if (a) logForm(a); },
-  'quick-log': el => { const a = Store.get('activities', el.dataset.id); if (a) addLog(a, { date: today() }); },
+  // "Fiz hoje" de novo desmarca (tira o registro de hoje).
+  'quick-log': el => {
+    const a = Store.get('activities', el.dataset.id);
+    if (!a) return;
+    const log = doneToday(a);
+    if (!log) return addLog(a, { date: today() });
+    Store.remove('activityLogs', log.id);
+    render();
+    toast('Desmarcado', { label: 'Desfazer', fn: () => { Store.upsert('activityLogs', log); render(); } });
+  },
   'del-log': el => {
     const removed = Store.remove('activityLogs', el.dataset.id);
     render();

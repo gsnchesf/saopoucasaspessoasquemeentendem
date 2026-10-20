@@ -72,7 +72,7 @@ function workForm() {
     <div class="modal-body">
       <label class="check"><input type="checkbox" name="off" ${off ? 'checked' : ''}> Não trabalho</label>
       <div class="work-fields stack" ${off ? 'hidden' : ''}>
-        <label class="field"><span>Nome</span><input name="title" maxlength="40" value="${esc(workTitle(w))}" placeholder="Ex.: Trabalho, Estágio"></label>
+        <label class="field"><span>Nome</span><input name="title" maxlength="40" value="${esc(workTitle(w))}"></label>
         <div><span class="fieldset-label">Dias de trabalho</span><div style="margin-top:6px">${dayToggles('days', w.days)}</div></div>
         <div class="row">
           <label class="field"><span>Começo</span><input type="time" name="start" value="${esc(w.start)}"></label>

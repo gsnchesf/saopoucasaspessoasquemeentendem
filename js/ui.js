@@ -70,6 +70,56 @@ function closeModal() {
 
 const modalOpen = () => !$('#modal').hidden || !$('#dialog').hidden;
 
+/* ---------- Ficha ---------- */
+
+/** Ficha pronta de um registro (clicar num item abre isto, não o formulário).
+    rows: [rótulo, html] (vazios somem); buttons: [{ label, kind, run }] à esquerda; "Editar" abre onEdit. */
+function openSheet({ title, color, sub = '', rows = [], body = '', buttons = [], onEdit }) {
+  const list = rows.filter(r => r && r[1]);
+  openModal(`<div class="sheet" style="${color ? `--c:${esc(color)}` : ''}">
+    ${modalHead(title)}
+    <div class="modal-body">
+      ${sub ? `<p class="sheet-sub">${color ? '<span class="dot"></span>' : ''}${sub}</p>` : ''}
+      ${list.length ? `<dl class="sheet-rows">${list.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>` : ''}
+      ${body}
+    </div>
+    <footer class="modal-actions">
+      ${buttons.map((b, i) => `<button type="button" class="btn ${b.kind ? 'btn-' + b.kind : ''}" data-sheet-btn="${i}">${b.label}</button>`).join('')}
+      <span class="spacer"></span>
+      ${onEdit ? `<button type="button" class="btn btn-primary" data-sheet-edit>${icon('edit')}Editar</button>` : '<button type="button" class="btn" data-close>Fechar</button>'}
+    </footer>
+  </div>`, {
+    onMount(_, root) {
+      $('[data-sheet-edit]', root)?.addEventListener('click', () => { closeModal(); onEdit(); });
+      $$('[data-sheet-btn]', root).forEach(el => el.addEventListener('click', () => { closeModal(); buttons[el.dataset.sheetBtn].run(); }));
+    },
+  });
+}
+
+/* ---------- Fiz / Não fiz num dia (blocos e treinos: doneDates / skippedDates) ---------- */
+
+const dayState = (rec, date) => (rec.doneDates || []).includes(date) ? 'done' : (rec.skippedDates || []).includes(date) ? 'skipped' : null;
+
+/** Cópia do registro com o dia marcado como 'done', 'skipped' ou sem marca (null). */
+function withDayState(rec, date, st) {
+  const next = structuredClone(rec);
+  next.doneDates = (rec.doneDates || []).filter(d => d !== date);
+  next.skippedDates = (rec.skippedDates || []).filter(d => d !== date);
+  if (st === 'done') next.doneDates = [...next.doneDates, date].sort();
+  if (st === 'skipped') next.skippedDates = [...next.skippedDates, date].sort();
+  if (!next.skippedDates.length) delete next.skippedDates;
+  return next;
+}
+
+/** Botões "Fiz" / "Não fiz" da ficha: o marcado leva ✓ e clicar de novo desmarca. */
+const dayStateButtons = (st, set) => [
+  { label: `${st === 'done' ? icon('check') : ''}Fiz`, kind: st === 'done' ? 'primary' : '', run: () => set(st === 'done' ? null : 'done') },
+  { label: `${st === 'skipped' ? icon('check') : ''}Não fiz`, kind: st === 'skipped' ? 'danger-ghost' : '', run: () => set(st === 'skipped' ? null : 'skipped') },
+];
+
+/** Texto livre com quebras de linha, para as fichas. */
+const sheetText = t => t ? `<span class="pre">${esc(t)}</span>` : '';
+
 /* ---------- Diálogo de confirmação ---------- */
 
 /** Mostra uma pergunta e resolve com o `value` do botão escolhido (ou null). */
@@ -177,7 +227,7 @@ function listEditor(name, items, { check = true, addLabel = 'Adicionar item' } =
 
 const listRow = (it, check) => `<div class="item" data-id="${esc(it.id)}">
   ${check ? `<input type="checkbox" ${it.done ? 'checked' : ''} aria-label="Concluído">` : ''}
-  <input type="text" value="${esc(it.text)}" maxlength="200" placeholder="Descreva o item">
+  <input type="text" value="${esc(it.text)}" maxlength="200">
   <button type="button" class="icon-btn ghost sm" data-remove-item aria-label="Remover item">${icon('x')}</button>
 </div>`;
 

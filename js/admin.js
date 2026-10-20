@@ -46,7 +46,7 @@ function newUserForm() {
     ${modalHead('Novo usuário')}
     <div class="modal-body">
       <label class="field"><span>Nome</span><input name="name" maxlength="40" autofocus></label>
-      <label class="field"><span>Usuário</span><input name="username" maxlength="30" autocapitalize="none" spellcheck="false" autocomplete="off" placeholder="Ex.: joao"></label>
+      <label class="field"><span>Usuário</span><input name="username" maxlength="30" autocapitalize="none" spellcheck="false" autocomplete="off"></label>
       <label class="field"><span>Senha inicial</span><input type="text" name="password" autocomplete="off" spellcheck="false"></label>
       <p class="form-error" hidden></p>
     </div>

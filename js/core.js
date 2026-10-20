@@ -104,7 +104,7 @@ const REMINDERS = [
   ['30', '30 min antes'], ['60', '1 hora antes'], ['120', '2 horas antes'], ['1440', '1 dia antes'],
 ];
 const ABSENCES_PER_DAY = 4; // faltas permitidas por dia de aula na semana (1 dia = 4, 2 dias = 8)
-const ASSESSMENT_KINDS ={ prova: 'Prova', trabalho: 'Trabalho', atividade: 'Atividade' };
+const ASSESSMENT_KINDS = { prova: 'Prova', trabalho: 'Trabalho', seminario: 'Seminário', atividade: 'Atividade' }; // lista fechada
 const DELIVERY_STATUS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['revisao', 'Em revisão'], ['entregue', 'Entregue']];
 const PRIORITIES = [['', 'Sem prioridade'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']];
 const GOAL_TYPES = { tempo: 'Tempo', vezes: 'Frequência', objetivo: 'Objetivos' };

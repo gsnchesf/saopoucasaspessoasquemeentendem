@@ -123,8 +123,8 @@ function deliverableForm(d, date = '') {
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Nova entrega' : 'Editar entrega')}
     <div class="modal-body">
-      <label class="field"><span>Entrega</span><input name="title" maxlength="160" value="${esc(d.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Relatório mensal de vendas"></label>
-      <label class="field"><span>Projeto / cliente</span><input name="project" maxlength="80" value="${esc(d.project)}" list="project-list" placeholder="Opcional"></label>
+      <label class="field"><span>Entrega</span><input name="title" maxlength="160" value="${esc(d.title)}" ${isNew ? 'autofocus' : ''}></label>
+      <label class="field"><span>Projeto / cliente</span><input name="project" maxlength="80" value="${esc(d.project)}" list="project-list"></label>
       <datalist id="project-list">${projects.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
       <div class="row">
         <label class="field"><span>Prazo</span><input type="date" name="due" value="${d.due || ''}"></label>
@@ -165,7 +165,27 @@ function deliverableForm(d, date = '') {
   });
 }
 
+/** Ficha da entrega. */
+function deliverableView(d) {
+  const st = DELIVERY_STATUS.find(([v]) => v === d.status)?.[1] || '';
+  const prio = PRIORITIES.find(([v]) => v === d.priority)?.[1];
+  const items = d.checklist || [];
+  const late = d.due && d.status !== 'entregue' && d.due < today();
+  openSheet({
+    title: d.title, color: workColor(), sub: esc([d.project, st].filter(Boolean).join(' · ')),
+    rows: [
+      ['Prazo', d.due ? esc(`${cap(relDay(d.due))}${d.time ? ' · até ' + d.time : ''}`) + (late ? ' <span class="late">atrasada</span>' : '') : ''],
+      ['Prioridade', d.priority ? esc(prio) : ''],
+      ['Detalhes', sheetText(d.details)],
+    ],
+    body: items.length ? `<div><span class="fieldset-label">Checklist · ${items.filter(x => x.done).length}/${items.length}</span>
+      <ul class="sheet-list" style="margin-top:6px">${items.map(x => `<li class="${x.done ? 'done' : ''}">${esc(x.text)}</li>`).join('')}</ul></div>` : '',
+    buttons: d.status === 'entregue' ? [] : [{ label: `${icon('check')}Entregue`, run: () => setDeliveryStatus(Store.get('deliverables', d.id), 'entregue') }],
+    onEdit: () => deliverableForm(d),
+  });
+}
+
 Object.assign(actions, {
   'new-deliverable': el => deliverableForm(null, el.dataset.date || ''),
-  'edit-deliverable': el => { const d = Store.get('deliverables', el.dataset.id); if (d) deliverableForm(d); },
+  'edit-deliverable': el => { const d = Store.get('deliverables', el.dataset.id); if (d) deliverableView(d); },
 });

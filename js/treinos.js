@@ -20,31 +20,31 @@ function workoutItems(from, to) {
       if (!(w.days || []).includes(weekday(d))) continue;
       const n = (w.exercises || []).length;
       out.push({ kind: 'workout', id: w.id, date: d, title: w.name, start: w.start, end: w.end, color: workoutColor(),
-        label: n ? plural(n, 'exercício', 'exercícios') : '', allDay: false, deadline: false, done: (w.doneDates || []).includes(d) });
+        label: n ? plural(n, 'exercício', 'exercícios') : '', allDay: false, deadline: false, state: dayState(w, d) });
     }
   }
   return out;
 }
 
-/** Botão "Fiz" ao lado do treino na agenda. */
+/** Ao lado do treino na agenda: "Fiz" / "Não fiz"; depois de marcado, um botão com o estado (clicar desmarca). */
 function workoutControls(it) {
   if (it.date > today()) return '';
-  return `<button class="btn btn-sm ${it.done ? 'btn-primary' : ''}" data-action="workout-done" data-id="${esc(it.id)}" data-date="${it.date}" aria-pressed="${it.done}">${it.done ? icon('check') + 'Feito' : 'Fiz'}</button>`;
+  const btn = (st, label, cls) => `<button class="btn btn-sm ${cls}" data-action="workout-state" data-state="${it.state === st ? '' : st}" data-id="${esc(it.id)}" data-date="${it.date}" aria-pressed="${it.state === st}">${label}</button>`;
+  if (it.state === 'done') return btn('done', `${icon('check')}Feito`, 'btn-primary');
+  if (it.state === 'skipped') return btn('skipped', 'Não fiz', 'btn-danger-ghost');
+  return btn('done', 'Fiz', '') + btn('skipped', 'Não fiz', 'btn-ghost');
 }
 
-/** Marca/desmarca o treino do dia; com meta ligada, registra (ou tira) o treino nela. */
-function toggleWorkoutDone(w, date) {
-  const next = structuredClone(w);
-  const done = (w.doneDates || []).includes(date);
-  next.doneDates = done ? w.doneDates.filter(d => d !== date) : [...(w.doneDates || []), date].sort();
-  Store.upsert('workouts', next);
+/** Marca o treino do dia como feito, não feito ou sem marca; feito com meta ligada registra nela. */
+function setWorkoutState(w, date, st) {
+  const before = dayState(w, date);
+  Store.upsert('workouts', withDayState(w, date, st));
   const a = w.activityId && Store.get('activities', w.activityId);
-  if (a) {
-    if (done) Store.removeWhere('activityLogs', l => l.workoutId === w.id && l.date === date);
-    else Store.upsert('activityLogs', { id: uid(), activityId: a.id, workoutId: w.id, date, minutes: workoutMinutes(w), count: 1, note: w.name });
-  }
+  if (a && before === 'done') Store.removeWhere('activityLogs', l => l.workoutId === w.id && l.date === date);
+  if (a && st === 'done') Store.upsert('activityLogs', { id: uid(), activityId: a.id, workoutId: w.id, date, minutes: workoutMinutes(w), count: 1, note: w.name });
   render();
-  if (done) return toast('Treino desmarcado');
+  if (st === 'skipped') return toast(`${w.name}: não fiz`);
+  if (!st) return toast('Treino desmarcado');
   const g = a && goalProgress(a);
   toast(!a ? `${w.name} feito` : g.p >= 1 ? `${w.name} feito · meta de “${a.name}” batida!` : `${w.name} feito · faltam ${g.leftText} em “${a.name}”`);
 }
@@ -59,7 +59,7 @@ function workoutsSection() {
     <div class="list">${list.map(w => {
       const a = w.activityId && Store.get('activities', w.activityId);
       const meta = [`${daysLabel(w.days || [])} · ${w.start}–${w.end}`, (w.exercises || []).length && plural(w.exercises.length, 'exercício', 'exercícios'), a && `conta em “${esc(a.name)}”`].filter(Boolean).join(' · ');
-      return `<button class="ev-row" style="--c:${esc(workoutColor())}" data-action="edit-workout" data-id="${esc(w.id)}">
+      return `<button class="ev-row" style="--c:${esc(workoutColor())}" data-action="open-workout" data-id="${esc(w.id)}" data-date="${today()}">
         <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(w.name)}</span></span><span class="ev-meta"><span>${meta}</span></span></span></button>`;
     }).join('')}</div>
   </section>`;
@@ -67,24 +67,22 @@ function workoutsSection() {
 
 /* ---------- Formulários ---------- */
 
-/** Treino de um dia: os exercícios à mão (para ver na academia) e o "Fiz". */
+/** Ficha do treino num dia: os exercícios à mão (para ver na academia) e Fiz / Não fiz. */
 function workoutDay(w, date) {
-  const done = (w.doneDates || []).includes(date);
   const ex = w.exercises || [];
-  openModal(`<form novalidate>
-    ${modalHead(w.name)}
-    <div class="modal-body">
-      <p class="desc" style="margin:0">${esc(relDay(date))} · ${w.start}–${w.end}</p>
-      ${ex.length ? `<ol class="workout-list">${ex.map(e => `<li>${esc(e.text)}</li>`).join('')}</ol>` : ''}
-    </div>
-    <footer class="modal-actions">
-      <button type="button" class="btn" data-edit>${icon('edit')}Editar</button>
-      <span class="spacer"></span>
-      ${date <= today() ? `<button type="submit" class="btn ${done ? '' : 'btn-primary'}">${done ? 'Desmarcar' : 'Fiz'}</button>` : '<button type="button" class="btn" data-close>Fechar</button>'}
-    </footer>
-  </form>`, {
-    onMount(form) { $('[data-edit]', form).addEventListener('click', () => { closeModal(); workoutForm(w); }); },
-    onSubmit() { closeModal(); toggleWorkoutDone(w, date); },
+  const a = w.activityId && Store.get('activities', w.activityId);
+  const st = dayState(w, date);
+  const plannedDay = (w.days || []).includes(weekday(date));
+  openSheet({
+    title: w.name, color: workoutColor(), sub: esc(`Treino · ${daysLabel(w.days || [])}`),
+    rows: [
+      ['Quando', esc(`${cap(relDay(date))} · ${w.start}–${w.end}`)],
+      ['Conta em', a ? esc(a.name) : ''],
+      ['Situação', st === 'done' ? 'Feito' : st === 'skipped' ? 'Não feito' : ''],
+    ],
+    body: ex.length ? `<ol class="workout-list">${ex.map(e => `<li>${esc(e.text)}</li>`).join('')}</ol>` : '',
+    buttons: plannedDay && date <= today() ? dayStateButtons(st, next => setWorkoutState(Store.get('workouts', w.id) || w, date, next)) : [],
+    onEdit: () => workoutForm(w),
   });
 }
 
@@ -96,7 +94,7 @@ function workoutForm(w) {
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Novo treino' : 'Editar treino')}
     <div class="modal-body">
-      <label class="field"><span>Nome</span><input name="name" maxlength="80" value="${esc(w.name)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Treino A — peito e tríceps"></label>
+      <label class="field"><span>Nome</span><input name="name" maxlength="80" value="${esc(w.name)}" ${isNew ? 'autofocus' : ''}></label>
       <div><span class="fieldset-label">Dias</span><div style="margin-top:6px">${dayToggles('days', w.days || [])}</div></div>
       <div class="row">
         <label class="field"><span>Início</span><input type="time" name="start" value="${esc(w.start)}"></label>
@@ -140,5 +138,5 @@ Object.assign(actions, {
   'new-workout': () => workoutForm(),
   'edit-workout': el => { const w = Store.get('workouts', el.dataset.id); if (w) workoutForm(w); },
   'open-workout': el => { const w = Store.get('workouts', el.dataset.id); if (w) workoutDay(w, el.dataset.date); },
-  'workout-done': el => { const w = Store.get('workouts', el.dataset.id); if (w) toggleWorkoutDone(w, el.dataset.date); },
+  'workout-state': el => { const w = Store.get('workouts', el.dataset.id); if (w) setWorkoutState(w, el.dataset.date, el.dataset.state || null); },
 });

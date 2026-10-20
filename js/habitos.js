@@ -252,13 +252,13 @@ function habitForm(h) {
     ${modalHead(isNew ? 'Novo hábito' : 'Editar hábito')}
     <div class="modal-body">
       <div class="row">
-        <label class="field"><span>Hábito</span><input name="name" maxlength="80" value="${esc(h.name)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Meditar 10 minutos"></label>
+        <label class="field"><span>Hábito</span><input name="name" maxlength="80" value="${esc(h.name)}" ${isNew ? 'autofocus' : ''}></label>
         <label class="field xs"><span>Cor</span><input type="color" name="color" value="${esc(h.color)}"></label>
       </div>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="kind">${options([['check', 'Sim / não'], ['qtd', 'Quantidade por dia']], h.kind)}</select></label>
         <label class="field xs qtd" ${h.kind === 'qtd' ? '' : 'hidden'}><span>Meta</span><input type="number" name="target" min="1" max="999" value="${h.target || 1}"></label>
-        <label class="field qtd" ${h.kind === 'qtd' ? '' : 'hidden'}><span>Unidade</span><input name="unit" maxlength="20" value="${esc(h.unit)}" placeholder="copos, páginas…"></label>
+        <label class="field qtd" ${h.kind === 'qtd' ? '' : 'hidden'}><span>Unidade</span><input name="unit" maxlength="20" value="${esc(h.unit)}"></label>
       </div>
       <div><span class="fieldset-label">Dias</span><div style="margin-top:6px">${dayToggles('days', h.weekdays || ALL_DAYS)}</div></div>
       <p class="form-error" hidden></p>
@@ -317,7 +317,19 @@ function screenLimitForm() {
 
 Object.assign(actions, {
   'new-habit': () => habitForm(),
-  'edit-habit': el => { const h = Store.get('habits', el.dataset.id); if (h) habitForm(h); },
+  'edit-habit': el => {
+    const h = Store.get('habits', el.dataset.id);
+    if (!h) return;
+    openSheet({
+      title: h.name, color: h.color, sub: esc(h.kind === 'qtd' ? 'Quantidade' : 'Sim ou não'),
+      rows: [
+        ['Meta', esc(habitGoalText(h))],
+        ['Sequência', esc(plural(habitStreak(h), 'dia', 'dias'))],
+        ['30 dias', `${Math.round(habitRate(h) * 100)}%`],
+      ],
+      onEdit: () => habitForm(h),
+    });
+  },
   'habit-toggle': el => {
     const h = Store.get('habits', el.dataset.id);
     if (!h) return;

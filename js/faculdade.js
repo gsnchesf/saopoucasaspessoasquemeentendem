@@ -233,6 +233,28 @@ function fileKind(name, type = '') {
   return [ext.slice(0, 4).toUpperCase() || 'ARQ', '#64748b'];
 }
 
+const valesPresenca = a => a.kind === 'atividade' && a.counts === 'presenca';
+
+/** Ficha do prazo da faculdade. */
+function assessmentView(a) {
+  const s = subject(a.subjectId);
+  const flip = () => { const x = Store.get('assessments', a.id); if (!x) return; x.done = !x.done; Store.upsert('assessments', x); render(); };
+  openSheet({
+    title: a.title, color: s?.color, sub: `${esc(s?.name || '')} · ${esc(kindLabel(a))}`,
+    rows: [
+      ['Data', esc(`${cap(relDay(a.date))}${a.time ? ' · ' + a.time : ''}`) + (!a.done && a.date < today() ? ' <span class="late">atrasado</span>' : '')],
+      ['Situação', a.done ? 'Feito' : ''],
+      ['Valor', esc(a.weight || '')],
+      ['Nota', esc(a.grade || '')],
+      ['Conteúdos', sheetText(a.topics)],
+      ['Detalhes', sheetText(a.details)],
+    ],
+    buttons: [{ label: a.done ? 'Reabrir' : `${icon('check')}Feito`, run: flip }],
+    onEdit: () => assessmentForm(a),
+  });
+}
+const kindLabel = a => ASSESSMENT_KINDS[a.kind] + (a.kind === 'atividade' ? ` · vale ${valesPresenca(a) ? 'presença' : 'nota'}` : '');
+
 function assessmentRow(a, { showSubject = true } = {}) {
   const s = subject(a.subjectId);
   const late = !a.done && a.date < today();
@@ -242,7 +264,7 @@ function assessmentRow(a, { showSubject = true } = {}) {
     <button class="task-main" data-action="edit-assessment" data-id="${esc(a.id)}">
       <span class="task-title">${esc(a.title)}</span>
       <span class="task-meta">
-        <span class="badge k-${a.kind}">${ASSESSMENT_KINDS[a.kind]}</span>
+        <span class="badge k-${a.kind}">${kindLabel(a)}</span>
         ${showSubject && s ? `<span class="pill" style="--c:${esc(s.color)}">${esc(s.name)}</span>` : ''}
         <span class="${late ? 'late' : soon ? 'soon' : ''}">${relDay(a.date)}${a.time ? ' · ' + a.time : ''}${Math.abs(diffDays(today(), a.date)) > 1 ? ` (${untilLabel(a.date)})` : ''}</span>
         ${a.grade ? `<span>Nota: ${esc(a.grade)}</span>` : ''}
@@ -482,12 +504,12 @@ function subjectForm(s) {
     ${modalHead(isNew ? 'Nova matéria' : 'Editar matéria')}
     <div class="modal-body">
       <div class="row">
-        <label class="field"><span>Nome da matéria</span><input name="name" maxlength="120" value="${esc(s.name)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Cálculo II"></label>
+        <label class="field"><span>Nome da matéria</span><input name="name" maxlength="120" value="${esc(s.name)}" ${isNew ? 'autofocus' : ''}></label>
         <label class="field xs"><span>Cor</span><input type="color" name="color" value="${esc(s.color)}"></label>
       </div>
       <div class="row">
         <label class="field"><span>Professor(a)</span><input name="professor" maxlength="120" value="${esc(s.professor)}"></label>
-        <label class="field"><span>Sala padrão</span><input name="room" maxlength="60" value="${esc(s.room)}" placeholder="Ex.: Bloco B, 204"></label>
+        <label class="field"><span>Sala padrão</span><input name="room" maxlength="60" value="${esc(s.room)}"></label>
       </div>
       <div>
         <span class="fieldset-label">Horários das aulas</span>
@@ -568,31 +590,42 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
       <div class="row">
         <label class="field"><span>Matéria</span><select name="subjectId">${subjectOptions(a.subjectId)}</select></label>
         <label class="field"><span>Tipo</span><select name="kind">${options(Object.entries(ASSESSMENT_KINDS), a.kind)}</select></label>
+        <label class="field" data-counts ${a.kind === 'atividade' ? '' : 'hidden'}><span>Vale</span><select name="counts">${options([['nota', 'Nota'], ['presenca', 'Presença']], a.counts || 'nota')}</select></label>
       </div>
-      <label class="field"><span>Título</span><input name="title" maxlength="160" value="${esc(a.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: P1, Lista 3, Seminário"></label>
+      <label class="field"><span>Título</span><input name="title" maxlength="160" value="${esc(a.title)}"></label>
       <div class="row">
         <label class="field"><span>Data</span><input type="date" name="date" value="${a.date}"></label>
         <label class="field"><span>Horário (opcional)</span><input type="time" name="time" value="${a.time || ''}"></label>
       </div>
       <label class="field"><span>Conteúdos cobrados</span><textarea name="topics" rows="3">${esc(a.topics)}</textarea></label>
       <label class="field"><span>Detalhes</span><textarea name="details" rows="2">${esc(a.details)}</textarea></label>
-      <div class="row">
-        <label class="field"><span>Valor / peso</span><input name="weight" maxlength="30" value="${esc(a.weight)}" placeholder="Ex.: 3,0 pts"></label>
-        <label class="field"><span>Nota</span><input name="grade" maxlength="30" value="${esc(a.grade)}" placeholder="Depois da correção"></label>
+      <div class="row" data-grade ${valesPresenca(a) ? 'hidden' : ''}>
+        <label class="field"><span>Valor / peso</span><input name="weight" maxlength="30" value="${esc(a.weight)}"></label>
+        <label class="field"><span>Nota</span><input name="grade" maxlength="30" value="${esc(a.grade)}"></label>
       </div>
       <label class="check"><input type="checkbox" name="done" ${a.done ? 'checked' : ''}> Concluído / entregue</label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
   </form>`, {
+    onMount(form) {
+      // Só atividade escolhe se vale nota ou presença; valendo presença, não tem peso nem nota.
+      const sync = () => {
+        const ativ = form.elements.kind.value === 'atividade';
+        $('[data-counts]', form).hidden = !ativ;
+        $('[data-grade]', form).hidden = ativ && form.elements.counts.value === 'presenca';
+      };
+      form.elements.kind.addEventListener('change', sync);
+      form.elements.counts.addEventListener('change', sync);
+    },
     onSubmit(form) {
       const f = formData(form);
-      if (!f.title.trim()) return formError(form, 'Falta o título.');
       if (!f.date) return formError(form, 'Falta a data.');
       Object.assign(a, {
-        subjectId: f.subjectId, kind: f.kind, title: f.title.trim(), date: f.date, time: f.time,
+        subjectId: f.subjectId, kind: f.kind, title: f.title.trim() || ASSESSMENT_KINDS[f.kind], date: f.date, time: f.time,
         topics: f.topics.trim(), details: f.details.trim(), weight: f.weight.trim(), grade: f.grade.trim(), done: !!f.done,
       });
+      if (f.kind === 'atividade') a.counts = f.counts; else delete a.counts;
       Store.upsert('assessments', a);
       closeModal();
       render();
@@ -616,7 +649,7 @@ function absenceForm(s) {
     <div class="modal-body">
       <label class="field"><span>Data</span><input type="date" name="date" value="${t}"></label>
       <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
-      <label class="field"><span>Observação</span><input name="note" maxlength="140" placeholder="Opcional (ex.: atestado)"></label>
+      <label class="field"><span>Observação</span><input name="note" maxlength="140"></label>
       ${attendance(s) === 'exercicio' ? '<label class="field"><span>Entrega do exercício (se for outro dia)</span><input type="date" name="delivery"></label>' : ''}
       ${ATTENDANCE[attendance(s)].action ? `<label class="check"><input type="checkbox" name="present"> ${ATTENDANCE[attendance(s)].action}</label>` : ''}
       <p class="form-error" hidden></p>
@@ -713,7 +746,7 @@ Object.assign(actions, {
   'fac-tab': el => { state.facTab = el.dataset.tab; render(); },
   'edit-semester': () => semesterForm(),
   'new-assessment': el => assessmentForm(null, { date: el.dataset.date, subjectId: el.dataset.subject }),
-  'edit-assessment': el => { const a = Store.get('assessments', el.dataset.id); if (a) assessmentForm(a); },
+  'edit-assessment': el => { const a = Store.get('assessments', el.dataset.id); if (a) assessmentView(a); },
   'toggle-assessment': el => {
     const a = Store.get('assessments', el.dataset.id);
     if (!a) return;

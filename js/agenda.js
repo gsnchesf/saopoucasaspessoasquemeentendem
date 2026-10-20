@@ -314,7 +314,7 @@ function eventForm(ev, date, startTime) {
     ${modalHead(isNew ? 'Novo compromisso' : 'Editar compromisso')}
     <div class="modal-body">
       ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as repetições.</p>` : ''}
-      <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}" ${isNew ? 'autofocus' : ''} placeholder="Ex.: Consulta no dentista"></label>
+      <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}" ${isNew ? 'autofocus' : ''}></label>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="category">${catOptions(ev.category)}</select></label>
         <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
@@ -329,7 +329,7 @@ function eventForm(ev, date, startTime) {
         <label class="field until" ${repeats ? '' : 'hidden'}><span>Até (opcional)</span><input type="date" name="until" value="${ev.until || ''}"></label>
       </div>
       <div class="row">
-        <label class="field"><span>Local</span><input name="location" value="${esc(ev.location)}" placeholder="Opcional"></label>
+        <label class="field"><span>Local</span><input name="location" value="${esc(ev.location)}"></label>
         <label class="field"><span>Lembrete</span><select name="reminder">${options(REMINDERS, ev.reminder ?? '')}</select></label>
       </div>
       <label class="field"><span>Detalhes</span><textarea name="notes" rows="3">${esc(ev.notes)}</textarea></label>
@@ -400,11 +400,29 @@ async function deleteEvent(id, occDate) {
   toast('Compromisso excluído', { label: 'Desfazer', fn: () => { Store.upsert('events', removed); render(); } });
 }
 
+/** Ficha do compromisso (no dia clicado, se for recorrente). */
+function eventView(ev, date) {
+  const d = date || ev.date;
+  const when = `${cap(relDay(d))}${ev.allDay ? ' · dia inteiro' : ` · ${ev.start}${ev.end ? '–' + ev.end : ''}`}`;
+  const rem = REMINDERS.find(([v]) => v === String(ev.reminder ?? ''));
+  openSheet({
+    title: ev.title, color: catColor(ev.category), sub: esc(cat(ev.category)?.name || 'Compromisso'),
+    rows: [
+      ['Quando', esc(when)],
+      ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
+      ['Local', esc(ev.location || '')],
+      ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],
+      ['Detalhes', sheetText(ev.notes)],
+    ],
+    onEdit: () => eventForm(ev, date),
+  });
+}
+
 /* ---------- Ações ---------- */
 
 Object.assign(actions, {
   'new-event': el => eventForm(null, el.dataset.date || (state.view === 'agenda' ? state.selected : today())),
-  'edit-event': el => { const ev = Store.get('events', el.dataset.id); if (ev) eventForm(ev, el.dataset.date); },
+  'edit-event': el => { const ev = Store.get('events', el.dataset.id); if (ev) eventView(ev, el.dataset.date); },
   'select-day': el => {
     const d = el.dataset.date;
     if (d.slice(0, 7) !== state.cursor.slice(0, 7)) state.cursor = d;

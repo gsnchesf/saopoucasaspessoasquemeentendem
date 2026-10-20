@@ -63,7 +63,7 @@ function quickNew(anchor) {
   openMenu(anchor, [
     { label: 'Compromisso', icon: 'calendar', key: 'E', run: () => eventForm(null, state.view === 'agenda' ? state.selected : today()) },
     { label: 'Bloco na semana', icon: 'week', key: 'B', run: () => actions['new-block']() },
-    { label: 'Prova, trabalho ou atividade', icon: 'book', key: 'P', run: () => assessmentForm(null, { date: state.view === 'agenda' ? state.selected : '' }) },
+    { label: 'Prazo da faculdade', icon: 'book', key: 'P', run: () => assessmentForm(null, { date: state.view === 'agenda' ? state.selected : '' }) },
     { label: 'Entrega', icon: 'briefcase', key: 'W', run: () => deliverableForm(null, state.view === 'agenda' ? state.selected : '') },
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },

@@ -438,6 +438,7 @@ kbd {
 .badge.k-atividade { background: var(--ok-soft); color: var(--ok); }
 .badge.k-entrega { background: var(--warn-soft); color: var(--warn); }
 .badge.k-exercicio { background: var(--ok-soft); color: var(--ok); }
+.badge.k-seminario { background: var(--warn-soft); color: var(--warn); }
 .badge.ok { background: var(--ok-soft); color: var(--ok); }
 .badge.warn { background: var(--warn-soft); color: var(--warn); }
 .badge.danger { background: var(--danger-soft); color: var(--danger); }
@@ -460,6 +461,15 @@ kbd {
 .ev-row:hover { background: var(--surface-2); }
 .ev-row.past { opacity: .55; }
 .workout-list { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+/* Ficha (leitura antes de editar) */
+.sheet-sub { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); }
+.sheet-sub .dot { background: var(--c); }
+.sheet-rows { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+.sheet-rows dt { color: var(--muted); font-size: 13px; padding-top: 1px; }
+.sheet-rows dd { margin: 0; }
+.sheet-rows .pre, .sheet .pre { white-space: pre-wrap; }
+.sheet-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.sheet-list .done { text-decoration: line-through; color: var(--muted); }
 .abs-mode { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 14px; }
 /* Aula cancelada: riscada e apagada, mas visível para dar para desfazer. */
 .ev-row.canceled, .chip.canceled, .tg-ev.canceled { opacity: .45; }
@@ -632,6 +642,8 @@ kbd {
 .tg-ev.blk { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 35%, transparent); }
 .tg-ev.blk.done { opacity: .6; }
 .tg-ev.blk.done .t { text-decoration: line-through; }
+.tg-ev.skipped { opacity: .5; border-left-color: var(--danger); }
+.tg-ev.skipped .t { text-decoration: line-through; text-decoration-color: var(--danger); }
 .tg-ev .t .icon { width: 12px; height: 12px; margin-right: 3px; vertical-align: -2px; }
 .tg-ev.ctx { opacity: .6; border-left-style: dashed; }
 .tg-ev.ctx:not(.cls) { background: color-mix(in srgb, var(--c) 9%, var(--surface)); }

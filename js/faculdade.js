@@ -22,13 +22,16 @@ function dayClasses(s, date) {
 }
 
 /** Como a matéria conta presença. Na lista ou no exercício dá para ter presença sem assistir a aula;
-    sem controle, a aula é faltável e falta não conta. */
+    na chamada, não. */
 const ATTENDANCE = {
-  lista: { label: 'Lista para assinar', action: 'Assinaram por mim', state: 'Lista assinada' },
-  exercicio: { label: 'Exercício entregue', action: 'Entreguei o exercício', state: 'Exercício entregue' },
-  livre: { label: 'Não controla (faltável)' },
+  lista: { label: 'Lista', action: 'Assinaram por mim', state: 'Lista assinada' },
+  exercicio: { label: 'Exercício', action: 'Entreguei o exercício', state: 'Exercício entregue' },
+  chamada: { label: 'Chamada' },
 };
 const attendance = s => ATTENDANCE[s.attendance] ? s.attendance : 'lista';
+
+/** Faltável (checkbox da matéria): falta fica registrada, mas não tem limite. 'livre' é o jeito antigo de marcar. */
+const isFree = s => !!s.faltavel || s.attendance === 'livre';
 
 /** Quanto do dia a pessoa perdeu: o dia inteiro vale 1; parte das aulas vale a fração (1 de 2 = 0,5). */
 function absShare(a, s) {
@@ -37,7 +40,7 @@ function absShare(a, s) {
 }
 
 /** Quanto conta no limite: com presença sem ter assistido (present) ou em matéria faltável, nada. */
-const absWeight = (a, s) => a.present || attendance(s) === 'livre' ? 0 : absShare(a, s);
+const absWeight = (a, s) => a.present || isFree(s) ? 0 : absShare(a, s);
 
 /** "1ª aula", "1ª e 2ª aulas". */
 const aulasLabel = aulas => `${aulas.map(i => `${i + 1}ª`).join(' e ')} ${aulas.length > 1 ? 'aulas' : 'aula'}`;
@@ -49,7 +52,7 @@ const absNum = n => String(Math.round(n * 10) / 10).replace('.', ',');
     não importa quantas aulas tenha naquele dia; faltar só em parte delas conta a fração. */
 function absInfo(s) {
   const list = absencesOf(s.id);
-  const free = attendance(s) === 'livre';
+  const free = isFree(s);
   const used = list.reduce((n, a) => n + absWeight(a, s), 0);
   const missed = list.reduce((n, a) => n + absShare(a, s), 0); // aulas não assistidas, contando ou não
   const pending = list.filter(a => a.delivery && !a.present).length; // exercícios ainda por entregar
@@ -384,12 +387,13 @@ function subjectScreen(s) {
     <div class="card-head"><h2>Faltas</h2><div class="btn-row">
       <button class="btn btn-sm" data-action="cancel-class" data-id="${esc(s.id)}">Aula cancelada</button>
       <button class="btn btn-sm" data-action="new-absence" data-id="${esc(s.id)}">${icon('plus')}Registrar falta</button></div></div>
-    <label class="abs-mode"><span class="muted">Presença</span>
+    <div class="abs-mode"><label><span class="muted">Presença</span>
       <select class="select" data-attendance="${esc(s.id)}">${options(Object.entries(ATTENDANCE).map(([k, v]) => [k, v.label]), attendance(s))}</select></label>
+      <label class="check"><input type="checkbox" data-faltavel="${esc(s.id)}" ${isFree(s) ? 'checked' : ''}> Faltável</label></div>
     ${info.limit ? `<div class="abs-hero">
         <div class="big-number ${info.level}">${absNum(Math.max(0, info.remaining))}</div>
         <p><b>${info.remaining > 0 ? 'Faltas restantes' : 'Limite atingido'}</b><br>
-        <span class="muted">${absNum(info.used)} de ${info.limit} usadas${info.missed > info.used ? ` · ${absNum(info.missed - info.used)} com ${ATTENDANCE[attendance(s)].state.toLowerCase()}` : ''}${info.pending ? ` · ${plural(info.pending, 'exercício pendente', 'exercícios pendentes')}` : ''}</span></p>
+        <span class="muted">${absNum(info.used)} de ${info.limit} usadas${info.missed > info.used ? ` · ${absNum(info.missed - info.used)} com ${(ATTENDANCE[attendance(s)].state || 'presença').toLowerCase()}` : ''}${info.pending ? ` · ${plural(info.pending, 'exercício pendente', 'exercícios pendentes')}` : ''}</span></p>
       </div>
       ${meter(info.used / info.limit, info.level)}`
       : `<p class="empty">${info.free ? `Faltável. Aulas perdidas: <b>${absNum(info.missed)}</b>.` : `${noLimitText()} Faltas registradas: <b>${absNum(info.missed)}</b>.`}</p>`}
@@ -519,7 +523,10 @@ function subjectForm(s) {
           <button type="button" class="btn btn-sm" data-add-slot style="justify-self:start">${icon('plus')}Horário</button>
         </div>
       </div>
-      <label class="field"><span>Presença</span><select name="attendance">${options(Object.entries(ATTENDANCE).map(([k, v]) => [k, v.label]), attendance(s))}</select></label>
+      <div class="row">
+        <label class="field"><span>Presença</span><select name="attendance">${options(Object.entries(ATTENDANCE).map(([k, v]) => [k, v.label]), attendance(s))}</select></label>
+        <label class="check"><input type="checkbox" name="faltavel" ${isFree(s) ? 'checked' : ''}> Faltável</label>
+      </div>
       <p class="hint-box calc-hint"></p>
       <label class="field"><span>Observações</span><textarea name="notes" rows="2">${esc(s.notes)}</textarea></label>
       <p class="form-error" hidden></p>
@@ -531,7 +538,7 @@ function subjectForm(s) {
       const hint = $('.calc-hint', form);
       const update = () => {
         const days = classDays(readSlots(form));
-        hint.innerHTML = icon('clock') + esc(form.elements.attendance.value === 'livre' ? 'Faltável: sem limite de faltas.'
+        hint.innerHTML = icon('clock') + esc(form.elements.faltavel.checked ? 'Faltável: sem limite de faltas.'
           : days ? `Limite: ${days * ABSENCES_PER_DAY} faltas (${ABSENCES_PER_DAY} por dia de aula).`
           : noLimitText());
       };
@@ -547,7 +554,7 @@ function subjectForm(s) {
       if (slots.some(x => !x.start || !x.end || x.end <= x.start)) return formError(form, 'O fim precisa ser depois do início.');
       Object.assign(s, {
         name: f.name.trim(), color: f.color, professor: f.professor.trim(), room: f.room.trim(),
-        notes: f.notes.trim(), slots, attendance: f.attendance,
+        notes: f.notes.trim(), slots, attendance: f.attendance, faltavel: !!f.faltavel,
       });
       delete s.absenceLimit; // o limite agora é sempre calculado pelos dias de aula
       Store.upsert('subjects', s);
@@ -804,12 +811,17 @@ Object.assign(actions, {
   },
 });
 
-// Presença da matéria trocada direto na tela dela.
+// Presença e "Faltável" trocados direto na tela da matéria.
 document.addEventListener('change', e => {
-  const id = e.target.dataset?.attendance;
-  const s = id && subject(id);
+  const { attendance: aid, faltavel: fid } = e.target.dataset || {};
+  const s = subject(aid || fid);
   if (!s) return;
-  Store.upsert('subjects', { ...structuredClone(s), attendance: e.target.value });
+  const next = structuredClone(s);
+  if (aid) next.attendance = e.target.value;
+  else next.faltavel = e.target.checked;
+  if (next.attendance === 'livre') next.attendance = 'lista'; // jeito antigo de marcar faltável
+  if (fid && !e.target.checked && s.attendance === 'livre') next.faltavel = false;
+  Store.upsert('subjects', next);
   render();
-  toast(`Presença: ${ATTENDANCE[e.target.value].label}`);
+  toast(aid ? `Presença: ${ATTENDANCE[next.attendance].label}` : e.target.checked ? 'Matéria faltável' : 'Matéria com limite de faltas');
 });

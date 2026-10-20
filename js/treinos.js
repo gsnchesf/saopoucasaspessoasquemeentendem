@@ -49,21 +49,43 @@ function setWorkoutState(w, date, st) {
   toast(!a ? `${w.name} feito` : g.p >= 1 ? `${w.name} feito · meta de “${a.name}” batida!` : `${w.name} feito · faltam ${g.leftText} em “${a.name}”`);
 }
 
-/* ---------- Seção em Metas ---------- */
+/* ---------- Tela ---------- */
 
-function workoutsSection() {
+screens.treinos = () => {
   const list = workoutsList();
-  if (!list.length) return '';
-  return `<section class="card card-pad">
-    <div class="card-head"><h2>Rotina de treinos</h2><button class="btn btn-sm" data-action="new-workout">${icon('plus')}Treino</button></div>
+  const t = today();
+  const days = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(t, 1), i));
+  const week = workoutItems(days[0], days[6]);
+  const due = week.filter(it => it.date <= t);
+  const done = week.filter(it => it.state === 'done').length;
+
+  const head = `<div class="title-block"><h1>Treinos</h1>
+      <p class="sub">${week.length ? `${done} de ${week.length} feitos nesta semana` : ''}</p></div>
+    <div class="toolbar"><button class="btn btn-primary" data-action="new-workout">${icon('plus')}Treino</button></div>`;
+  if (!list.length) {
+    return { head, body: `<div class="card card-pad"><p class="empty">Nenhum treino.</p>
+      <div class="btn-row" style="padding:0 8px 4px"><button class="btn btn-primary" data-action="new-workout">${icon('plus')}Criar treino</button></div></div>` };
+  }
+
+  // Semana: cada dia com treino, com Fiz / Não fiz nos que já chegaram.
+  const semana = `<section class="card card-pad">
+    <div class="card-head"><h2>Esta semana</h2>${due.some(it => !it.state) ? `<span class="sub">${plural(due.filter(it => !it.state).length, 'sem marcar', 'sem marcar')}</span>` : ''}</div>
+    ${days.filter(d => week.some(it => it.date === d)).map(d => `<h3 class="section-label">${cap(relDay(d))}</h3>
+      <div class="list">${week.filter(it => it.date === d).map(itemRow).join('')}</div>`).join('')}
+  </section>`;
+
+  const rotina = `<section class="card card-pad">
+    <div class="card-head"><h2>Rotina</h2></div>
     <div class="list">${list.map(w => {
       const a = w.activityId && Store.get('activities', w.activityId);
       const meta = [`${daysLabel(w.days || [])} · ${w.start}–${w.end}`, (w.exercises || []).length && plural(w.exercises.length, 'exercício', 'exercícios'), a && `conta em “${esc(a.name)}”`].filter(Boolean).join(' · ');
-      return `<button class="ev-row" style="--c:${esc(workoutColor())}" data-action="open-workout" data-id="${esc(w.id)}" data-date="${today()}">
+      return `<button class="ev-row" style="--c:${esc(workoutColor())}" data-action="open-workout" data-id="${esc(w.id)}" data-date="${t}">
         <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(w.name)}</span></span><span class="ev-meta"><span>${meta}</span></span></span></button>`;
     }).join('')}</div>
   </section>`;
-}
+
+  return { head, body: `<div class="stack">${semana}${rotina}</div>` };
+};
 
 /* ---------- Formulários ---------- */
 

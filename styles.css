@@ -470,7 +470,8 @@ kbd {
 .sheet-rows .pre, .sheet .pre { white-space: pre-wrap; }
 .sheet-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .sheet-list .done { text-decoration: line-through; color: var(--muted); }
-.abs-mode { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 14px; }
+.abs-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 0 0 12px; font-size: 14px; }
+.abs-mode > label:first-child { display: flex; align-items: center; gap: 10px; }
 /* Aula cancelada: riscada e apagada, mas visível para dar para desfazer. */
 .ev-row.canceled, .chip.canceled, .tg-ev.canceled { opacity: .45; }
 .ev-row.canceled .ev-title, .chip.canceled, .tg-ev.canceled .t { text-decoration: line-through; }

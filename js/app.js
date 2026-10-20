@@ -10,7 +10,7 @@ const VIEWS = [
   { id: 'agenda', label: 'Agenda', icon: 'calendar' },
   { id: 'faculdade', label: 'Faculdade', icon: 'book' },
   { id: 'trabalho', label: 'Trabalho', icon: 'briefcase' },
-  { id: 'habitos', label: 'Hábitos', icon: 'flame' },
+  { id: 'treinos', label: 'Treinos', icon: 'dumbbell' },
   { id: 'metas', label: 'Metas', icon: 'target' },
   { id: 'ajustes', label: 'Ajustes', icon: 'gear', bottom: true },
   { id: 'admin', label: 'Admin', icon: 'shield', bottom: true, adminOnly: true },
@@ -68,7 +68,6 @@ function quickNew(anchor) {
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },
     { label: 'Treino', icon: 'dumbbell', run: () => workoutForm() },
-    { label: 'Hábito', icon: 'flame', run: () => habitForm() },
     { label: 'Atividade / meta', icon: 'target', run: () => activityForm() },
   ]);
 }
@@ -226,11 +225,11 @@ function checkReminders() {
 function notify(ev, d) {
   const when = ev.reminder === 0 ? 'Agora' : `${relDay(d)} às ${ev.start}`;
   const body = `${when}${ev.location ? ' · ' + ev.location : ''}`;
-  toast(`Lembrete: ${ev.title} — ${body}`, null, 12000);
+  toast(`Lembrete: ${eventTitle(ev)} — ${body}`, null, 12000);
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const opts = { body, icon: 'icon-192.png', tag: `${ev.id}@${d}` };
-  if (navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r => r.showNotification(ev.title, opts));
-  else try { new Notification(ev.title, opts); } catch {}
+  if (navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r => r.showNotification(eventTitle(ev), opts));
+  else try { new Notification(eventTitle(ev), opts); } catch {}
 }
 
 /* ---------- Inicialização ---------- */

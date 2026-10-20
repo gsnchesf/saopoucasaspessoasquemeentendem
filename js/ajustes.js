@@ -140,7 +140,7 @@ screens.ajustes = () => {
         <select class="select" data-setting="dayStart">${options(Array.from({ length: 13 }, (_, h) => [h, `${pad(h)}:00`]), s.dayStart)}</select></div>
       <div class="setting"><div><div>Lembretes</div><div class="desc">Notificações ${permText}</div></div>
         ${perm === 'default' ? '<button class="btn" data-action="notify-perm">Ativar</button>' : ''}</div>
-      <h3 class="section-label" style="margin-top:12px;padding:0">Tipos de compromisso</h3>
+      <h3 class="section-label" style="margin-top:12px;padding:0">Tipos de bloco (Essa semana)</h3>
       <div class="cats">${colorNameRows('categories', 'do tipo')}</div>
       <button class="btn btn-sm" data-action="add-row" data-coll="categories">${icon('plus')}Tipo</button>
     </section>
@@ -212,8 +212,8 @@ function exportICS() {
     if (ev.notes) lines.push(`DESCRIPTION:${txt(ev.notes)}`);
     if (RR[ev.repeat]) lines.push(`RRULE:${RR[ev.repeat]}${ev.until ? `;UNTIL=${d8(ev.until)}${ev.allDay ? '' : 'T235959'}` : ''}`);
     for (const x of ev.exdates || []) lines.push(ev.allDay ? `EXDATE;VALUE=DATE:${d8(x)}` : `EXDATE:${d8(x)}T${t6(ev.start)}`);
-    if (ev.reminder != null && !ev.allDay) lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${txt(ev.title)}`, `TRIGGER:-PT${ev.reminder}M`, 'END:VALARM');
-    vevent(ev.id, ev.title, lines);
+    if (ev.reminder != null && !ev.allDay) lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${txt(eventTitle(ev))}`, `TRIGGER:-PT${ev.reminder}M`, 'END:VALARM');
+    vevent(ev.id, eventTitle(ev), lines);
   }
 
   // Aulas: um evento semanal por horário, dentro do semestre.
@@ -285,7 +285,7 @@ Object.assign(actions, {
     const { coll, id } = el.dataset;
     const item = Store.get(coll, id);
     if (!item) return;
-    const used = coll === 'areas' ? Store.data.activities.filter(a => a.areaId === id).length : Store.data.events.filter(e => e.category === id).length;
+    const used = coll === 'areas' ? Store.data.activities.filter(a => a.areaId === id).length : Store.data.blocks.filter(b => b.category === id).length;
     if (used && !await ask(`“${item.name}” está em ${plural(used, 'item', 'itens')}. Excluir mesmo assim?`, [
       { label: 'Cancelar', value: false }, { label: 'Excluir', value: true, kind: 'danger' }])) return;
     Store.remove(coll, id);

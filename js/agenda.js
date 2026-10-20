@@ -66,9 +66,9 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
 
   for (const ev of Store.data.events) {
     for (const d of occurrences(ev, from, to)) add({
-      kind: 'event', id: ev.id, date: d, title: ev.title,
+      kind: 'event', id: ev.id, date: d, title: eventTitle(ev),
       start: ev.allDay ? '' : ev.start, end: ev.allDay ? '' : ev.end, allDay: !!ev.allDay, deadline: false,
-      color: catColor(ev.category), label: cat(ev.category)?.name, place: ev.location,
+      color: EVENT_KINDS[eventKind(ev)].color, label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
       repeats: !!ev.repeat && ev.repeat !== 'none',
     });
   }
@@ -293,6 +293,31 @@ function navCal(dir) {
   render();
 }
 
+/* ---------- Tipos de compromisso (lista fechada, "Outro" por último) ---------- */
+
+const EVENT_KINDS = {
+  consulta: { label: 'Consulta', color: '#0ea5e9', specialty: true },
+  hangout: { label: 'Hangout', color: '#ec4899', with: true },
+  compromisso: { label: 'Compromisso', color: '#4f46e5', with: true },
+  outro: { label: 'Outro', color: '#64748b' },
+};
+
+/** Tipo do compromisso; os antigos (com tipo personalizado) são encaixados pelo nome. */
+function eventKind(ev) {
+  if (EVENT_KINDS[ev.kind]) return ev.kind;
+  const n = norm(cat(ev.category)?.name);
+  return n === 'consulta' ? 'consulta' : n === 'compromisso' ? 'compromisso' : n === 'date' ? 'hangout' : 'outro';
+}
+
+/** "com Ana" / "Dermatologia": o complemento do tipo. */
+const eventExtra = ev => {
+  const k = EVENT_KINDS[eventKind(ev)];
+  return k.specialty ? ev.specialty || '' : k.with && ev.with ? `com ${ev.with}` : '';
+};
+
+/** Título exibido: o digitado ou, sem título, o tipo com o complemento. */
+const eventTitle = ev => ev.title || [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ');
+
 /* ---------- Formulário de compromisso ---------- */
 
 function eventForm(ev, date, startTime) {
@@ -303,22 +328,25 @@ function eventForm(ev, date, startTime) {
     ev = {
       id: uid(), title: '', date: date || today(), allDay: false,
       start, end: fromMin(Math.min(toMin(start) + 60, 1439)),
-      category: Store.data.categories[0]?.id || '', repeat: 'none', until: '',
+      kind: 'compromisso', with: '', specialty: '', repeat: 'none', until: '',
       reminder: null, location: '', notes: '', exdates: [],
     };
   }
   const occDate = date;
   const repeats = ev.repeat && ev.repeat !== 'none';
+  const kind = eventKind(ev);
 
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Novo compromisso' : 'Editar compromisso')}
     <div class="modal-body">
       ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as repetições.</p>` : ''}
-      <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}" ${isNew ? 'autofocus' : ''}></label>
       <div class="row">
-        <label class="field"><span>Tipo</span><select name="category">${catOptions(ev.category)}</select></label>
-        <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
+        <label class="field"><span>Tipo</span><select name="kind">${options(Object.entries(EVENT_KINDS).map(([k, v]) => [k, v.label]), kind)}</select></label>
+        <label class="field" data-with ${EVENT_KINDS[kind].with ? '' : 'hidden'}><span>Com quem</span><input name="with" maxlength="80" value="${esc(ev.with || '')}"></label>
+        <label class="field" data-specialty ${EVENT_KINDS[kind].specialty ? '' : 'hidden'}><span>Especialidade</span><input name="specialty" maxlength="80" value="${esc(ev.specialty || '')}"></label>
       </div>
+      <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
+      <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
         <label class="field times" ${ev.allDay ? 'hidden' : ''}><span>Início</span><input type="time" name="start" value="${ev.start || ''}"></label>
@@ -338,7 +366,11 @@ function eventForm(ev, date, startTime) {
     ${modalFoot(!isNew)}
   </form>`, {
     onMount(form) {
-      const { allDay, start, end, repeat } = form.elements;
+      const { allDay, start, end, repeat, kind } = form.elements;
+      kind.addEventListener('change', () => {
+        $('[data-with]', form).hidden = !EVENT_KINDS[kind.value].with;
+        $('[data-specialty]', form).hidden = !EVENT_KINDS[kind.value].specialty;
+      });
       allDay.addEventListener('change', () => $$('.times', form).forEach(el => { el.hidden = allDay.checked; }));
       repeat.addEventListener('change', () => { $('.until', form).hidden = repeat.value === 'none'; });
       let prev = start.value;
@@ -354,17 +386,19 @@ function eventForm(ev, date, startTime) {
     onSubmit(form) {
       const f = formData(form);
       const allDay = !!f.allDay;
-      if (!f.title.trim()) return formError(form, 'Falta o título.');
+      const k = EVENT_KINDS[f.kind];
+      if (f.kind === 'outro' && !f.title.trim()) return formError(form, 'Falta o título.');
       if (!f.date) return formError(form, 'Falta a data.');
       if (!allDay && !f.start) return formError(form, 'Falta o horário.');
       if (!allDay && f.end && f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
       if (f.repeat !== 'none' && f.until && f.until < f.date) return formError(form, 'A repetição termina antes de começar.');
       Object.assign(ev, {
-        title: f.title.trim(), category: f.category, date: f.date, allDay,
+        title: f.title.trim(), kind: f.kind, with: k.with ? f.with.trim() : '', specialty: k.specialty ? f.specialty.trim() : '', date: f.date, allDay,
         start: allDay ? '' : f.start, end: allDay ? '' : f.end,
         repeat: f.repeat, until: f.repeat === 'none' ? '' : f.until,
         location: f.location.trim(), reminder: f.reminder === '' ? null : +f.reminder, notes: f.notes.trim(),
       });
+      delete ev.category; // o tipo agora é ev.kind
       Store.upsert('events', ev);
       closeModal();
       render();
@@ -406,9 +440,11 @@ function eventView(ev, date) {
   const when = `${cap(relDay(d))}${ev.allDay ? ' · dia inteiro' : ` · ${ev.start}${ev.end ? '–' + ev.end : ''}`}`;
   const rem = REMINDERS.find(([v]) => v === String(ev.reminder ?? ''));
   openSheet({
-    title: ev.title, color: catColor(ev.category), sub: esc(cat(ev.category)?.name || 'Compromisso'),
+    title: eventTitle(ev), color: EVENT_KINDS[eventKind(ev)].color, sub: esc(EVENT_KINDS[eventKind(ev)].label),
     rows: [
       ['Quando', esc(when)],
+      ['Com quem', EVENT_KINDS[eventKind(ev)].with ? esc(ev.with || '') : ''],
+      ['Especialidade', EVENT_KINDS[eventKind(ev)].specialty ? esc(ev.specialty || '') : ''],
       ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
       ['Local', esc(ev.location || '')],
       ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],

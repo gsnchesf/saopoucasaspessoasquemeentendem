@@ -104,8 +104,7 @@ screens.metas = () => {
 
   const head = `<div class="title-block"><h1>Metas</h1>
       <p class="sub">${periodic.length ? `${onTrack} de ${periodic.length} no ritmo` : ''}</p></div>
-    <div class="toolbar"><button class="btn" data-action="new-workout">${icon('dumbbell')}Treino</button>
-      <button class="btn btn-primary" data-action="new-activity">${icon('plus')}Atividade</button></div>`;
+    <div class="toolbar"><button class="btn btn-primary" data-action="new-activity">${icon('plus')}Atividade</button></div>`;
 
   const filter = `<div class="segmented">
     <button data-action="goal-area" data-id="" class="${!sel ? 'active' : ''}">Todas</button>
@@ -123,7 +122,8 @@ screens.metas = () => {
       ${sel ? '' : `<h2 style="display:flex;align-items:center;gap:8px;margin:4px 0 10px">${ar.color ? `<span class="dot" style="--c:${esc(ar.color)}"></span>` : ''}${esc(ar.name)}</h2>`}
       <div class="goal-grid">${l.map(goalCard).join('')}</div></section>`).join('');
   }
-  return { head, body: `<div class="stack">${workoutsSection()}<div>${filter}</div>${content}</div>` };
+  // Tempo de tela mora aqui também (era de Hábitos).
+  return { head, body: `<div class="stack"><div>${filter}</div>${content}${screenCard()}</div>`, after: bindChartTooltip };
 };
 
 /* ---------- Formulários ---------- */

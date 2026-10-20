@@ -183,7 +183,7 @@ function screenCard({ compact = false } = {}) {
   const vsPrev = s.avg7 != null && s.prev7 != null && s.prev7 > 0 ? Math.round((s.avg7 / s.prev7 - 1) * 100) : null;
   const overToday = s.limit && s.today > s.limit;
   return `<section class="card card-pad">
-    <div class="card-head"><h2>Tempo de tela</h2>${compact ? '<a class="link" href="#/habitos">Histórico</a>' : `<span class="sub">Limite diário: ${s.limit ? fmtDuration(s.limit) : 'não definido'} · <button class="link" data-action="edit-screen-limit">alterar</button></span>`}</div>
+    <div class="card-head"><h2>Tempo de tela</h2>${compact ? '<a class="link" href="#/metas">Histórico</a>' : `<span class="sub">Limite diário: ${s.limit ? fmtDuration(s.limit) : 'não definido'} · <button class="link" data-action="edit-screen-limit">alterar</button></span>`}</div>
     <div class="screen-summary">
       <div><b>${s.today != null ? fmtDuration(s.today) : '—'}</b>hoje${overToday ? ` · <span class="late">${icon('flag')} acima do limite</span>` : ''}</div>
       <div><b>${s.avg7 != null ? fmtDuration(s.avg7) : '—'}</b>média 7 dias</div>

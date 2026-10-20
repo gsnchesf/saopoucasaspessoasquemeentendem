@@ -22,8 +22,9 @@ screens.hoje = () => {
   }
   const next7 = upcoming.filter(([d]) => diffDays(t, d) <= 7).reduce((n, [, l]) => n + l.length, 0);
 
-  const { list: habits, done: habitsDone } = habitsToday();
-  const scr = screenStats();
+  const workoutsToday = timeline.filter(i => i.kind === 'workout');
+  const goalsList = activitiesList().filter(a => a.goalType !== 'objetivo');
+  const onTrack = goalsList.filter(a => goalProgress(a).status !== 'Abaixo do ritmo').length;
 
   const h = new Date().getHours();
   const greet = h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
@@ -49,8 +50,8 @@ screens.hoje = () => {
   const stats = `<div class="stats">
     <div class="card stat"><div class="n">${classesToday.length}</div><div class="l">${classesToday.length === 1 ? 'aula hoje' : 'aulas hoje'}</div></div>
     <div class="card stat ${overdue.length ? 'danger' : ''}"><div class="n">${overdue.length ? overdue.length : next7}</div><div class="l">${overdue.length ? (overdue.length === 1 ? 'prazo atrasado' : 'prazos atrasados') : 'prazos em 7 dias'}</div></div>
-    <div class="card stat"><div class="n">${habitsDone}<small>/${habits.length}</small></div><div class="l">hábitos feitos</div></div>
-    <div class="card stat ${scr.limit && scr.today > scr.limit ? 'danger' : ''}"><div class="n">${scr.today != null ? fmtDuration(scr.today) : '—'}</div><div class="l">tempo de tela${scr.limit ? ` · limite ${fmtDuration(scr.limit)}` : ''}</div></div>
+    <div class="card stat"><div class="n">${workoutsToday.length ? `${workoutsToday.filter(i => i.state === 'done').length}<small>/${workoutsToday.length}</small>` : '—'}</div><div class="l">treino hoje</div></div>
+    <div class="card stat"><div class="n">${goalsList.length ? `${onTrack}<small>/${goalsList.length}</small>` : '—'}</div><div class="l">metas no ritmo</div></div>
   </div>`;
 
   const agenda = `<section class="card card-pad">
@@ -65,14 +66,9 @@ screens.hoje = () => {
     ${upcoming.map(([d, items]) => `<h3 class="section-label">${relDay(d)} <span class="count">${untilLabel(d)}</span></h3><div class="list">${items.map(i => deadlineRow(i)).join('')}</div>`).join('')}
     ${!overdue.length && !upcoming.length ? '<p class="empty">Nada nas próximas duas semanas.</p>' : ''}
     <div class="panel-actions">
-      <button class="btn btn-sm" data-action="new-assessment">${icon('plus')}Prova/trabalho</button>
+      <button class="btn btn-sm" data-action="new-assessment">${icon('plus')}Prazo da faculdade</button>
       <button class="btn btn-sm" data-action="new-deliverable">${icon('plus')}Entrega</button>
     </div>
-  </section>`;
-
-  const habitsCard = `<section class="card card-pad">
-    <div class="card-head"><h2>Hábitos de hoje</h2><a class="link" href="#/habitos">Ver semana</a></div>
-    ${habitTodayList()}
   </section>`;
 
   const goals = `<section class="card card-pad">
@@ -84,7 +80,7 @@ screens.hoje = () => {
   const body = `${art}${workPrompt()}${onboarding}${stats}
     <div class="home-grid">
       <div class="home-col">${agenda}${prazos}</div>
-      <div class="home-col">${habitsCard}${screenCard({ compact: true })}${goals}</div>
+      <div class="home-col">${goals}</div>
     </div>`;
   return { head, body };
 };

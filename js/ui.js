@@ -212,7 +212,7 @@ const slotRow = s => `<div class="slot-row" data-id="${esc(s.id)}">
   <select aria-label="Dia da semana">${options(WEEKDAYS_LONG.map((d, i) => [i, d]), s.weekday)}</select>
   <input type="time" value="${s.start}" aria-label="Início">
   <input type="time" value="${s.end}" aria-label="Fim">
-  <input type="number" min="1" max="10" value="${s.weight || 1}" aria-label="Quantidade de aulas" title="Quantas aulas (para contar faltas)">
+  <input type="number" min="1" max="10" value="${s.weight || 1}" aria-label="Quantidade de aulas" title="Quantas aulas nesse horário">
   <input type="text" value="${esc(s.room || '')}" placeholder="Sala" aria-label="Sala">
   <button type="button" class="icon-btn ghost sm" data-remove-slot aria-label="Remover horário">${icon('x')}</button>
 </div>`;

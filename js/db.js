@@ -187,7 +187,13 @@ const Store = {
     }
   },
 
+  /** Assinatura do conteúdo (ids + data de alteração), para saber se o servidor trouxe algo novo. */
+  signature() {
+    return JSON.stringify([COLLECTIONS.map(c => this.data[c].map(x => `${x.id}:${x.updatedAt || 0}`).sort().join(',')), this.settings]);
+  },
+
   async applyRemote(rows) {
+    const before = this.signature();
     const by = Object.fromEntries(COLLECTIONS.map(c => [c, new Map()]));
     let settings = null;
     for (const r of rows) {
@@ -214,6 +220,7 @@ const Store = {
       await DB.put('meta', { key: 'settings', value: this.settings });
       this.cacheTheme();
     }
+    this.changedBySync = this.signature() !== before;
   },
 
   /** Conteúdo inicial de uma conta nova. */

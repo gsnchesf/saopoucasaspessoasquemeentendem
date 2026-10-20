@@ -294,13 +294,13 @@ async function start() {
   runPendingImport();
   // Quando o servidor responder: redesenha com os dados dele e oferece trazer dados antigos.
   synced.then(ok => {
-    if (ok && !modalOpen()) { applyTheme(); render(); }
+    if (ok && Store.changedBySync && !modalOpen()) { applyTheme(); render(); }
     offerLegacyImport();
   });
 }
 
 async function refreshFromServer() {
-  if (await Store.syncNow() && !modalOpen()) { applyTheme(); render(); }
+  if (await Store.syncNow() && Store.changedBySync && !modalOpen()) { applyTheme(); render(); }
 }
 
 /** Dados salvos neste navegador antes do login: oferece (uma vez) levar para a conta. */

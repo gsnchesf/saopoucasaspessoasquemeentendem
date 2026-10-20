@@ -181,8 +181,7 @@ function importReview(list) {
   openModal(`<form novalidate>
     ${modalHead('Conferir importação')}
     <div class="modal-body">
-      ${semStart ? `<label class="check"><input type="checkbox" name="semester" ${semChanged ? 'checked' : ''}> Usar o semestre da turma: ${esc(fmt(semStart, { day: 'numeric', month: 'short' }))} – ${esc(fmt(semEnd, { day: 'numeric', month: 'short', year: 'numeric' }))}</label>`
-        : !st.semesterStart ? `<p class="hint-box">${icon('calendar')}Defina o início e o fim do semestre em Faculdade para o limite de faltas (30%) ser calculado.</p>` : ''}
+      ${semStart ? `<label class="check"><input type="checkbox" name="semester" ${semChanged ? 'checked' : ''}> Usar o semestre da turma: ${esc(fmt(semStart, { day: 'numeric', month: 'short' }))} – ${esc(fmt(semEnd, { day: 'numeric', month: 'short', year: 'numeric' }))}</label>` : ''}
       <div class="import-list">${list.map((s, i) => {
         const ex = existing(s);
         return `<div class="import-row">

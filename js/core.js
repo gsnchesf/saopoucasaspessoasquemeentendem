@@ -103,7 +103,7 @@ const REMINDERS = [
   ['', 'Sem lembrete'], ['0', 'Na hora'], ['5', '5 min antes'], ['10', '10 min antes'], ['15', '15 min antes'],
   ['30', '30 min antes'], ['60', '1 hora antes'], ['120', '2 horas antes'], ['1440', '1 dia antes'],
 ];
-const ABSENCE_RATE = 0.3; // pode faltar até 30% das aulas do semestre
+const ABSENCES_PER_DAY = 4; // faltas permitidas por dia de aula na semana (1 dia = 4, 2 dias = 8)
 const ASSESSMENT_KINDS ={ prova: 'Prova', trabalho: 'Trabalho', atividade: 'Atividade' };
 const DELIVERY_STATUS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['revisao', 'Em revisão'], ['entregue', 'Entregue']];
 const PRIORITIES = [['', 'Sem prioridade'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']];

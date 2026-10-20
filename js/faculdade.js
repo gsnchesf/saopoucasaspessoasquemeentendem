@@ -11,10 +11,32 @@ const absencesOf = id => Store.data.absences.filter(a => a.subjectId === id).sor
 /** Dias da semana em que a matéria tem aula. */
 const classDays = slots => new Set(slots.map(x => x.weekday)).size;
 
+/** Aulas da matéria num dia, em ordem. Um horário de 3 h ou mais (ex.: 19:30–23:00) são duas aulas seguidas. */
+function dayClasses(s, date) {
+  const out = [];
+  (s.slots || []).filter(x => x.weekday === weekday(date)).sort((a, b) => a.start.localeCompare(b.start)).forEach(x => {
+    const n = toMin(x.end) - toMin(x.start) >= 180 ? 2 : 1;
+    for (let i = 0; i < n; i++) out.push(x);
+  });
+  return out;
+}
+
+/** Quanto uma falta conta: o dia inteiro vale 1; faltar em parte das aulas vale a fração (1 de 2 = 0,5). */
+function absWeight(a, s) {
+  if (!a.aulas?.length) return 1;
+  return Math.min(1, a.aulas.length / Math.max(1, dayClasses(s, a.date).length));
+}
+
+/** "1ª aula", "1ª e 2ª aulas". */
+const aulasLabel = aulas => `${aulas.map(i => `${i + 1}ª`).join(' e ')} ${aulas.length > 1 ? 'aulas' : 'aula'}`;
+
+/** Número de faltas com meia falta: 3,5. */
+const absNum = n => String(Math.round(n * 10) / 10).replace('.', ',');
+
 /** Limite: 4 faltas por dia de aula na semana (1 dia = 4, 2 dias = 8). Cada dia faltado conta 1,
-    não importa quantas aulas tenha naquele dia. */
+    não importa quantas aulas tenha naquele dia; faltar só em parte delas conta a fração. */
 function absInfo(s) {
-  const used = absencesOf(s.id).length;
+  const used = absencesOf(s.id).reduce((n, a) => n + absWeight(a, s), 0);
   const days = classDays(s.slots || []);
   const limit = days * ABSENCES_PER_DAY;
   const remaining = limit - used;
@@ -32,32 +54,56 @@ function absenceControls(it) {
   const s = subject(it.id);
   if (!s) return '';
   const info = absInfo(s);
-  const marked = Store.data.absences.some(a => a.subjectId === s.id && a.date === it.date);
+  const marked = absenceOn(s.id, it.date);
   let html = '';
   if (info.limit) {
     const n = Math.max(0, info.remaining);
-    html += `<span class="badge ${info.level}" title="${n} de ${info.limit} faltas restantes">${n ? `restam ${n}` : 'no limite'}</span>`;
+    html += `<span class="badge ${info.level}" title="${absNum(n)} de ${info.limit} faltas restantes">${n ? `restam ${absNum(n)}` : 'no limite'}</span>`;
   }
   if (it.date <= today()) {
-    html += `<button class="btn btn-sm ${marked ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${marked}">${marked ? 'Falta marcada' : 'Faltei'}</button>`;
+    const label = !marked ? 'Faltei' : marked.aulas?.length ? `Faltei na ${aulasLabel(marked.aulas)}` : 'Falta marcada';
+    html += `<button class="btn btn-sm ${marked ? 'btn-danger-ghost' : ''}" data-action="toggle-absence" data-id="${esc(s.id)}" data-date="${it.date}" aria-pressed="${!!marked}">${label}</button>`;
   }
   return html;
 }
 
-function toggleAbsence(subjectId, date) {
-  const s = subject(subjectId);
-  if (!s) return;
-  const existing = Store.data.absences.filter(a => a.subjectId === subjectId && a.date === date);
-  if (existing.length) {
-    Store.removeWhere('absences', a => a.subjectId === subjectId && a.date === date);
+const absenceOn = (subjectId, date) => Store.data.absences.find(a => a.subjectId === subjectId && a.date === date);
+
+/** Grava a falta do dia: aulas = null (sem falta), [] (todas) ou os índices das aulas faltadas. */
+function setAbsence(s, date, aulas) {
+  const cur = absenceOn(s.id, date);
+  const total = dayClasses(s, date).length;
+  if (aulas && aulas.length >= total) aulas = [];
+  if (!aulas) {
+    if (!cur) return;
+    Store.removeWhere('absences', a => a.subjectId === s.id && a.date === date);
     render();
     toast('Falta desmarcada');
     return;
   }
-  Store.upsert('absences', { id: uid(), subjectId, date, note: '' });
+  const rec = cur ? { ...cur } : { id: uid(), subjectId: s.id, date, note: '' };
+  if (aulas.length) rec.aulas = aulas.slice().sort(); else delete rec.aulas;
+  Store.upsert('absences', rec);
   render();
   const info = absInfo(s);
-  toast(info.limit ? `Falta em ${s.name} · restam ${Math.max(0, info.remaining)}` : `Falta em ${s.name}`);
+  toast(info.limit ? `Falta em ${s.name} · restam ${absNum(Math.max(0, info.remaining))}` : `Falta em ${s.name}`);
+}
+
+/** Botão "Faltei": dia com uma aula marca direto; com aulas seguidas, deixa escolher qual. */
+function toggleAbsence(el) {
+  const s = subject(el.dataset.id);
+  if (!s) return;
+  const date = el.dataset.date;
+  const cur = absenceOn(s.id, date);
+  const n = dayClasses(s, date).length;
+  if (n < 2) return setAbsence(s, date, cur ? null : []);
+  const all = !!cur && !cur.aulas?.length;
+  const only = i => cur?.aulas?.length === 1 && cur.aulas[0] === i;
+  // Clicar de novo na opção marcada desmarca a falta.
+  openMenu(el, [
+    { label: n === 2 ? 'Nas duas' : 'Em todas', icon: all ? 'check' : '', run: () => setAbsence(s, date, all ? null : []) },
+    ...Array.from({ length: n }, (_, i) => ({ label: `Só na ${i + 1}ª aula`, icon: only(i) ? 'check' : '', run: () => setAbsence(s, date, only(i) ? null : [i]) })),
+  ]);
 }
 
 /* ---------- Auxiliares ---------- */
@@ -142,8 +188,8 @@ function subjectsTab() {
       <div><h3>${esc(s.name)}</h3>
         <div class="meta">${[s.professor && `Prof. ${esc(s.professor)}`, s.room && esc(s.room)].filter(Boolean).join(' · ')}</div></div>
       <div class="meta">${icon('clock')}${esc(slotsText(s) || 'Sem horários')}</div>
-      ${info.limit ? `<div><div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> de ${info.limit} · <span class="badge ${info.level}">${info.remaining > 0 ? `restam ${info.remaining}` : 'limite atingido'}</span></span></div>${meter(info.used / info.limit, info.level)}</div>`
-        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${info.used}</b> · sem limite</span></div>`}
+      ${info.limit ? `<div><div class="abs-line"><span class="muted">Faltas</span><span><b>${absNum(info.used)}</b> de ${info.limit} · <span class="badge ${info.level}">${info.remaining > 0 ? `restam ${absNum(info.remaining)}` : 'limite atingido'}</span></span></div>${meter(info.used / info.limit, info.level)}</div>`
+        : `<div class="abs-line"><span class="muted">Faltas</span><span><b>${absNum(info.used)}</b> · sem limite</span></div>`}
       <div class="meta">${next ? `<span class="badge k-${next.kind}">${ASSESSMENT_KINDS[next.kind]}</span> ${esc(next.title)} · ${untilLabel(next.date)}` : 'Sem prazos'}</div>
       <div class="meta"><span>${plural(nFiles, 'arquivo', 'arquivos')}</span><span>${studied}/${contents.length} conteúdos estudados</span></div>
     </button>`;
@@ -214,16 +260,19 @@ function subjectScreen(s) {
   const faltas = `<section class="card card-pad">
     <div class="card-head"><h2>Faltas</h2><button class="btn btn-sm" data-action="new-absence" data-id="${esc(s.id)}">${icon('plus')}Registrar falta</button></div>
     ${info.limit ? `<div class="abs-hero">
-        <div class="big-number ${info.level}">${Math.max(0, info.remaining)}</div>
+        <div class="big-number ${info.level}">${absNum(Math.max(0, info.remaining))}</div>
         <p><b>${info.remaining > 0 ? 'Faltas restantes' : 'Limite atingido'}</b><br>
-        <span class="muted">${info.used} de ${info.limit} usadas</span></p>
+        <span class="muted">${absNum(info.used)} de ${info.limit} usadas</span></p>
       </div>
       ${meter(info.used / info.limit, info.level)}`
-      : `<p class="empty">${noLimitText()} Faltas registradas: <b>${info.used}</b>.</p>`}
+      : `<p class="empty">${noLimitText()} Faltas registradas: <b>${absNum(info.used)}</b>.</p>`}
     <h3 class="section-label" style="margin-top:16px">Histórico <span class="count">${absences.length}</span></h3>
-    ${absences.length ? `<div class="list">${absences.map(a => `<div class="task">
-        <span class="task-main"><span class="task-title">${relDay(a.date)}</span>${a.note ? `<span class="task-meta">${esc(a.note)}</span>` : ''}</span>
-        <button class="icon-btn ghost sm" data-action="del-absence" data-id="${esc(a.id)}" aria-label="Remover falta">${icon('x')}</button></div>`).join('')}</div>`
+    ${absences.length ? `<div class="list">${absences.map(a => {
+        const meta = [a.aulas?.length && `Só na ${aulasLabel(a.aulas)}`, a.note && esc(a.note)].filter(Boolean).join(' · ');
+        return `<div class="task">
+        <span class="task-main"><span class="task-title">${relDay(a.date)}</span>${meta ? `<span class="task-meta">${meta}</span>` : ''}</span>
+        <button class="icon-btn ghost sm" data-action="del-absence" data-id="${esc(a.id)}" aria-label="Remover falta">${icon('x')}</button></div>`;
+      }).join('')}</div>`
       : '<p class="empty">Nenhuma falta.</p>'}
   </section>`;
 
@@ -454,17 +503,31 @@ function absenceForm(s) {
     ${modalHead(`Registrar falta · ${s.name}`)}
     <div class="modal-body">
       <label class="field"><span>Data</span><input type="date" name="date" value="${t}"></label>
+      <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
       <label class="field"><span>Observação</span><input name="note" maxlength="140" placeholder="Opcional (ex.: atestado)"></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false, 'Registrar')}
   </form>`, {
+    onMount(form) {
+      // Dia com aulas seguidas: escolher se faltou em todas ou só numa.
+      const field = $('[data-aulas]', form);
+      const update = () => {
+        const n = form.elements.date.value ? dayClasses(s, form.elements.date.value).length : 0;
+        field.hidden = n < 2;
+        form.elements.aulas.innerHTML = options([['', n === 2 ? 'Nas duas' : 'Em todas'], ...Array.from({ length: n }, (_, i) => [i, `Só na ${i + 1}ª`])], '');
+      };
+      update();
+      form.elements.date.addEventListener('change', update);
+    },
     onSubmit(form) {
       const f = formData(form);
       if (!f.date) return formError(form, 'Falta a data.');
       if (f.date > today()) return formError(form, 'Esse dia ainda não chegou.');
       if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já tem falta em ${relDay(f.date).toLowerCase()}.`);
-      Store.upsert('absences', { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() });
+      const rec = { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() };
+      if (f.aulas && dayClasses(s, f.date).length > 1) rec.aulas = [+f.aulas];
+      Store.upsert('absences', rec);
       closeModal();
       render();
       toast('Falta registrada');
@@ -516,7 +579,7 @@ Object.assign(actions, {
     render();
     if (a.done) toast('Feito', { label: 'Desfazer', fn: () => { a.done = false; Store.upsert('assessments', a); render(); } });
   },
-  'toggle-absence': el => toggleAbsence(el.dataset.id, el.dataset.date),
+  'toggle-absence': el => toggleAbsence(el),
   'new-absence': el => { const s = subject(el.dataset.id); if (s) absenceForm(s); },
   'del-absence': el => {
     const removed = Store.remove('absences', el.dataset.id);

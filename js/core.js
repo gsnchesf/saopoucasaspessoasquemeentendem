@@ -59,8 +59,9 @@ function untilLabel(s) {
   return n > 0 ? `em ${n} dias` : `há ${-n} dias`;
 }
 
-/** Período atual (semana ou mês) que contém a data. */
+/** Período atual (dia, semana ou mês) que contém a data. */
 function periodRange(period, ref = today()) {
+  if (period === 'dia') return [ref, ref];
   if (period === 'mes') {
     const first = ref.slice(0, 8) + '01';
     return [first, addDays(addMonths(first, 1), -1)];
@@ -108,7 +109,7 @@ const ASSESSMENT_KINDS = { prova: 'Prova', trabalho: 'Trabalho', seminario: 'Sem
 const DELIVERY_STATUS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['revisao', 'Em revisão'], ['entregue', 'Entregue']];
 const PRIORITIES = [['', 'Sem prioridade'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']];
 const GOAL_TYPES = { tempo: 'Tempo', vezes: 'Vezes', quantidade: 'Quantidade', objetivo: 'Etapas' };
-const PERIODS = { semana: 'semana', mes: 'mês' };
+const PERIODS = { dia: 'dia', semana: 'semana', mes: 'mês' };
 const SWATCHES = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#64748b'];
 
 /* ---------- Ícones (traço, 24×24) ---------- */

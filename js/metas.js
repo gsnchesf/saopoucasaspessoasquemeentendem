@@ -1,13 +1,14 @@
 'use strict';
 /* ==========================================================
-   Metas: objetivos agrupados em áreas (corpo, leitura…), criados
-   a partir de um tipo pronto (kind, ver GOAL_KINDS) ou do zero.
-   Cada meta mede uma coisa (goalType):
+   Metas: objetivos agrupados em áreas (corpo, leitura…). A
+   pessoa escreve a meta do jeito dela ("treinar 3x por semana",
+   "perder 5 kg até dezembro") e parseGoal preenche os campos,
+   que continuam ajustáveis. Cada meta mede (goalType):
    - tempo:       minutos
-   - vezes:       quantas vezes
+   - vezes:       quantas vezes (unit 'dias' mostra "5 dias")
    - quantidade:  número com unidade (páginas, km, livros, kg)
-   - objetivo:    etapas para marcar
-   num prazo (period): por semana, por mês ou longo prazo
+   - objetivo:    etapas para marcar, ou só "Concluí" sem etapas
+   num prazo (period): por dia, semana, mês ou longo prazo
    ('total', com data opcional em deadline, contada a partir de
    startDate). Quantidade de longo prazo soma os registros ou
    acompanha um valor (track 'valor', de `from` até `to` — ex.:
@@ -18,30 +19,19 @@ const activitiesList = () => Store.data.activities.filter(a => !a.archived)
   .sort((a, b) => (area(a.areaId)?.name || '').localeCompare(area(b.areaId)?.name || '') || a.name.localeCompare(b.name));
 const logsOf = id => Store.data.activityLogs.filter(l => l.activityId === id).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
-/** Tipos prontos: preenchem medida, prazo e unidade; "outra" mostra tudo. */
-const GOAL_KINDS = {
-  treino: { area: 'Corpo', label: 'Treinar (vezes)', name: 'Treinar', done: 'Treinei hoje', preset: { goalType: 'vezes', target: 3, period: 'semana' } },
-  treinoTempo: { area: 'Corpo', label: 'Treinar (tempo)', name: 'Treinar', preset: { goalType: 'tempo', target: 180, period: 'semana' } },
-  peso: { area: 'Corpo', label: 'Ganhar ou perder peso', name: 'Peso', fixedPeriod: true, fromLabel: 'Hoje (kg)', toLabel: 'Meta (kg)', log: 'Anotar peso', preset: { goalType: 'quantidade', period: 'total', track: 'valor', unit: 'kg' } },
-  dieta: { area: 'Corpo', label: 'Seguir dieta', name: 'Dieta', fixedPeriod: true, timesLabel: 'Dias por semana', timesUnit: ['dia', 'dias'], done: 'Segui hoje', preset: { goalType: 'vezes', target: 5, period: 'semana' } },
-  corrida: { area: 'Corpo', label: 'Correr ou caminhar', name: 'Correr', preset: { goalType: 'quantidade', target: 10, period: 'semana', unit: 'km' } },
-  leitura: { area: 'Leitura', label: 'Ler páginas', name: 'Ler', preset: { goalType: 'quantidade', target: 100, period: 'semana', unit: 'páginas' } },
-  livros: { area: 'Leitura', label: 'Terminar livros', name: 'Terminar livros', fixedPeriod: true, plusOne: 'Terminei um', preset: { goalType: 'quantidade', target: 12, period: 'total', unit: 'livros' } },
-  outra: { label: 'Outra' },
-};
-const goalKind = a => GOAL_KINDS[a.kind] || GOAL_KINDS.outra;
-
 const num = v => (+v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const goalPeriod = a => a.goalType === 'objetivo' ? 'total' : a.period || 'semana';
 const isLongTerm = a => goalPeriod(a) === 'total';
 const tracksValue = a => a.goalType === 'quantidade' && isLongTerm(a) && a.track === 'valor';
+const isSimple = a => a.goalType === 'objetivo' && !(a.objectives || []).length;
+const isWeight = a => tracksValue(a) && /^(kg|quilos?|kilos?)$/i.test(a.unit || '');
 /** Tem ritmo a acompanhar: meta por período ou de longo prazo com data. */
 const hasPace = a => !isLongTerm(a) || !!a.deadline;
 
-/** Valor na medida da meta: "2h", "3×", "20 páginas". */
+/** Valor na medida da meta: "2h", "3×", "5 dias", "20 páginas". */
 function amountText(a, v) {
   if (a.goalType === 'tempo') return fmtDuration(v);
-  if (a.goalType === 'vezes') return goalKind(a).timesUnit ? plural(+v || 0, ...goalKind(a).timesUnit) : `${num(v)}×`;
+  if (a.goalType === 'vezes') return a.unit === 'dias' || a.kind === 'dieta' ? plural(+v || 0, 'dia', 'dias') : `${num(v)}×`;
   return a.unit ? `${num(v)} ${a.unit}` : num(v);
 }
 
@@ -54,7 +44,8 @@ function untilText(a) {
 
 function goalText(a) {
   const until = untilText(a);
-  if (a.goalType === 'objetivo') return [plural((a.objectives || []).length, 'etapa', 'etapas'), until].filter(Boolean).join(' ');
+  if (isSimple(a)) return until;
+  if (a.goalType === 'objetivo') return [plural(a.objectives.length, 'etapa', 'etapas'), until].filter(Boolean).join(' ');
   if (tracksValue(a)) return [`de ${amountText(a, a.from)} para ${amountText(a, a.to)}`, until].filter(Boolean).join(' ');
   return `${amountText(a, a.target)} ${isLongTerm(a) ? until || 'no total' : `por ${PERIODS[goalPeriod(a)]}`}`;
 }
@@ -62,8 +53,10 @@ function goalText(a) {
 function goalProgress(a) {
   const period = goalPeriod(a);
   let value, target, p, left;
-  if (a.goalType === 'objetivo') {
-    const o = a.objectives || [];
+  if (isSimple(a)) {
+    value = a.done ? 1 : 0; target = 1; p = value; left = 1 - value;
+  } else if (a.goalType === 'objetivo') {
+    const o = a.objectives;
     value = o.filter(x => x.done).length;
     target = o.length;
     p = target ? value / target : 0;
@@ -94,12 +87,12 @@ function goalProgress(a) {
   else if (hasPace(a)) {
     const [from, to] = period === 'total' ? [a.startDate || today(), a.deadline] : periodRange(period);
     const elapsed = Math.min(1, (diffDays(from, today()) + 1) / (Math.max(0, diffDays(from, to)) + 1));
-    status = today() > to ? 'Prazo passou' : p >= elapsed ? 'No ritmo' : 'Abaixo do ritmo';
+    status = today() > to ? 'Prazo passou' : isSimple(a) ? '' : p >= elapsed ? 'No ritmo' : 'Abaixo do ritmo';
   }
   const steps = a.goalType === 'objetivo';
   return {
     value, target, p, left, status, period,
-    text: steps ? `${value} de ${target}` : amountText(a, value),
+    text: isSimple(a) ? (a.done ? 'Concluída' : 'A fazer') : steps ? `${value} de ${target}` : amountText(a, value),
     leftText: steps ? plural(left, 'etapa', 'etapas') : amountText(a, left),
     targetText: steps ? '' : amountText(a, target),
   };
@@ -112,8 +105,9 @@ const statusClass = s => s === 'Meta batida' ? 'ok' : s === 'No ritmo' ? '' : s 
 const onPace = a => ['Meta batida', 'No ritmo'].includes(goalProgress(a).status);
 
 function goalFoot(a, g) {
-  const nesta = `nest${g.period === 'mes' ? 'e mês' : 'a semana'}`;
+  const nesta = { dia: 'hoje', semana: 'nesta semana', mes: 'neste mês' }[g.period];
   if (g.p >= 1) return isLongTerm(a) ? 'Concluída.' : `Concluída ${nesta}.`;
+  if (isSimple(a)) return a.deadline ? `Prazo ${untilLabel(a.deadline)}.` : '';
   const faltam = g.left === 1 && a.goalType !== 'tempo' ? 'Falta' : 'Faltam';
   if (!isLongTerm(a)) return `${faltam} ${g.leftText} ${nesta}.`;
   if (!a.deadline) return `${faltam} ${g.leftText}.`;
@@ -134,35 +128,39 @@ function goalCard(a) {
   const id = esc(a.id);
   const badge = g.status ? `<span class="badge ${statusClass(g.status)}">${g.status}</span>` : '';
   const logs = a.goalType === 'objetivo' ? [] : logsOf(a.id).slice(0, 3);
+  const foot = goalFoot(a, g);
   let main;
-  if (a.goalType === 'objetivo') {
+  if (isSimple(a)) {
+    main = `${badge ? `<div class="goal-progress"><span></span>${badge}</div>` : ''}${foot ? `<p class="desc" style="margin:0">${esc(foot)}</p>` : ''}`;
+  } else if (a.goalType === 'objetivo') {
     main = `<div class="goal-progress"><span><b>${g.value}</b> de ${g.target}</span>${badge}</div>
       ${meter(g.p, g.p >= 1 ? 'ok' : '', color)}
-      ${a.deadline && g.p < 1 ? `<p class="desc" style="margin:0">${goalFoot(a, g)}</p>` : ''}
-      <div class="list">${(a.objectives || []).map(o => `<div class="task ${o.done ? 'done' : ''}">
+      ${a.deadline && g.p < 1 ? `<p class="desc" style="margin:0">${esc(foot)}</p>` : ''}
+      <div class="list">${a.objectives.map(o => `<div class="task ${o.done ? 'done' : ''}">
         <button class="checkbox ${o.done ? 'on' : ''}" data-action="toggle-objective" data-id="${id}" data-obj="${esc(o.id)}" role="checkbox" aria-checked="${!!o.done}" aria-label="${esc(o.text)}"></button>
-        <span class="task-main"><span class="task-title">${esc(o.text)}</span></span></div>`).join('') || '<p class="empty">Sem etapas.</p>'}</div>`;
+        <span class="task-main"><span class="task-title">${esc(o.text)}</span></span></div>`).join('')}</div>`;
   } else {
     main = `<div class="goal-progress"><span><b>${esc(g.text)}</b> ${tracksValue(a) ? '→' : 'de'} ${esc(g.targetText)}</span>${badge}</div>
       ${meter(g.p, g.p >= 1 ? 'ok' : '', color)}
-      <p class="desc" style="margin:0">${esc(goalFoot(a, g))}</p>`;
+      <p class="desc" style="margin:0">${esc(foot)}</p>`;
   }
-  const buttons = {
-    tempo: () => `<button class="btn btn-sm btn-primary" data-action="log-activity" data-id="${id}">${icon('clock')}Registrar tempo</button>`,
-    vezes: () => (doneToday(a)
-      ? `<button class="btn btn-sm" data-action="quick-log" data-id="${id}" aria-pressed="true" title="Clique para desmarcar">${icon('check')}${goalKind(a).done || 'Fiz hoje'}</button>`
-      : `<button class="btn btn-sm btn-primary" data-action="quick-log" data-id="${id}">${icon('plus')}${goalKind(a).done || 'Fiz hoje'}</button>`)
-      + `<button class="btn btn-sm" data-action="log-activity" data-id="${id}">Detalhes</button>`,
-    quantidade: () => tracksValue(a)
-      ? `<button class="btn btn-sm btn-primary" data-action="log-activity" data-id="${id}">${icon('edit')}${goalKind(a).log || 'Atualizar'}</button>`
-      : goalKind(a).plusOne
-        ? `<button class="btn btn-sm btn-primary" data-action="plus-one" data-id="${id}">${icon('plus')}${goalKind(a).plusOne}</button>`
-          + `<button class="btn btn-sm" data-action="log-activity" data-id="${id}">Detalhes</button>`
-        : `<button class="btn btn-sm btn-primary" data-action="log-activity" data-id="${id}">${icon('plus')}Registrar</button>`,
-  }[a.goalType]?.() || '';
+  const btn = (action, label, ico, primary = true, extra = '') =>
+    `<button class="btn btn-sm ${primary ? 'btn-primary' : ''}" data-action="${action}" data-id="${id}" ${extra}>${ico ? icon(ico) : ''}${label}</button>`;
+  let buttons = '';
+  if (isSimple(a)) buttons = a.done ? btn('toggle-goal-done', 'Concluída', 'check', false, 'aria-pressed="true"') : btn('toggle-goal-done', 'Concluí', 'check');
+  else if (a.goalType === 'tempo') buttons = btn('log-activity', 'Registrar tempo', 'clock');
+  else if (a.goalType === 'vezes') {
+    buttons = (doneToday(a) ? btn('quick-log', 'Fiz hoje', 'check', false, 'aria-pressed="true" title="Clique para desmarcar"') : btn('quick-log', 'Fiz hoje', 'plus'))
+      + btn('log-activity', 'Detalhes', '', false);
+  } else if (tracksValue(a)) buttons = btn('log-activity', isWeight(a) ? 'Anotar peso' : 'Atualizar', 'edit');
+  else if (a.goalType === 'quantidade') {
+    // Metas de longo prazo com poucas unidades inteiras (livros, cursos) ganham o "+1" direto.
+    buttons = (isLongTerm(a) && Number.isInteger(+a.target) && a.target <= 50 ? btn('plus-one', '+1', '', true) + btn('log-activity', 'Registrar', '', false) : btn('log-activity', 'Registrar', 'plus'));
+  }
+  const sub = [`<span class="pill" style="--c:${esc(color)}">${esc(ar?.name || 'Sem área')}</span>`, esc(goalText(a))].filter(Boolean).join(' · ');
   return `<article class="card goal-card">
     <div class="goal-top">
-      <div><h3>${esc(a.name)}</h3><p class="sub"><span class="pill" style="--c:${esc(color)}">${esc(ar?.name || 'Sem área')}</span> · ${esc(goalText(a))}</p></div>
+      <div><h3>${esc(a.name)}</h3><p class="sub">${sub}</p></div>
       <button class="icon-btn ghost sm" data-action="edit-activity" data-id="${id}" aria-label="Editar ${esc(a.name)}">${icon('edit')}</button>
     </div>
     ${main}
@@ -191,7 +189,7 @@ screens.metas = () => {
   const areas = Store.data.areas;
   const sel = state.goalArea;
   const list = activitiesList().filter(a => !sel || a.areaId === sel);
-  const paced = activitiesList().filter(hasPace);
+  const paced = activitiesList().filter(a => hasPace(a) && !isSimple(a));
   const onTrack = paced.filter(onPace).length;
 
   const head = `<div class="title-block"><h1>Metas</h1>
@@ -218,142 +216,229 @@ screens.metas = () => {
   return { head, body: `<div class="stack"><div>${filter}</div>${content}${screenCard()}</div>`, after: bindChartTooltip };
 };
 
+/* ---------- Entender o que a pessoa escreveu ---------- */
+
+const NUM_WORDS = { dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10, doze: 12, quinze: 15, vinte: 20, trinta: 30 };
+const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const STOPWORDS = new Set(['eu', 'quero', 'meta', 'de', 'do', 'da', 'por', 'em', 'a', 'o', 'os', 'as', 'no', 'na', 'e', 'ate', 'pra', 'para', 'cada', 'todo', 'toda', 'com']);
+/** Áreas que a meta sugere; Corpo também acha Fitness e Saúde. */
+const GOAL_AREAS = [
+  { name: 'Corpo', aliases: ['corpo', 'fitness', 'saude'], re: /trein|academia|muscula|corr|caminh|nada|natac|pedal|bike|yoga|pilates|alonga|peso|\bkg\b|quilo|emagrec|engord|dieta|agua|dormir|sono|passos|abdomin|flex|lutar|futebol|esporte/ },
+  { name: 'Leitura', aliases: ['leitura', 'livros'], re: /\bler\b|leitura|livro|pagina/ },
+];
+const parseNum = s => +String(s).replace(',', '.');
+
+function goalAreaId(text) {
+  const t = norm(text);
+  const g = GOAL_AREAS.find(x => x.re.test(t));
+  if (!g) return '';
+  return Store.data.areas.find(a => g.aliases.includes(norm(a.name)))?.id || `new:${g.name}`;
+}
+
+function deadlineOf(m, kind) {
+  const t = today();
+  if (kind === 'data') {
+    let y = m[3] ? +m[3] : +t.slice(0, 4);
+    if (y < 100) y += 2000;
+    const d = `${y}-${pad(+m[2])}-${pad(+m[1])}`;
+    return !m[3] && d < t ? `${y + 1}${d.slice(4)}` : d;
+  }
+  if (kind === 'mes') {
+    const mi = MONTHS.indexOf(m[1]);
+    let y = m[2] ? +m[2] : +t.slice(0, 4);
+    if (!m[2] && mi + 1 < +t.slice(5, 7)) y++;
+    return addDays(addMonths(`${y}-${pad(mi + 1)}-01`, 1), -1);
+  }
+  if (kind === 'ano') return `${t.slice(0, 4)}-12-31`;
+  const n = +m[1], u = m[2];
+  if (u.startsWith('dia')) return addDays(t, n);
+  if (u.startsWith('semana')) return addDays(t, n * 7);
+  if (u.startsWith('mes')) return addMonths(t, n);
+  return addMonths(t, n * 12);
+}
+
+/** "treinar 3x por semana" → { name: 'Treinar', goalType: 'vezes', target: 3, period: 'semana', areaId }. */
+function parseGoal(raw) {
+  const words = raw.toLowerCase().split(/[^\p{L}\d]+/u).filter(Boolean);
+  const orig = w => words.find(x => norm(x) === w) || w;
+  let s = ` ${norm(raw).replace(/×/g, 'x').replace(/(\d)\s*,\s*(\d)/g, '$1.$2')} `
+    .replace(/\b(dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|doze|quinze|vinte|trinta)\b/g, w => NUM_WORDS[w]);
+  const cut = re => { const m = s.match(re); if (m) s = s.replace(m[0], ' '); return m; };
+  const g = { areaId: goalAreaId(raw) };
+  let m, nameFrom;
+  const N = '(\\d+(?:\\.\\d+)?)';
+
+  if ((m = cut(/\b(?:ate|em) (?:o )?(?:dia )?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/))) g.deadline = deadlineOf(m, 'data');
+  else if ((m = cut(/\bate (?:o )?(?:fim |final )?(?:de )?(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*(?: de (\d{4}))?/))) g.deadline = deadlineOf(m, 'mes');
+  else if ((m = cut(/\b(?:ate o (?:fim|final) do ano|(?:n?es[st]e|no) ano)\b/))) g.deadline = deadlineOf(m, 'ano');
+  else if ((m = cut(/\bem (\d+) (dias?|semanas?|mes|meses|anos?)\b/))) g.deadline = deadlineOf(m, 'prazo');
+
+  if (cut(/(?:\b(?:por|ao|cada|todo|todos os)|\/) ?dias?\b|\bdiari\w*/)) g.period = 'dia';
+  else if (cut(/(?:\b(?:por|na|cada|toda|todas as)|\/) ?semanas?\b|\bsemana\w*/)) g.period = 'semana';
+  else if (cut(/(?:\b(?:por|no|cada|todo)|\/) ?mes\b|\bmensa\w*/)) g.period = 'mes';
+
+  if ((m = cut(new RegExp(`\\bde ${N} ?([a-z]*) (?:para|pra|ate|a) ${N} ?([a-z]*)`)))) {
+    Object.assign(g, { goalType: 'quantidade', track: 'valor', from: parseNum(m[1]), to: parseNum(m[3]), unit: orig(m[4] || m[2]) });
+  } else if ((m = s.match(new RegExp(`\\b(perder|emagrecer|secar|baixar|reduzir|ganhar|engordar|subir|aumentar)\\b(?:.*?)${N} ?(kg|quilos?|kilos?)\\b`)))) {
+    const delta = parseNum(m[2]) * (/^(ganhar|engordar|subir|aumentar)$/.test(m[1]) ? 1 : -1);
+    Object.assign(g, { goalType: 'quantidade', track: 'valor', delta, unit: 'kg' });
+    nameFrom = `${cap(orig(m[1]))} ${num(Math.abs(delta))} kg`;
+  } else if ((m = cut(new RegExp(`\\bchegar (?:a|aos?|em|nos?) ${N} ?(kg|quilos?|kilos?)?`)))) {
+    Object.assign(g, { goalType: 'quantidade', track: 'valor', to: parseNum(m[1]), unit: m[2] ? 'kg' : '' });
+  } else if ((m = cut(new RegExp(`${N} ?(?:h|horas?)(?: ?e? ?(\\d+) ?(?:min\\w*)?| e meia)?(?![a-z])|(\\d+) ?min\\w*`)))) {
+    const minutes = m[3] ? +m[3] : Math.round(parseNum(m[1]) * 60 + (m[2] ? +m[2] : /e meia/.test(m[0]) ? 30 : 0));
+    Object.assign(g, { goalType: 'tempo', target: minutes });
+  } else if ((m = cut(/(\d+) ?(?:x|vezes|vez)(?![a-z])/))) {
+    Object.assign(g, { goalType: 'vezes', target: +m[1] });
+  } else if ((m = cut(/(\d+) ?dias?\b/))) {
+    Object.assign(g, { goalType: 'vezes', target: +m[1], unit: 'dias' });
+  } else if ((m = s.match(new RegExp(`${N} ?([a-z]+)?`)))) {
+    // Unidade curta (km) sai do nome; palavra fica ("Ler páginas"), a não ser que venha "de": "Beber água".
+    const unit = m[2] && !STOPWORDS.has(m[2]) ? m[2] : '';
+    const de = unit && s.includes(`${m[0]} de `);
+    s = s.replace(de ? `${m[0]} de ` : m[0], unit.length > 3 && !de ? ` ${unit} ` : ' ');
+    Object.assign(g, { goalType: 'quantidade', target: parseNum(m[1]), unit: orig(unit) });
+  } else g.goalType = 'objetivo';
+
+  if (!g.period) g.period = g.goalType === 'vezes' || g.goalType === 'tempo' ? (g.deadline ? 'total' : 'semana') : 'total';
+  if (g.track === 'valor') g.period = 'total';
+
+  const rest = s.split(/\s+/).filter(Boolean);
+  while (rest.length && STOPWORDS.has(rest[0])) rest.shift();
+  while (rest.length && STOPWORDS.has(rest[rest.length - 1])) rest.pop();
+  g.name = nameFrom || cap(rest.map(orig).join(' ')) || (g.unit === 'kg' ? 'Peso' : '');
+  return g;
+}
+
 /* ---------- Formulários ---------- */
 
-/** Área do tipo pronto: a que já existe (Corpo também acha Fitness e Saúde) ou "new:Nome", criada ao salvar. */
-const AREA_ALIASES = { corpo: ['corpo', 'fitness', 'saude'], leitura: ['leitura', 'livros'] };
-function kindAreaId(kind) {
-  const name = GOAL_KINDS[kind]?.area;
-  if (!name) return '';
-  const names = AREA_ALIASES[norm(name)] || [norm(name)];
-  return Store.data.areas.find(a => names.includes(norm(a.name)))?.id || `new:${name}`;
-}
+const GOAL_IDEAS = ['Treinar 3x por semana', 'Perder 5 kg até dezembro', 'Dieta 5 dias por semana', 'Ler 20 páginas por dia', 'Terminar 12 livros este ano'];
 
 function activityForm(a) {
   if (!Store.data.areas.length) Store.upsert('areas', { id: uid(), name: 'Geral', color: SWATCHES[0] });
   const isNew = !a;
-  a = a ? structuredClone(a) : { id: uid(), kind: 'treino', ...GOAL_KINDS.treino.preset, name: GOAL_KINDS.treino.name, areaId: kindAreaId('treino'), track: 'soma', deadline: '', objectives: [], notes: '' };
-  const kind = a.kind && GOAL_KINDS[a.kind] ? a.kind : 'outra';
+  a = a ? structuredClone(a) : { id: uid(), name: '', areaId: state.goalArea || Store.data.areas[0].id, goalType: 'objetivo', target: 0, period: 'semana', unit: '', track: 'soma', deadline: '', objectives: [], notes: '' };
   const t = a.goalType;
-  const tH = t === 'tempo' ? Math.floor(a.target / 60) : 3, tM = t === 'tempo' ? a.target % 60 : 0;
+  const tH = t === 'tempo' ? Math.floor(a.target / 60) : 0, tM = t === 'tempo' ? a.target % 60 : 0;
   const val = v => v == null ? '' : v;
-  const kindOptions = groups => groups.map(([label, ids]) => `<optgroup label="${label}">${options(ids.map(k => [k, GOAL_KINDS[k].label]), kind)}</optgroup>`).join('');
-  const newAreas = [...new Set([a.areaId, ...Object.keys(GOAL_KINDS).map(kindAreaId)])].filter(id => id.startsWith('new:'));
-  const areaSel = areaOptions(a.areaId) + newAreas.map(id => `<option value="${esc(id)}" ${a.areaId === id ? 'selected' : ''}>${esc(id.slice(4))}</option>`).join('');
+  const newAreas = GOAL_AREAS.filter(g => !Store.data.areas.some(x => g.aliases.includes(norm(x.name)))).map(g => `new:${g.name}`);
+  const areaSel = areaOptions(a.areaId) + newAreas.map(id => `<option value="${esc(id)}">${esc(id.slice(4))}</option>`).join('');
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Nova meta' : 'Editar meta')}
     <div class="modal-body">
-      <label class="field"><span>Tipo</span><select name="kind">${kindOptions([
-        ['Corpo', ['treino', 'treinoTempo', 'peso', 'dieta', 'corrida']],
-        ['Leitura', ['leitura', 'livros']],
-        ['Outras', ['outra']]])}</select></label>
-      <div class="row">
-        <label class="field"><span>Meta</span><input name="name" maxlength="80" value="${esc(a.name)}"></label>
-        <label class="field"><span>Área</span><select name="areaId">${areaSel}</select></label>
+      <label class="field"><span>Meta</span><input name="text" maxlength="120" value="${isNew ? '' : esc(a.name)}" autocomplete="off" ${isNew ? 'autofocus' : ''}></label>
+      ${isNew ? `<div class="goal-ideas">${GOAL_IDEAS.map(i => `<button type="button" class="btn btn-sm btn-ghost" data-idea="${esc(i)}">${esc(i)}</button>`).join('')}</div>` : ''}
+      <p class="goal-preview" aria-live="polite"></p>
+      <div class="row g-valor">
+        <label class="field xs"><span class="l-from">Hoje</span><input type="number" name="from" step="any" value="${esc(val(a.from))}"></label>
+        <label class="field xs"><span class="l-to">Meta</span><input type="number" name="to" step="any" value="${esc(val(a.to))}"></label>
       </div>
-      <div class="row g-custom">
-        <label class="field"><span>Medida</span><select name="goalType">${options(Object.entries(GOAL_TYPES), t)}</select></label>
-        <label class="field g-track"><span>Acompanhar</span><select name="track">${options([['soma', 'Somando o que fizer'], ['valor', 'Pelo valor atual']], a.track || 'soma')}</select></label>
-      </div>
-      <div class="row">
-        <label class="field xs g-vezes"><span class="l-vezes">Vezes</span><input type="number" name="times" min="1" max="9999" value="${t === 'vezes' ? a.target : 3}"></label>
-        <label class="field xs g-tempo"><span>Horas</span><input type="number" name="h" min="0" max="9999" value="${tH}"></label>
-        <label class="field xs g-tempo"><span>Minutos</span><input type="number" name="m" min="0" max="59" value="${tM}"></label>
-        <label class="field xs g-soma"><span class="l-soma">Quanto</span><input type="number" name="amount" min="0" step="any" value="${t === 'quantidade' && a.track !== 'valor' ? a.target : ''}"></label>
-        <label class="field xs g-valor"><span class="l-from">De</span><input type="number" name="from" step="any" value="${esc(val(a.from))}"></label>
-        <label class="field xs g-valor"><span class="l-to">Para</span><input type="number" name="to" step="any" value="${esc(val(a.to))}"></label>
-        <label class="field g-unit"><span>Unidade</span><input name="unit" maxlength="20" value="${esc(a.unit || '')}"></label>
-        <label class="field g-period"><span>Prazo</span><select name="period">${options([['semana', 'Por semana'], ['mes', 'Por mês'], ['total', 'Longo prazo']], goalPeriod(a))}</select></label>
-      </div>
-      <label class="field g-deadline"><span>Até</span><input type="date" name="deadline" value="${esc(a.deadline || '')}"></label>
-      <div class="g-objetivo"><span class="fieldset-label">Etapas</span>
-        <div style="margin-top:6px">${listEditor('objectives', a.objectives || [], { addLabel: 'Adicionar etapa' })}</div></div>
-      <label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>
+      <details class="goal-more" ${isNew ? '' : 'open'}><summary>Ajustar</summary>
+        <div class="row">
+          <label class="field"><span>Nome</span><input name="name" maxlength="80" value="${esc(a.name)}"></label>
+          <label class="field"><span>Área</span><select name="areaId">${areaSel}</select></label>
+        </div>
+        <div class="row">
+          <label class="field"><span>Medida</span><select name="goalType">${options(Object.entries(GOAL_TYPES), t)}</select></label>
+          <label class="field g-period"><span>Prazo</span><select name="period">${options([['dia', 'Por dia'], ['semana', 'Por semana'], ['mes', 'Por mês'], ['total', 'Longo prazo']], goalPeriod(a))}</select></label>
+        </div>
+        <div class="row">
+          <label class="field xs g-vezes"><span>Vezes</span><input type="number" name="times" min="1" max="9999" value="${t === 'vezes' ? a.target : ''}"></label>
+          <label class="field xs g-tempo"><span>Horas</span><input type="number" name="h" min="0" max="9999" value="${t === 'tempo' ? tH : ''}"></label>
+          <label class="field xs g-tempo"><span>Minutos</span><input type="number" name="m" min="0" max="59" value="${t === 'tempo' ? tM : ''}"></label>
+          <label class="field xs g-soma"><span>Quanto</span><input type="number" name="amount" min="0" step="any" value="${t === 'quantidade' && a.track !== 'valor' ? a.target : ''}"></label>
+          <label class="field g-unit"><span>Unidade</span><input name="unit" maxlength="20" value="${esc(a.unit || '')}"></label>
+          <label class="field g-track"><span>Acompanhar</span><select name="track">${options([['soma', 'Somando o que fizer'], ['valor', 'Pelo valor atual']], a.track || 'soma')}</select></label>
+        </div>
+        <label class="field g-deadline"><span>Até</span><input type="date" name="deadline" value="${esc(a.deadline || '')}"></label>
+        <div class="g-objetivo"><span class="fieldset-label">Etapas</span>
+          <div style="margin-top:6px">${listEditor('objectives', a.objectives || [], { addLabel: 'Adicionar etapa' })}</div></div>
+        <label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>
+      </details>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
   </form>`, {
     onMount(form) {
       const el = form.elements;
-      let lastKind = kind;
+      // Campo mexido à mão não é mais sobrescrito pelo texto.
+      const touched = new Set();
+      const more = $('.goal-more', form);
+      ['input', 'change'].forEach(ev => more.addEventListener(ev, e => { if (e.isTrusted && e.target.name) touched.add(e.target.name); }));
+      el.to.addEventListener('input', e => { if (e.isTrusted) touched.add('to'); });
+      let delta = null;
+      const put = (name, v) => { if (!touched.has(name) && v !== undefined) el[name].value = v ?? ''; };
       const sync = () => {
-        const k = GOAL_KINDS[el.kind.value], custom = el.kind.value === 'outra';
         const t = el.goalType.value;
         const total = t === 'objetivo' || el.period.value === 'total';
         const valor = t === 'quantidade' && total && el.track.value === 'valor';
-        $('.g-custom', form).hidden = !custom;
+        $('.g-period', form).hidden = t === 'objetivo';
         $('.g-track', form).hidden = !(t === 'quantidade' && total);
-        $('.g-period', form).hidden = t === 'objetivo' || !!k.fixedPeriod;
         $$('.g-vezes', form).forEach(x => { x.hidden = t !== 'vezes'; });
         $$('.g-tempo', form).forEach(x => { x.hidden = t !== 'tempo'; });
         $('.g-soma', form).hidden = t !== 'quantidade' || valor;
-        $$('.g-valor', form).forEach(x => { x.hidden = !valor; });
-        $('.g-unit', form).hidden = t !== 'quantidade' || !custom;
+        $('.g-unit', form).hidden = t !== 'quantidade';
+        $('.g-valor', form).hidden = !valor;
         $('.g-deadline', form).hidden = !total;
         $('.g-objetivo', form).hidden = t !== 'objetivo';
         const unit = el.unit.value.trim();
-        $('.l-vezes', form).textContent = k.timesLabel || 'Vezes';
-        $('.l-soma', form).textContent = custom || !unit ? 'Quanto' : unit.length < 4 ? `Quanto (${unit})` : cap(unit);
-        $('.l-from', form).textContent = k.fromLabel || 'De';
-        $('.l-to', form).textContent = k.toLabel || 'Para';
+        $('.l-from', form).textContent = unit ? `Hoje (${unit})` : 'Hoje';
+        $('.l-to', form).textContent = unit ? `Meta (${unit})` : 'Meta';
+        const { goal } = readGoal(form);
+        const ar = goal && (area(goal.areaId)?.name || goal.areaId.replace(/^new:/, ''));
+        $('.goal-preview', form).textContent = goal
+          ? [goal.name, valor && el.from.value === '' ? untilText(goal) : goalText(goal), ar].filter(Boolean).join(' · ')
+          : '';
       };
-      // Trocar o tipo preenche medida, prazo e unidade; o nome só se ainda for o padrão.
-      el.kind.addEventListener('change', () => {
-        const k = GOAL_KINDS[el.kind.value];
-        if (k.preset) {
-          el.goalType.value = k.preset.goalType;
-          el.period.value = k.preset.period;
-          el.track.value = k.preset.track || 'soma';
-          el.unit.value = k.preset.unit || '';
-          if (k.preset.goalType === 'vezes') el.times.value = k.preset.target;
-          if (k.preset.goalType === 'quantidade' && k.preset.track !== 'valor') el.amount.value = k.preset.target;
-          if (k.preset.goalType === 'tempo') { el.h.value = Math.floor(k.preset.target / 60); el.m.value = k.preset.target % 60; }
-        }
-        if (!el.name.value.trim() || el.name.value === GOAL_KINDS[lastKind].name) el.name.value = k.name || '';
-        if (isNew) el.areaId.value = k.area ? kindAreaId(el.kind.value) : state.goalArea || Store.data.areas[0].id;
-        lastKind = el.kind.value;
+      const fromText = () => {
+        const p = parseGoal(el.text.value);
+        delta = p.delta ?? null;
+        put('name', p.name);
+        put('goalType', p.goalType);
+        put('period', p.period);
+        put('track', p.track || 'soma');
+        put('unit', p.unit || '');
+        put('deadline', p.deadline || '');
+        if (p.areaId) put('areaId', p.areaId);
+        put('times', p.goalType === 'vezes' ? p.target : '');
+        put('amount', p.goalType === 'quantidade' && p.track !== 'valor' ? p.target : '');
+        put('h', p.goalType === 'tempo' ? Math.floor(p.target / 60) : '');
+        put('m', p.goalType === 'tempo' ? p.target % 60 : '');
+        if (p.from != null) put('from', p.from);
+        if (p.to != null) put('to', p.to);
+        else if (delta != null && el.from.value !== '') put('to', Math.round((+el.from.value + delta) * 100) / 100);
         sync();
+      };
+      // Em metas existentes o texto só manda depois que a pessoa mexe nele.
+      el.text.addEventListener('input', fromText);
+      // "Perder 5 kg": a meta sai do peso de hoje.
+      el.from.addEventListener('input', () => {
+        if (delta != null && el.from.value !== '') put('to', Math.round((+el.from.value + delta) * 100) / 100);
       });
-      ['goalType', 'period', 'track'].forEach(n => el[n].addEventListener('change', sync));
-      el.unit.addEventListener('input', sync);
+      form.addEventListener('input', e => { if (e.target !== el.text) sync(); });
+      form.addEventListener('change', sync);
+      form.addEventListener('click', e => {
+        const idea = e.target.closest('[data-idea]');
+        if (!idea) return;
+        el.text.value = idea.dataset.idea;
+        fromText();
+        el.text.focus();
+      });
       sync();
     },
     onSubmit(form) {
-      const f = formData(form);
-      const k = GOAL_KINDS[f.kind];
-      const period = f.goalType === 'objetivo' ? 'total' : f.period;
-      const track = f.goalType === 'quantidade' && period === 'total' ? f.track : 'soma';
-      let target = 0, from, to;
-      if (f.goalType === 'vezes') target = Math.min(f.kind === 'dieta' ? 7 : 9999, Math.max(1, +f.times || 1));
-      if (f.goalType === 'tempo') target = (+f.h || 0) * 60 + (+f.m || 0);
-      if (f.goalType === 'tempo' && !target) return formError(form, 'Falta o tempo.');
-      if (f.goalType === 'quantidade' && track === 'soma') {
-        target = +f.amount || 0;
-        if (target <= 0) return formError(form, 'Falta quanto.');
+      const r = readGoal(form);
+      if (r.error) {
+        if (r.inMore) $('.goal-more', form).open = true;
+        return formError(form, r.error);
       }
-      if (track === 'valor') {
-        if (f.from === '') return formError(form, f.kind === 'peso' ? 'Falta o peso atual.' : 'Falta de onde parte.');
-        if (f.to === '') return formError(form, f.kind === 'peso' ? 'Falta o peso que quer.' : 'Falta aonde quer chegar.');
-        from = +f.from; to = +f.to;
-      }
-      let name = f.name.trim();
-      if (f.kind === 'peso' && (!name || name === k.name)) name = to > from ? 'Ganhar peso' : to < from ? 'Perder peso' : 'Manter o peso';
-      if (!name) return formError(form, 'Falta o nome.');
-      const objectives = readList(form, 'objectives');
-      if (f.goalType === 'objetivo' && !objectives.length) return formError(form, 'Falta pelo menos uma etapa.');
-      let areaId = f.areaId;
+      let { areaId } = r.goal;
       if (areaId.startsWith('new:')) {
         const name = areaId.slice(4);
         areaId = uid();
         Store.upsert('areas', { id: areaId, name, color: SWATCHES[(Store.data.areas.length * 3) % SWATCHES.length] });
       }
-      Object.assign(a, {
-        kind: f.kind, name, areaId, goalType: f.goalType, target, period, track, from, to,
-        unit: f.goalType === 'quantidade' ? f.unit.trim() : '',
-        deadline: period === 'total' ? f.deadline : '',
-        startDate: a.startDate || today(),
-        objectives, notes: f.notes.trim(),
-      });
+      Object.assign(a, r.goal, { areaId, startDate: a.startDate || today() });
       Store.upsert('activities', a);
       closeModal();
       render();
@@ -370,14 +455,44 @@ function activityForm(a) {
   });
 }
 
+/** Lê o formulário de meta: { goal } pronta para salvar e, se faltar algo, { error }. */
+function readGoal(form) {
+  const f = formData(form);
+  const name = (f.name || f.text).trim();
+  if (!name) return { error: 'Falta a meta.' };
+  const goalType = f.goalType;
+  const period = goalType === 'objetivo' ? 'total' : f.period;
+  const track = goalType === 'quantidade' && period === 'total' ? f.track : 'soma';
+  let target = 0;
+  if (goalType === 'vezes') target = +f.times || 0;
+  if (goalType === 'tempo') target = (+f.h || 0) * 60 + (+f.m || 0);
+  if (goalType === 'quantidade' && track === 'soma') target = +f.amount || 0;
+  const goal = {
+    name, areaId: f.areaId, goalType, target, period, track,
+    unit: goalType === 'quantidade' || goalType === 'vezes' ? f.unit.trim() : '',
+    deadline: period === 'total' ? f.deadline : '',
+    objectives: readList(form, 'objectives'), notes: f.notes.trim(),
+  };
+  if (track === 'valor') {
+    goal.from = f.from === '' ? undefined : +f.from;
+    goal.to = f.to === '' ? undefined : +f.to;
+    if (goal.from === undefined) return { goal, error: 'Falta o valor de hoje.' };
+    if (goal.to === undefined) return { goal, error: 'Falta aonde quer chegar.' };
+  }
+  if (goalType === 'vezes' && target < 1) return { goal, error: 'Falta quantas vezes.', inMore: true };
+  if (goalType === 'tempo' && !target) return { goal, error: 'Falta o tempo.', inMore: true };
+  if (goalType === 'quantidade' && track === 'soma' && target <= 0) return { goal, error: 'Falta quanto.', inMore: true };
+  return { goal };
+}
+
 function logForm(a) {
   const qtd = a.goalType === 'quantidade', valor = tracksValue(a);
   const unit = a.unit ? ` (${esc(a.unit)})` : '';
-  const amountField = qtd ? `<label class="field xs"><span>${valor ? 'Valor atual' : 'Quanto'}${unit}</span><input type="number" name="amount" step="any" ${valor ? '' : 'min="0"'} autofocus value="${valor ? esc(String(goalProgress(a).value)) : ''}"></label>` : '';
+  const amountField = qtd ? `<label class="field xs"><span>${valor ? 'Hoje' : 'Quanto'}${unit}</span><input type="number" name="amount" step="any" ${valor ? '' : 'min="0"'} autofocus value="${valor ? esc(String(goalProgress(a).value)) : ''}"></label>` : '';
   const timeFields = qtd ? '' : `<label class="field xs"><span>Horas</span><input type="number" name="h" min="0" max="24" ${a.goalType === 'tempo' ? 'autofocus' : ''} placeholder="0"></label>
         <label class="field xs"><span>Minutos</span><input type="number" name="m" min="0" max="59" placeholder="0"></label>`;
   openModal(`<form novalidate>
-    ${modalHead(`${valor ? goalKind(a).log || 'Atualizar' : 'Registrar'} · ${a.name}`)}
+    ${modalHead(`${valor ? (isWeight(a) ? 'Anotar peso' : 'Atualizar') : 'Registrar'} · ${a.name}`)}
     <div class="modal-body">
       <div class="row">
         <label class="field"><span>Data</span><input type="date" name="date" value="${today()}" max="${today()}"></label>
@@ -422,6 +537,14 @@ Object.assign(actions, {
   'goal-area': el => { state.goalArea = el.dataset.id; render(); },
   'log-activity': el => { const a = Store.get('activities', el.dataset.id); if (a) logForm(a); },
   'plus-one': el => { const a = Store.get('activities', el.dataset.id); if (a) addLog(a, { date: today(), amount: 1 }); },
+  'toggle-goal-done': el => {
+    const a = Store.get('activities', el.dataset.id);
+    if (!a) return;
+    a.done = !a.done;
+    Store.upsert('activities', a);
+    render();
+    if (a.done) toast(`“${a.name}” concluída!`);
+  },
   // "Fiz hoje" de novo desmarca (tira o registro de hoje).
   'quick-log': el => {
     const a = Store.get('activities', el.dataset.id);

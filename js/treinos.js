@@ -110,7 +110,8 @@ function workoutDay(w, date) {
 
 function workoutForm(w) {
   const isNew = !w;
-  const fitness = Store.data.activities.find(a => !a.archived && ['tempo', 'vezes'].includes(a.goalType) && norm(area(a.areaId)?.name) === 'fitness');
+  const goals = Store.data.activities.filter(a => !a.archived && ['tempo', 'vezes'].includes(a.goalType));
+  const fitness = goals.find(a => ['treino', 'treinoTempo'].includes(a.kind)) || goals.find(a => ['corpo', 'fitness'].includes(norm(area(a.areaId)?.name)));
   w = w ? structuredClone(w) : { id: uid(), name: '', days: [1, 3, 5], start: '07:00', end: '08:00', exercises: [], activityId: fitness?.id || '', doneDates: [] };
   const acts = activitiesList().filter(a => a.goalType === 'tempo' || a.goalType === 'vezes');
   openModal(`<form novalidate>

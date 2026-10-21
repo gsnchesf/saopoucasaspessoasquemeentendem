@@ -279,7 +279,7 @@ function assessmentView(a) {
   const s = subject(a.subjectId);
   const flip = () => { const x = Store.get('assessments', a.id); if (!x) return; x.done = !x.done; Store.upsert('assessments', x); render(); };
   openSheet({
-    title: a.title, color: s?.color, sub: `${esc(s?.name || '')} · ${esc(kindLabel(a))}`,
+    title: a.title, color: s?.color, sub: esc(['Faculdade', s?.name, kindLabel(a)].filter(Boolean).join(' · ')),
     rows: [
       ['Data', esc(`${cap(relDay(a.date))}${a.time ? ' · ' + a.time : ''}`) + (!a.done && a.date < today() ? ' <span class="late">atrasado</span>' : '')],
       ['Situação', a.done ? 'Feito' : ''],

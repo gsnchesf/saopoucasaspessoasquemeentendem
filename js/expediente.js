@@ -26,12 +26,12 @@ function workItems(from, to) {
   const out = [];
   if (!w) return out;
   const s = toMin(w.start), e = toMin(w.end), c = Math.max(0, +w.commute || 0);
-  const base = { allDay: false, deadline: false, label: '' };
+  const base = { allDay: false, deadline: false, label: '', group: 'Trabalho' };
   for (let d = from; d <= to; d = addDays(d, 1)) {
     if (!w.days.includes(weekday(d))) continue;
-    if (c) out.push({ ...base, kind: 'commute', id: 'ida', date: d, title: 'Ida para o trabalho', start: fromMin(Math.max(0, s - c)), end: w.start, color: COMMUTE_COLOR });
+    if (c) out.push({ ...base, kind: 'commute', id: 'ida', date: d, title: 'Ida para o trabalho', group: 'Deslocamento', start: fromMin(Math.max(0, s - c)), end: w.start, color: COMMUTE_COLOR });
     out.push({ ...base, kind: 'work', id: 'trabalho', date: d, title: workTitle(w), start: w.start, end: w.end, color: workColor() });
-    if (c) out.push({ ...base, kind: 'commute', id: 'volta', date: d, title: 'Volta do trabalho', start: w.end, end: fromMin(Math.min(23 * 60 + 59, e + c)), color: COMMUTE_COLOR });
+    if (c) out.push({ ...base, kind: 'commute', id: 'volta', date: d, title: 'Volta do trabalho', group: 'Deslocamento', start: w.end, end: fromMin(Math.min(23 * 60 + 59, e + c)), color: COMMUTE_COLOR });
   }
   return out;
 }

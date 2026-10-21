@@ -48,7 +48,7 @@ function classItems(from, to) {
     for (const [s, sl] of byDay[weekday(d)]) {
       out.push({
         kind: 'class', id: s.id, date: d, title: s.name, start: sl.start, end: sl.end,
-        color: s.color, place: sl.room || s.room, label: s.professor ? `Prof. ${s.professor}` : '',
+        color: s.color, group: 'Faculdade', what: 'Aula', place: sl.room || s.room, label: s.professor ? `Prof. ${s.professor}` : '',
         weight: sl.weight || 1, allDay: false, deadline: false, canceled: (s.canceled || []).includes(d),
       });
     }
@@ -68,7 +68,7 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
     for (const d of occurrences(ev, from, to)) add({
       kind: 'event', id: ev.id, date: d, title: eventTitle(ev),
       start: ev.allDay ? '' : ev.start, end: ev.allDay ? '' : ev.end, allDay: !!ev.allDay, deadline: false,
-      color: EVENT_KINDS[eventKind(ev)].color, label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
+      color: EVENT_KINDS[eventKind(ev)].color, group: EVENT_KINDS[eventKind(ev)].label, what: eventExtra(ev), label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
       repeats: !!ev.repeat && ev.repeat !== 'none',
     });
   }
@@ -79,19 +79,19 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
     if (a.date < from || a.date > to) continue;
     const s = subject(a.subjectId);
     add({ kind: 'assessment', id: a.id, date: a.date, title: a.title, start: a.time || '', allDay: true, deadline: true,
-      color: s?.color || 'var(--faint)', label: s?.name, badge: a.kind, done: !!a.done });
+      color: s?.color || 'var(--faint)', group: 'Faculdade', groupSub: s?.name, what: BADGE_LABEL[a.kind], label: s?.name, badge: a.kind, done: !!a.done });
   }
   for (const d of Store.data.deliverables) {
     if (!d.due || d.due < from || d.due > to) continue;
     add({ kind: 'deliverable', id: d.id, date: d.due, title: d.title, start: d.time || '', allDay: true, deadline: true,
-      color: workColor(), label: d.project, badge: 'entrega', done: d.status === 'entregue' });
+      color: workColor(), group: 'Trabalho', groupSub: d.project, what: 'Entrega', label: d.project, badge: 'entrega', done: d.status === 'entregue' });
   }
   // Exercício de aula faltada combinado para outro dia (presença por exercício).
   for (const a of Store.data.absences) {
     if (!a.delivery || a.present || a.delivery < from || a.delivery > to) continue;
     const s = subject(a.subjectId);
     if (s) add({ kind: 'exercise', id: a.id, date: a.delivery, title: `Exercício da aula de ${fmt(a.date, { day: 'numeric', month: 'short' })}`,
-      start: '', allDay: true, deadline: true, color: s.color, label: s.name, badge: 'exercicio', done: false });
+      start: '', allDay: true, deadline: true, color: s.color, group: 'Faculdade', groupSub: s.name, what: 'Exercício', label: s.name, badge: 'exercicio', done: false });
   }
   for (const d in map) map[d].sort(itemSort);
   return map;
@@ -103,6 +103,14 @@ const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) ||
 
 const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', work: 'edit-work', commute: 'edit-work' };
 const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"`;
+
+/** Etiqueta do hover: de onde vem a cor (Faculdade, Date, Treino…) e quando/onde. */
+function itemTip(it) {
+  const when = it.deadline ? (it.start ? `até ${it.start}` : 'Prazo') : it.allDay ? 'Dia todo' : `${it.start}${it.end ? '–' + it.end : ''}`;
+  const top = [it.group, it.groupSub].filter(Boolean).join(' · ');
+  const bottom = [it.canceled ? 'Cancelada' : it.what, when, it.place].filter(Boolean).join(' · ');
+  return esc(`<b><i style="--c:${esc(it.color)}"></i>${esc(top)}</b><span>${esc(bottom)}</span>`);
+}
 
 function itemRow(it) {
   const t = today(), n = nowMin();
@@ -140,7 +148,7 @@ function itemChip(it) {
   const cls = it.deadline ? 'deadline' : it.kind === 'class' ? `cls${it.canceled ? ' canceled' : ''}` : it.allDay ? 'allday' : '';
   const time = !it.deadline && !it.allDay && it.start ? `<b>${it.start}</b>` : '';
   const prefix = it.deadline ? `${BADGE_LABEL[it.badge]}: ` : '';
-  return `<button class="chip ${cls}" style="--c:${esc(it.color)}" ${itemAttrs(it)} title="${esc(prefix + it.title)}">${time}${esc(prefix + it.title)}</button>`;
+  return `<button class="chip ${cls}" style="--c:${esc(it.color)}" ${itemAttrs(it)} data-tip="${itemTip(it)}">${time}${esc(prefix + it.title)}</button>`;
 }
 
 /* ---------- Tela ---------- */
@@ -266,7 +274,7 @@ function timeGrid(days, showClasses) {
     });
     const blocks = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
-      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''} ${it.canceled ? 'canceled' : ''} ${it.kind === 'commute' ? 'commute' : ''}" ${itemAttrs(it)}
+      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''} ${it.canceled ? 'canceled' : ''} ${it.kind === 'commute' ? 'commute' : ''}" ${itemAttrs(it)} data-tip="${itemTip(it)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="t">${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}</span></button>`;
     }).join('');

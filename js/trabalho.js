@@ -172,7 +172,7 @@ function deliverableView(d) {
   const items = d.checklist || [];
   const late = d.due && d.status !== 'entregue' && d.due < today();
   openSheet({
-    title: d.title, color: workColor(), sub: esc([d.project, st].filter(Boolean).join(' · ')),
+    title: d.title, color: workColor(), sub: esc(['Trabalho', d.project, st].filter(Boolean).join(' · ')),
     rows: [
       ['Prazo', d.due ? esc(`${cap(relDay(d.due))}${d.time ? ' · até ' + d.time : ''}`) + (late ? ' <span class="late">atrasada</span>' : '') : ''],
       ['Prioridade', d.priority ? esc(prio) : ''],

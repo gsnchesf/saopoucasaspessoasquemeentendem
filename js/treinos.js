@@ -19,8 +19,8 @@ function workoutItems(from, to) {
     for (let d = from; d <= to; d = addDays(d, 1)) {
       if (!(w.days || []).includes(weekday(d))) continue;
       const n = (w.exercises || []).length;
-      out.push({ kind: 'workout', id: w.id, date: d, title: w.name, start: w.start, end: w.end, color: workoutColor(),
-        label: n ? plural(n, 'exercício', 'exercícios') : '', allDay: false, deadline: false, state: dayState(w, d) });
+      out.push({ kind: 'workout', id: w.id, date: d, title: w.name, start: w.start, end: w.end, color: workoutColor(), group: 'Treino',
+        what: n ? plural(n, 'exercício', 'exercícios') : '', label: n ? plural(n, 'exercício', 'exercícios') : '', allDay: false, deadline: false, state: dayState(w, d) });
     }
   }
   return out;

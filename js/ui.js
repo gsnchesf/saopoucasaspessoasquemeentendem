@@ -96,6 +96,30 @@ function openSheet({ title, color, sub = '', rows = [], body = '', buttons = [],
   });
 }
 
+/* ---------- Etiqueta de hover (data-tip com HTML já escapado) ---------- */
+
+(() => {
+  let tip, cur;
+  const hide = () => { if (tip) tip.hidden = true; cur = null; };
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    const el = e.target.closest?.('[data-tip]');
+    if (el === cur) return;
+    if (!el) return hide();
+    cur = el;
+    tip ||= document.body.appendChild(Object.assign(document.createElement('div'), { className: 'hover-tip', role: 'tooltip' }));
+    tip.innerHTML = el.dataset.tip;
+    tip.hidden = false;
+    const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect();
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - t.width / 2), innerWidth - t.width - 8);
+    const above = r.top - t.height - 6;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${above > 8 ? above : r.bottom + 6}px`;
+  });
+  ['scroll', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, hide, true));
+  document.addEventListener('pointerleave', hide);
+})();
+
 /* ---------- Fiz / Não fiz num dia (blocos e treinos: doneDates / skippedDates) ---------- */
 
 const dayState = (rec, date) => (rec.doneDates || []).includes(date) ? 'done' : (rec.skippedDates || []).includes(date) ? 'skipped' : null;

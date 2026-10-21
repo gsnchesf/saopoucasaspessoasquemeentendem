@@ -787,6 +787,15 @@ kbd {
   background: var(--toast-bg); color: var(--toast-fg); box-shadow: var(--shadow-lg);
   font-size: 12.5px; white-space: nowrap; transform: translate(-50%, calc(-100% - 8px));
 }
+.hover-tip {
+  position: fixed; z-index: 70; pointer-events: none; display: grid; gap: 1px; max-width: 260px;
+  padding: 6px 10px; border-radius: 8px; background: var(--toast-bg); color: var(--toast-fg); box-shadow: var(--shadow-lg);
+  font-size: 12.5px; line-height: 1.35; animation: fade .1s ease-out;
+}
+.hover-tip b { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.hover-tip b i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .5); }
+.hover-tip span:empty { display: none; }
+.hover-tip span { opacity: .8; }
 .screen-input { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 .screen-input .field { flex: 0 0 auto; width: 92px; min-width: 0; }
 .screen-summary { display: flex; flex-wrap: wrap; gap: 18px; margin: 4px 0 14px; }

@@ -96,7 +96,7 @@ function planGrid(days, blocks, showAgenda) {
       const isBlock = it.kind === 'block';
       const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.canceled && 'canceled', it.kind === 'commute' && 'commute', it.done && 'done', it.skipped && 'skipped'].filter(Boolean).join(' ');
       const attrs = isBlock ? `data-action="edit-block" data-id="${esc(it.id)}" data-date="${it.date}"` : itemAttrs(it);
-      return `<button class="${cls}" ${attrs} title="${esc(`${it.title} · ${it.start}${it.end ? '–' + it.end : ''}${isBlock ? '' : ' (agenda)'}`)}"
+      return `<button class="${cls}" ${attrs} data-tip="${itemTip(isBlock ? { ...it, group: cat(it.category)?.name || 'Bloco' } : it)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
         <span class="t">${it.done ? icon('check') : ''}${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}</span></button>`;
     }).join('');

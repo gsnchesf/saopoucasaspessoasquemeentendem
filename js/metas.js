@@ -5,7 +5,7 @@
    "perder 5 kg até dezembro") e parseGoal preenche os campos,
    que continuam ajustáveis. Cada meta mede (goalType):
    - tempo:       minutos
-   - vezes:       quantas vezes (unit 'dias' mostra "5 dias")
+   - vezes:       quantas vezes
    - quantidade:  número com unidade (páginas, km, livros, kg)
    - objetivo:    etapas para marcar, ou só "Concluí" sem etapas
    num prazo (period): por dia, semana, mês ou longo prazo
@@ -28,10 +28,10 @@ const isWeight = a => tracksValue(a) && /^(kg|quilos?|kilos?)$/i.test(a.unit || 
 /** Tem ritmo a acompanhar: meta por período ou de longo prazo com data. */
 const hasPace = a => !isLongTerm(a) || !!a.deadline;
 
-/** Valor na medida da meta: "2h", "3×", "5 dias", "20 páginas". */
+/** Valor na medida da meta: "2h", "3×", "20 páginas". */
 function amountText(a, v) {
   if (a.goalType === 'tempo') return fmtDuration(v);
-  if (a.goalType === 'vezes') return a.unit === 'dias' || a.kind === 'dieta' ? plural(+v || 0, 'dia', 'dias') : `${num(v)}×`;
+  if (a.goalType === 'vezes') return `${num(v)}×`;
   return a.unit ? `${num(v)} ${a.unit}` : num(v);
 }
 
@@ -293,7 +293,7 @@ function parseGoal(raw) {
   } else if ((m = cut(/(\d+) ?(?:x|vezes|vez)(?![a-z])/))) {
     Object.assign(g, { goalType: 'vezes', target: +m[1] });
   } else if ((m = cut(/(\d+) ?dias?\b/))) {
-    Object.assign(g, { goalType: 'vezes', target: +m[1], unit: 'dias' });
+    Object.assign(g, { goalType: 'vezes', target: +m[1] });
   } else if ((m = s.match(new RegExp(`${N} ?([a-z]+)?`)))) {
     // Unidade curta (km) sai do nome; palavra fica ("Ler páginas"), a não ser que venha "de": "Beber água".
     const unit = m[2] && !STOPWORDS.has(m[2]) ? m[2] : '';
@@ -334,7 +334,7 @@ const GOAL_IDEAS = [
   ['Corpo', [
     { icon: '🏋️', name: 'Treinar', measure: 'vezes', target: 3, period: 'semana' },
     { icon: '⚖️', name: 'Perder peso', measure: 'valor', unit: 'kg', delta: -5, due: '3m' },
-    { icon: '🥗', name: 'Seguir a dieta', measure: 'vezes', target: 5, unit: 'dias', period: 'semana' },
+    { icon: '🥗', name: 'Seguir a dieta', measure: 'vezes', target: 5, period: 'semana' },
     { icon: '🏃', name: 'Correr', measure: 'quantidade', target: 10, unit: 'km', period: 'semana' },
     { icon: '💧', name: 'Beber água', measure: 'quantidade', target: 2, unit: 'litros', period: 'dia' },
     { icon: '😴', name: 'Dormir bem', measure: 'tempo', target: 480, period: 'dia' },
@@ -405,7 +405,7 @@ function activityForm(a) {
           ${chips('measure', [['vezes', 'Vezes'], ['tempo', 'Tempo'], ['quantidade', 'Quantidade'], ['valor', 'Chegar a um valor'], ['concluir', 'Concluir']], m)}</section>
         <section class="goal-sec m-vezes"><span class="fieldset-label">Meta</span><div class="target-row">
           ${stepper('times', a.goalType === 'vezes' ? a.target : 3, 'type="number" min="1" inputmode="numeric" aria-label="Quantas"')}
-          ${chips('timesUnit', [['', 'vezes'], ['dias', 'dias']], a.unit === 'dias' || a.kind === 'dieta' ? 'dias' : '')}</div></section>
+          <span class="unit-word">vezes</span></div></section>
         <section class="goal-sec m-tempo"><span class="fieldset-label">Meta</span><div class="target-row">
           ${stepper('duration', fmtDuration(a.goalType === 'tempo' ? a.target : 30), 'inputmode="text" aria-label="Tempo"')}</div></section>
         <section class="goal-sec m-qtd"><span class="fieldset-label">Meta</span><div class="target-row">
@@ -471,7 +471,7 @@ function activityForm(a) {
         const m = p.track === 'valor' ? 'valor' : p.goalType === 'objetivo' ? 'concluir' : p.goalType;
         put('measure', m);
         if (m === 'vezes' || m === 'tempo' || m === 'quantidade') put('period', p.period);
-        if (m === 'vezes') { put('times', p.target); put('timesUnit', p.unit || ''); }
+        if (m === 'vezes') put('times', p.target);
         if (m === 'tempo') put('duration', fmtDuration(p.target));
         if (m === 'quantidade') { put('amount', p.target); put('unit', p.unit || ''); }
         if (m === 'valor') {
@@ -525,7 +525,7 @@ function activityForm(a) {
           el.icon.value = it.icon;
           el.measure.value = it.measure;
           if (it.period) el.period.value = it.period;
-          if (it.measure === 'vezes') { el.times.value = it.target; el.timesUnit.value = it.unit || ''; }
+          if (it.measure === 'vezes') el.times.value = it.target;
           if (it.measure === 'tempo') el.duration.value = fmtDuration(it.target);
           if (it.measure === 'quantidade') { el.amount.value = it.target; el.unit.value = it.unit || ''; }
           if (it.measure === 'valor') { el.vunit.value = it.unit || ''; el.to.value = ''; }
@@ -582,7 +582,7 @@ function readGoal(form) {
   const goal = {
     name, icon: f.icon || guessEmoji(name), areaId: f.areaId || '', goalType, target, period,
     track: m === 'valor' ? 'valor' : 'soma',
-    unit: { vezes: f.timesUnit, quantidade: f.unit.trim(), valor: f.vunit.trim() }[m] || '',
+    unit: { quantidade: f.unit.trim(), valor: f.vunit.trim() }[m] || '',
     deadline: period === 'total' ? dueDate(f.due, f.deadline) : '',
     objectives: m === 'concluir' ? readList(form, 'objectives') : [],
     why: f.why.trim(), notes: (f.notes || '').trim(),

@@ -160,9 +160,11 @@ function goalCard(a) {
   const sub = [`<span class="pill" style="--c:${esc(color)}">${esc(ar?.name || 'Sem área')}</span>`, esc(goalText(a))].filter(Boolean).join(' · ');
   return `<article class="card goal-card">
     <div class="goal-top">
-      <div><h3>${esc(a.name)}</h3><p class="sub">${sub}</p></div>
+      <div class="goal-title"><span class="goal-emoji sm" style="--c:${esc(color)}" aria-hidden="true">${goalEmoji(a)}</span>
+        <div><h3>${esc(a.name)}</h3><p class="sub">${sub}</p></div></div>
       <button class="icon-btn ghost sm" data-action="edit-activity" data-id="${id}" aria-label="Editar ${esc(a.name)}">${icon('edit')}</button>
     </div>
+    ${a.why ? `<p class="goal-why">${esc(a.why)}</p>` : ''}
     ${main}
     ${buttons ? `<div class="goal-actions">${buttons}</div>` : ''}
     ${logs.length ? `<ul class="goal-log">${logs.map(l => `<li><span>${logLine(a, l)}</span>
@@ -177,7 +179,7 @@ function goalsMini() {
   return `<div class="list">${list.map(a => {
     const g = goalProgress(a), color = area(a.areaId)?.color;
     return `<a class="mini-goal" href="#/metas" style="color:inherit;text-decoration:none">
-      <span class="top"><span>${esc(a.name)}</span><span>${esc(a.goalType === 'objetivo' ? g.text : `${g.text} / ${g.targetText}`)}</span></span>
+      <span class="top"><span>${goalEmoji(a)} ${esc(a.name)}</span><span>${esc(a.goalType === 'objetivo' ? g.text : `${g.text} / ${g.targetText}`)}</span></span>
       ${meter(g.p, g.p >= 1 ? 'ok' : '', color)}
     </a>`;
   }).join('')}</div>`;
@@ -310,128 +312,237 @@ function parseGoal(raw) {
   return g;
 }
 
-/* ---------- Formulários ---------- */
+/* ---------- Formulários ----------
+   Criação no jeito de Stride/TickTick/Go Dreams: ícone e nome grandes,
+   sugestões que preenchem tudo, escolhas em botões, meta com − e +,
+   e um "por quê" para lembrar o motivo. O nome também é lido
+   (parseGoal), então "ler 20 páginas por dia" já ajusta o resto. */
 
-const GOAL_IDEAS = ['Treinar 3x por semana', 'Perder 5 kg até dezembro', 'Dieta 5 dias por semana', 'Ler 20 páginas por dia', 'Terminar 12 livros este ano'];
+const GOAL_EMOJIS = ['🎯', '🏋️', '🏃', '⚖️', '🥗', '💧', '😴', '🧘', '📖', '📚', '🗣️', '💰', '💻', '✍️', '🎸', '🎨', '🌱', '🧹', '🍳', '🚭', '📵', '❤️', '🙏', '⭐'];
+const EMOJI_HINTS = [
+  [/trein|academia|muscula/, '🏋️'], [/corr|caminh|passos/, '🏃'], [/peso|\bkg\b|quilo|emagrec|engord/, '⚖️'], [/dieta|comer|alimenta/, '🥗'],
+  [/agua/, '💧'], [/dorm|sono/, '😴'], [/medit|respira|yoga/, '🧘'], [/livro/, '📚'], [/\bler\b|leitura|pagina/, '📖'],
+  [/ingles|idioma|espanhol|frances|lingua/, '🗣️'], [/dinheiro|reais|guardar|juntar|econom|invest/, '💰'], [/estud|curso|program|codigo/, '💻'],
+  [/escrev|diario/, '✍️'], [/violao|guitarra|piano|music|tocar/, '🎸'], [/desenh|pint|arte/, '🎨'], [/fum|cigarro/, '🚭'],
+  [/celular|tela|redes/, '📵'], [/limp|arrum|casa/, '🧹'], [/cozinh|receita/, '🍳'],
+];
+const guessEmoji = text => EMOJI_HINTS.find(([re]) => re.test(norm(text)))?.[1] || '';
+const goalEmoji = a => a.icon || guessEmoji(a.name) || '🎯';
+
+/** Sugestões prontas: um toque preenche a meta inteira. */
+const GOAL_IDEAS = [
+  ['Corpo', [
+    { icon: '🏋️', name: 'Treinar', measure: 'vezes', target: 3, period: 'semana' },
+    { icon: '⚖️', name: 'Perder peso', measure: 'valor', unit: 'kg', delta: -5, due: '3m' },
+    { icon: '🥗', name: 'Seguir a dieta', measure: 'vezes', target: 5, unit: 'dias', period: 'semana' },
+    { icon: '🏃', name: 'Correr', measure: 'quantidade', target: 10, unit: 'km', period: 'semana' },
+    { icon: '💧', name: 'Beber água', measure: 'quantidade', target: 2, unit: 'litros', period: 'dia' },
+    { icon: '😴', name: 'Dormir bem', measure: 'tempo', target: 480, period: 'dia' },
+  ]],
+  ['Mente', [
+    { icon: '📖', name: 'Ler', measure: 'quantidade', target: 20, unit: 'páginas', period: 'dia' },
+    { icon: '📚', name: 'Terminar livros', measure: 'quantidade', target: 12, unit: 'livros', period: 'total', due: 'ano' },
+    { icon: '🧘', name: 'Meditar', measure: 'tempo', target: 10, period: 'dia' },
+    { icon: '🗣️', name: 'Estudar inglês', measure: 'tempo', target: 120, period: 'semana' },
+  ]],
+  ['Vida', [
+    { icon: '💰', name: 'Juntar dinheiro', measure: 'quantidade', target: 1000, unit: 'reais', period: 'total', due: '3m' },
+    { icon: '🎯', label: 'Concluir algo', name: '', measure: 'concluir', due: 'none' },
+  ]],
+];
+
+const measureOf = a => tracksValue(a) ? 'valor' : a.goalType === 'objetivo' ? 'concluir' : a.goalType;
+
+function dueDate(due, date) {
+  const t = today();
+  return { '1m': addMonths(t, 1), '3m': addMonths(t, 3), ano: `${t.slice(0, 4)}-12-31`, data: date || '' }[due] || '';
+}
+
+/** "1h30", "45", "2 horas" → minutos. */
+function parseDuration(s) {
+  const t = norm(s).replace(',', '.');
+  const m = t.match(/(\d+(?:\.\d+)?)\s*h\w*\s*(?:e\s*)?(\d+)?/);
+  if (m) return Math.round(+m[1] * 60 + (+m[2] || 0));
+  const n = t.match(/\d+/);
+  return n ? +n[0] : 0;
+}
 
 function activityForm(a) {
   if (!Store.data.areas.length) Store.upsert('areas', { id: uid(), name: 'Geral', color: SWATCHES[0] });
   const isNew = !a;
-  a = a ? structuredClone(a) : { id: uid(), name: '', areaId: state.goalArea || Store.data.areas[0].id, goalType: 'objetivo', target: 0, period: 'semana', unit: '', track: 'soma', deadline: '', objectives: [], notes: '' };
-  const t = a.goalType;
-  const tH = t === 'tempo' ? Math.floor(a.target / 60) : 0, tM = t === 'tempo' ? a.target % 60 : 0;
+  a = a ? structuredClone(a) : { id: uid(), name: '', icon: '', areaId: state.goalArea || Store.data.areas[0].id, goalType: 'vezes', target: 3, period: 'semana', unit: '', track: 'soma', deadline: '', objectives: [], why: '', notes: '' };
+  const m = measureOf(a);
+  const newAreas = GOAL_AREAS.filter(g => !Store.data.areas.some(x => g.aliases.includes(norm(x.name))));
+  const chips = (name, list, sel) => `<div class="day-toggles choice">${list.map(([v, l]) =>
+    `<label><input type="radio" name="${name}" value="${esc(v)}" ${v === sel ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`;
+  const stepper = (name, value, attrs) => `<div class="stepper">
+    <button type="button" class="icon-btn" data-step="-1" data-for="${name}" aria-label="Menos">−</button>
+    <input name="${name}" value="${esc(value)}" ${attrs}>
+    <button type="button" class="icon-btn" data-step="1" data-for="${name}" aria-label="Mais">+</button></div>`;
+  const areaChips = chips('areaId', [
+    ...Store.data.areas.map(x => [x.id, `<i style="--c:${esc(x.color)}"></i>${esc(x.name)}`]),
+    ...newAreas.map(g => [`new:${g.name}`, `<i style="--c:var(--muted)"></i>${esc(g.name)}`]),
+  ], a.areaId);
+  const ideas = GOAL_IDEAS.map(([group, list]) => `<div><span class="fieldset-label">${group}</span><div class="idea-row">
+    ${list.map((it, i) => `<button type="button" class="idea" data-idea="${group}:${i}"><span aria-hidden="true">${it.icon}</span>${esc(it.label || it.name)}</button>`).join('')}</div></div>`).join('');
   const val = v => v == null ? '' : v;
-  const newAreas = GOAL_AREAS.filter(g => !Store.data.areas.some(x => g.aliases.includes(norm(x.name)))).map(g => `new:${g.name}`);
-  const areaSel = areaOptions(a.areaId) + newAreas.map(id => `<option value="${esc(id)}">${esc(id.slice(4))}</option>`).join('');
+
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Nova meta' : 'Editar meta')}
     <div class="modal-body">
-      <label class="field"><span>Meta</span><input name="text" maxlength="120" value="${isNew ? '' : esc(a.name)}" autocomplete="off" ${isNew ? 'autofocus' : ''}></label>
-      ${isNew ? `<div class="goal-ideas">${GOAL_IDEAS.map(i => `<button type="button" class="btn btn-sm btn-ghost" data-idea="${esc(i)}">${esc(i)}</button>`).join('')}</div>` : ''}
-      <p class="goal-preview" aria-live="polite"></p>
-      <div class="row g-valor">
-        <label class="field xs"><span class="l-from">Hoje</span><input type="number" name="from" step="any" value="${esc(val(a.from))}"></label>
-        <label class="field xs"><span class="l-to">Meta</span><input type="number" name="to" step="any" value="${esc(val(a.to))}"></label>
+      <div class="goal-hero">
+        <button type="button" class="goal-emoji" data-emoji-toggle aria-label="Trocar ícone">${goalEmoji(a)}</button>
+        <input type="hidden" name="icon" value="${esc(a.icon || '')}">
+        <div class="goal-hero-main">
+          <input class="goal-name" name="name" maxlength="80" value="${esc(a.name)}" autocomplete="off" aria-label="Meta" ${isNew ? 'autofocus' : ''}>
+          <p class="goal-preview" aria-live="polite"></p>
+        </div>
       </div>
-      <details class="goal-more" ${isNew ? '' : 'open'}><summary>Ajustar</summary>
-        <div class="row">
-          <label class="field"><span>Nome</span><input name="name" maxlength="80" value="${esc(a.name)}"></label>
-          <label class="field"><span>Área</span><select name="areaId">${areaSel}</select></label>
-        </div>
-        <div class="row">
-          <label class="field"><span>Medida</span><select name="goalType">${options(Object.entries(GOAL_TYPES), t)}</select></label>
-          <label class="field g-period"><span>Prazo</span><select name="period">${options([['dia', 'Por dia'], ['semana', 'Por semana'], ['mes', 'Por mês'], ['total', 'Longo prazo']], goalPeriod(a))}</select></label>
-        </div>
-        <div class="row">
-          <label class="field xs g-vezes"><span>Vezes</span><input type="number" name="times" min="1" max="9999" value="${t === 'vezes' ? a.target : ''}"></label>
-          <label class="field xs g-tempo"><span>Horas</span><input type="number" name="h" min="0" max="9999" value="${t === 'tempo' ? tH : ''}"></label>
-          <label class="field xs g-tempo"><span>Minutos</span><input type="number" name="m" min="0" max="59" value="${t === 'tempo' ? tM : ''}"></label>
-          <label class="field xs g-soma"><span>Quanto</span><input type="number" name="amount" min="0" step="any" value="${t === 'quantidade' && a.track !== 'valor' ? a.target : ''}"></label>
-          <label class="field g-unit"><span>Unidade</span><input name="unit" maxlength="20" value="${esc(a.unit || '')}"></label>
-          <label class="field g-track"><span>Acompanhar</span><select name="track">${options([['soma', 'Somando o que fizer'], ['valor', 'Pelo valor atual']], a.track || 'soma')}</select></label>
-        </div>
-        <label class="field g-deadline"><span>Até</span><input type="date" name="deadline" value="${esc(a.deadline || '')}"></label>
-        <div class="g-objetivo"><span class="fieldset-label">Etapas</span>
-          <div style="margin-top:6px">${listEditor('objectives', a.objectives || [], { addLabel: 'Adicionar etapa' })}</div></div>
-        <label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>
-      </details>
+      <div class="emoji-grid" hidden>${GOAL_EMOJIS.map(e => `<button type="button" data-emoji="${e}">${e}</button>`).join('')}</div>
+      ${isNew ? `<div class="goal-ideas">${ideas}</div>` : ''}
+      <div class="goal-setup">
+        <section class="goal-sec"><span class="fieldset-label">Como medir</span>
+          ${chips('measure', [['vezes', 'Vezes'], ['tempo', 'Tempo'], ['quantidade', 'Quantidade'], ['valor', 'Chegar a um valor'], ['concluir', 'Concluir']], m)}</section>
+        <section class="goal-sec m-vezes"><span class="fieldset-label">Meta</span><div class="target-row">
+          ${stepper('times', a.goalType === 'vezes' ? a.target : 3, 'type="number" min="1" inputmode="numeric" aria-label="Quantas"')}
+          ${chips('timesUnit', [['', 'vezes'], ['dias', 'dias']], a.unit === 'dias' || a.kind === 'dieta' ? 'dias' : '')}</div></section>
+        <section class="goal-sec m-tempo"><span class="fieldset-label">Meta</span><div class="target-row">
+          ${stepper('duration', fmtDuration(a.goalType === 'tempo' ? a.target : 30), 'inputmode="text" aria-label="Tempo"')}</div></section>
+        <section class="goal-sec m-qtd"><span class="fieldset-label">Meta</span><div class="target-row">
+          ${stepper('amount', a.goalType === 'quantidade' && !tracksValue(a) ? a.target : 10, 'type="number" min="0" step="any" inputmode="decimal" aria-label="Quanto"')}
+          <input class="unit-input" name="unit" maxlength="20" value="${esc(tracksValue(a) ? '' : a.unit || '')}" aria-label="Unidade"></div></section>
+        <section class="goal-sec m-valor"><div class="target-row">
+          <label class="value-box"><span>Hoje</span><input type="number" name="from" step="any" inputmode="decimal" value="${esc(val(a.from))}"></label>
+          <span class="arrow" aria-hidden="true">→</span>
+          <label class="value-box"><span>Meta</span><input type="number" name="to" step="any" inputmode="decimal" value="${esc(val(a.to))}"></label>
+          <input class="unit-input" name="vunit" maxlength="20" value="${esc(tracksValue(a) ? a.unit || '' : 'kg')}" aria-label="Unidade"></div></section>
+        <section class="goal-sec m-concluir"><span class="fieldset-label">Etapas</span>
+          ${listEditor('objectives', a.objectives || [], { addLabel: 'Etapa' })}</section>
+        <section class="goal-sec m-period"><span class="fieldset-label">Frequência</span>
+          ${chips('period', [['dia', 'Por dia'], ['semana', 'Por semana'], ['mes', 'Por mês'], ['total', 'No total']], goalPeriod(a))}</section>
+        <section class="goal-sec m-due"><span class="fieldset-label">Prazo</span>
+          ${chips('due', [['none', 'Sem data'], ['1m', '1 mês'], ['3m', '3 meses'], ['ano', 'Fim do ano'], ['data', 'Escolher data']], a.deadline ? 'data' : 'none')}
+          <input type="date" class="due-date" name="deadline" value="${esc(a.deadline || '')}" aria-label="Data"></section>
+        <section class="goal-sec"><span class="fieldset-label">Área</span>${areaChips}</section>
+      </div>
+      <label class="field"><span>Por quê</span><input name="why" maxlength="140" value="${esc(a.why || '')}"></label>
+      ${!isNew || a.notes ? `<label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>` : ''}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
   </form>`, {
     onMount(form) {
       const el = form.elements;
-      // Campo mexido à mão não é mais sobrescrito pelo texto.
+      // Campo mexido à mão não é mais sobrescrito pelo nome nem pelas sugestões de texto.
       const touched = new Set();
-      const more = $('.goal-more', form);
-      ['input', 'change'].forEach(ev => more.addEventListener(ev, e => { if (e.isTrusted && e.target.name) touched.add(e.target.name); }));
-      el.to.addEventListener('input', e => { if (e.isTrusted) touched.add('to'); });
+      ['input', 'change'].forEach(ev => form.addEventListener(ev, e => { if (e.isTrusted && e.target.name && e.target.name !== 'name') touched.add(e.target.name); }));
       let delta = null;
-      const put = (name, v) => { if (!touched.has(name) && v !== undefined) el[name].value = v ?? ''; };
+      const put = (name, v) => { if (!touched.has(name) && v !== undefined && el[name]) el[name].value = v ?? ''; };
+      const show = (sel, on) => { $(sel, form).hidden = !on; };
       const sync = () => {
-        const t = el.goalType.value;
-        const total = t === 'objetivo' || el.period.value === 'total';
-        const valor = t === 'quantidade' && total && el.track.value === 'valor';
-        $('.g-period', form).hidden = t === 'objetivo';
-        $('.g-track', form).hidden = !(t === 'quantidade' && total);
-        $$('.g-vezes', form).forEach(x => { x.hidden = t !== 'vezes'; });
-        $$('.g-tempo', form).forEach(x => { x.hidden = t !== 'tempo'; });
-        $('.g-soma', form).hidden = t !== 'quantidade' || valor;
-        $('.g-unit', form).hidden = t !== 'quantidade';
-        $('.g-valor', form).hidden = !valor;
-        $('.g-deadline', form).hidden = !total;
-        $('.g-objetivo', form).hidden = t !== 'objetivo';
-        const unit = el.unit.value.trim();
-        $('.l-from', form).textContent = unit ? `Hoje (${unit})` : 'Hoje';
-        $('.l-to', form).textContent = unit ? `Meta (${unit})` : 'Meta';
+        const m = el.measure.value;
+        show('.m-vezes', m === 'vezes');
+        show('.m-tempo', m === 'tempo');
+        show('.m-qtd', m === 'quantidade');
+        show('.m-valor', m === 'valor');
+        show('.m-concluir', m === 'concluir');
+        show('.m-period', m !== 'valor' && m !== 'concluir');
+        show('.m-due', m === 'valor' || m === 'concluir' || el.period.value === 'total');
+        el.deadline.hidden = el.due.value !== 'data';
+        const ideas = $('.goal-ideas', form);
+        if (ideas) ideas.hidden = !!el.name.value.trim();
+        const emoji = $('.goal-emoji', form);
+        emoji.textContent = el.icon.value || guessEmoji(el.name.value) || '🎯';
+        emoji.style.setProperty('--c', area(el.areaId.value)?.color || 'var(--accent)');
         const { goal } = readGoal(form);
         const ar = goal && (area(goal.areaId)?.name || goal.areaId.replace(/^new:/, ''));
         $('.goal-preview', form).textContent = goal
-          ? [goal.name, valor && el.from.value === '' ? untilText(goal) : goalText(goal), ar].filter(Boolean).join(' · ')
+          ? [m === 'valor' && el.from.value === '' ? untilText(goal) : goalText(goal), ar].filter(Boolean).join(' · ')
           : '';
       };
-      const fromText = () => {
-        const p = parseGoal(el.text.value);
-        delta = p.delta ?? null;
-        put('name', p.name);
-        put('goalType', p.goalType);
-        put('period', p.period);
-        put('track', p.track || 'soma');
-        put('unit', p.unit || '');
-        put('deadline', p.deadline || '');
-        if (p.areaId) put('areaId', p.areaId);
-        put('times', p.goalType === 'vezes' ? p.target : '');
-        put('amount', p.goalType === 'quantidade' && p.track !== 'valor' ? p.target : '');
-        put('h', p.goalType === 'tempo' ? Math.floor(p.target / 60) : '');
-        put('m', p.goalType === 'tempo' ? p.target % 60 : '');
-        if (p.from != null) put('from', p.from);
-        if (p.to != null) put('to', p.to);
-        else if (delta != null && el.from.value !== '') put('to', Math.round((+el.from.value + delta) * 100) / 100);
-        sync();
-      };
-      // Em metas existentes o texto só manda depois que a pessoa mexe nele.
-      el.text.addEventListener('input', fromText);
-      // "Perder 5 kg": a meta sai do peso de hoje.
-      el.from.addEventListener('input', () => {
+      const followDelta = () => {
         if (delta != null && el.from.value !== '') put('to', Math.round((+el.from.value + delta) * 100) / 100);
+      };
+      // Ler o nome: só mexe no resto quando ele traz número ou prazo.
+      const parsed = () => {
+        const p = parseGoal(el.name.value);
+        if (p.areaId) put('areaId', p.areaId);
+        if (p.goalType === 'objetivo' && !p.deadline) return p;
+        const m = p.track === 'valor' ? 'valor' : p.goalType === 'objetivo' ? 'concluir' : p.goalType;
+        put('measure', m);
+        if (m === 'vezes' || m === 'tempo' || m === 'quantidade') put('period', p.period);
+        if (m === 'vezes') { put('times', p.target); put('timesUnit', p.unit || ''); }
+        if (m === 'tempo') put('duration', fmtDuration(p.target));
+        if (m === 'quantidade') { put('amount', p.target); put('unit', p.unit || ''); }
+        if (m === 'valor') {
+          put('vunit', p.unit || '');
+          if (p.from != null) put('from', p.from);
+          if (p.to != null) put('to', p.to);
+        }
+        delta = p.delta ?? null;
+        followDelta();
+        if (p.deadline) { put('due', 'data'); put('deadline', p.deadline); }
+        p.understood = true;
+        return p;
+      };
+      el.name.addEventListener('input', () => { parsed(); sync(); });
+      // Ao sair do campo, "ler 20 páginas por dia" vira só "Ler páginas" (o resto já está nos botões).
+      el.name.addEventListener('change', () => {
+        const p = parsed();
+        if (p.understood && p.name) el.name.value = p.name;
+        sync();
       });
-      form.addEventListener('input', e => { if (e.target !== el.text) sync(); });
+      el.from.addEventListener('input', followDelta);
+      form.addEventListener('input', e => { if (e.target !== el.name) sync(); });
       form.addEventListener('change', sync);
       form.addEventListener('click', e => {
-        const idea = e.target.closest('[data-idea]');
-        if (!idea) return;
-        el.text.value = idea.dataset.idea;
-        fromText();
-        el.text.focus();
+        const t = e.target.closest('button');
+        if (!t) return;
+        if (t.matches('[data-emoji-toggle]')) {
+          const grid = $('.emoji-grid', form);
+          grid.hidden = !grid.hidden;
+        } else if (t.dataset.emoji) {
+          el.icon.value = t.dataset.emoji;
+          $('.emoji-grid', form).hidden = true;
+          sync();
+        } else if (t.dataset.step) {
+          const name = t.dataset.for, dir = +t.dataset.step, input = el[name];
+          if (name === 'duration') {
+            const cur = parseDuration(input.value);
+            input.value = fmtDuration(Math.max(5, cur + dir * (cur >= 120 ? 30 : cur >= 30 ? 15 : 5)));
+          } else {
+            const cur = +input.value || 0;
+            const step = name === 'amount' ? (cur >= 100 ? 10 : cur >= 20 ? 5 : 1) : 1;
+            input.value = Math.max(name === 'times' ? 1 : 0, Math.round((cur + dir * step) * 100) / 100);
+          }
+          touched.add(name);
+          sync();
+        } else if (t.dataset.idea) {
+          const [group, i] = t.dataset.idea.split(':');
+          const it = GOAL_IDEAS.find(([g]) => g === group)[1][+i];
+          touched.clear();
+          el.name.value = it.name;
+          el.icon.value = it.icon;
+          el.measure.value = it.measure;
+          if (it.period) el.period.value = it.period;
+          if (it.measure === 'vezes') { el.times.value = it.target; el.timesUnit.value = it.unit || ''; }
+          if (it.measure === 'tempo') el.duration.value = fmtDuration(it.target);
+          if (it.measure === 'quantidade') { el.amount.value = it.target; el.unit.value = it.unit || ''; }
+          if (it.measure === 'valor') { el.vunit.value = it.unit || ''; el.to.value = ''; }
+          delta = it.delta ?? null;
+          el.due.value = it.due || 'none';
+          el.deadline.value = '';
+          const ar = goalAreaId(it.name);
+          if (ar) el.areaId.value = ar;
+          sync();
+          (it.measure === 'valor' ? el.from : el.name).focus();
+        }
       });
       sync();
     },
     onSubmit(form) {
       const r = readGoal(form);
-      if (r.error) {
-        if (r.inMore) $('.goal-more', form).open = true;
-        return formError(form, r.error);
-      }
+      if (r.error) return formError(form, r.error);
       let { areaId } = r.goal;
       if (areaId.startsWith('new:')) {
         const name = areaId.slice(4);
@@ -439,6 +550,7 @@ function activityForm(a) {
         Store.upsert('areas', { id: areaId, name, color: SWATCHES[(Store.data.areas.length * 3) % SWATCHES.length] });
       }
       Object.assign(a, r.goal, { areaId, startDate: a.startDate || today() });
+      delete a.kind;
       Store.upsert('activities', a);
       closeModal();
       render();
@@ -458,30 +570,33 @@ function activityForm(a) {
 /** Lê o formulário de meta: { goal } pronta para salvar e, se faltar algo, { error }. */
 function readGoal(form) {
   const f = formData(form);
-  const name = (f.name || f.text).trim();
+  const name = f.name.trim();
   if (!name) return { error: 'Falta a meta.' };
-  const goalType = f.goalType;
-  const period = goalType === 'objetivo' ? 'total' : f.period;
-  const track = goalType === 'quantidade' && period === 'total' ? f.track : 'soma';
+  const m = f.measure;
+  const goalType = m === 'valor' ? 'quantidade' : m === 'concluir' ? 'objetivo' : m;
+  const period = m === 'valor' || m === 'concluir' ? 'total' : f.period;
   let target = 0;
-  if (goalType === 'vezes') target = +f.times || 0;
-  if (goalType === 'tempo') target = (+f.h || 0) * 60 + (+f.m || 0);
-  if (goalType === 'quantidade' && track === 'soma') target = +f.amount || 0;
+  if (m === 'vezes') target = Math.round(+f.times || 0);
+  if (m === 'tempo') target = parseDuration(f.duration);
+  if (m === 'quantidade') target = +f.amount || 0;
   const goal = {
-    name, areaId: f.areaId, goalType, target, period, track,
-    unit: goalType === 'quantidade' || goalType === 'vezes' ? f.unit.trim() : '',
-    deadline: period === 'total' ? f.deadline : '',
-    objectives: readList(form, 'objectives'), notes: f.notes.trim(),
+    name, icon: f.icon || guessEmoji(name), areaId: f.areaId || '', goalType, target, period,
+    track: m === 'valor' ? 'valor' : 'soma',
+    unit: { vezes: f.timesUnit, quantidade: f.unit.trim(), valor: f.vunit.trim() }[m] || '',
+    deadline: period === 'total' ? dueDate(f.due, f.deadline) : '',
+    objectives: m === 'concluir' ? readList(form, 'objectives') : [],
+    why: f.why.trim(), notes: (f.notes || '').trim(),
   };
-  if (track === 'valor') {
+  if (m === 'valor') {
     goal.from = f.from === '' ? undefined : +f.from;
     goal.to = f.to === '' ? undefined : +f.to;
     if (goal.from === undefined) return { goal, error: 'Falta o valor de hoje.' };
     if (goal.to === undefined) return { goal, error: 'Falta aonde quer chegar.' };
   }
-  if (goalType === 'vezes' && target < 1) return { goal, error: 'Falta quantas vezes.', inMore: true };
-  if (goalType === 'tempo' && !target) return { goal, error: 'Falta o tempo.', inMore: true };
-  if (goalType === 'quantidade' && track === 'soma' && target <= 0) return { goal, error: 'Falta quanto.', inMore: true };
+  if (m === 'vezes' && target < 1) return { goal, error: 'Falta quantas vezes.' };
+  if (m === 'tempo' && !target) return { goal, error: 'Falta o tempo.' };
+  if (m === 'quantidade' && target <= 0) return { goal, error: 'Falta quanto.' };
+  if (period === 'total' && f.due === 'data' && !f.deadline) return { goal, error: 'Falta a data.' };
   return { goal };
 }
 

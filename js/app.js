@@ -68,7 +68,7 @@ function quickNew(anchor) {
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },
     { label: 'Treino', icon: 'dumbbell', run: () => workoutForm() },
-    { label: 'Atividade / meta', icon: 'target', run: () => activityForm() },
+    { label: 'Meta', icon: 'target', run: () => activityForm() },
   ]);
 }
 

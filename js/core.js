@@ -107,7 +107,7 @@ const ABSENCES_PER_DAY = 4; // faltas permitidas por dia de aula na semana (1 di
 const ASSESSMENT_KINDS = { prova: 'Prova', trabalho: 'Trabalho', seminario: 'Seminário', atividade: 'Atividade' }; // lista fechada
 const DELIVERY_STATUS = [['afazer', 'A fazer'], ['andamento', 'Em andamento'], ['revisao', 'Em revisão'], ['entregue', 'Entregue']];
 const PRIORITIES = [['', 'Sem prioridade'], ['baixa', 'Baixa'], ['media', 'Média'], ['alta', 'Alta']];
-const GOAL_TYPES = { tempo: 'Tempo', vezes: 'Frequência', objetivo: 'Objetivos' };
+const GOAL_TYPES = { tempo: 'Tempo', vezes: 'Vezes', quantidade: 'Quantidade', objetivo: 'Etapas' };
 const PERIODS = { semana: 'semana', mes: 'mês' };
 const SWATCHES = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#64748b'];
 

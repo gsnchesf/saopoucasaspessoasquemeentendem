@@ -110,9 +110,9 @@ function workoutDay(w, date) {
 
 function workoutForm(w) {
   const isNew = !w;
-  const fitness = Store.data.activities.find(a => !a.archived && norm(area(a.areaId)?.name) === 'fitness');
+  const fitness = Store.data.activities.find(a => !a.archived && ['tempo', 'vezes'].includes(a.goalType) && norm(area(a.areaId)?.name) === 'fitness');
   w = w ? structuredClone(w) : { id: uid(), name: '', days: [1, 3, 5], start: '07:00', end: '08:00', exercises: [], activityId: fitness?.id || '', doneDates: [] };
-  const acts = activitiesList();
+  const acts = activitiesList().filter(a => a.goalType === 'tempo' || a.goalType === 'vezes');
   openModal(`<form novalidate>
     ${modalHead(isNew ? 'Novo treino' : 'Editar treino')}
     <div class="modal-body">

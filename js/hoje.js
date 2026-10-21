@@ -23,8 +23,8 @@ screens.hoje = () => {
   const next7 = upcoming.filter(([d]) => diffDays(t, d) <= 7).reduce((n, [, l]) => n + l.length, 0);
 
   const workoutsToday = timeline.filter(i => i.kind === 'workout');
-  const goalsList = activitiesList().filter(a => a.goalType !== 'objetivo');
-  const onTrack = goalsList.filter(a => goalProgress(a).status !== 'Abaixo do ritmo').length;
+  const goalsList = activitiesList().filter(hasPace);
+  const onTrack = goalsList.filter(onPace).length;
 
   const h = new Date().getHours();
   const greet = h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';

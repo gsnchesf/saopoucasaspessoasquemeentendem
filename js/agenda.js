@@ -298,15 +298,16 @@ function navCal(dir) {
 const EVENT_KINDS = {
   consulta: { label: 'Consulta', color: '#0ea5e9', specialty: true },
   hangout: { label: 'Hangout', color: '#ec4899', with: true },
-  compromisso: { label: 'Compromisso', color: '#4f46e5', with: true },
-  outro: { label: 'Outro', color: '#64748b' },
+  date: { label: 'Date', color: '#e11d48', with: true },
+  outro: { label: 'Outro', color: '#64748b', with: true, title: true },
 };
 
-/** Tipo do compromisso; os antigos (com tipo personalizado) são encaixados pelo nome. */
+/** Tipo do compromisso; "compromisso" antigo virou hangout e os de tipo personalizado são encaixados pelo nome. */
 function eventKind(ev) {
+  if (ev.kind === 'compromisso') return 'hangout';
   if (EVENT_KINDS[ev.kind]) return ev.kind;
   const n = norm(cat(ev.category)?.name);
-  return n === 'consulta' ? 'consulta' : n === 'compromisso' ? 'compromisso' : n === 'date' ? 'hangout' : 'outro';
+  return n === 'consulta' ? 'consulta' : n === 'compromisso' ? 'hangout' : n === 'date' ? 'date' : 'outro';
 }
 
 /** "com Ana" / "Dermatologia": o complemento do tipo. */
@@ -315,7 +316,7 @@ const eventExtra = ev => {
   return k.specialty ? ev.specialty || '' : k.with && ev.with ? `com ${ev.with}` : '';
 };
 
-/** Título exibido: o digitado ou, sem título, o tipo com o complemento. */
+/** Título exibido: o digitado (só em "Outro") ou o tipo com o complemento. */
 const eventTitle = ev => ev.title || [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ');
 
 /* ---------- Formulário de compromisso ---------- */
@@ -328,7 +329,7 @@ function eventForm(ev, date, startTime) {
     ev = {
       id: uid(), title: '', date: date || today(), allDay: false,
       start, end: fromMin(Math.min(toMin(start) + 60, 1439)),
-      kind: 'compromisso', with: '', specialty: '', repeat: 'none', until: '',
+      kind: 'hangout', with: '', specialty: '', repeat: 'none', until: '',
       reminder: null, location: '', notes: '', exdates: [],
     };
   }
@@ -345,7 +346,7 @@ function eventForm(ev, date, startTime) {
         <label class="field" data-with ${EVENT_KINDS[kind].with ? '' : 'hidden'}><span>Com quem</span><input name="with" maxlength="80" value="${esc(ev.with || '')}"></label>
         <label class="field" data-specialty ${EVENT_KINDS[kind].specialty ? '' : 'hidden'}><span>Especialidade</span><input name="specialty" maxlength="80" value="${esc(ev.specialty || '')}"></label>
       </div>
-      <label class="field"><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
+      <label class="field" data-title ${EVENT_KINDS[kind].title ? '' : 'hidden'}><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
       <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
@@ -370,6 +371,7 @@ function eventForm(ev, date, startTime) {
       kind.addEventListener('change', () => {
         $('[data-with]', form).hidden = !EVENT_KINDS[kind.value].with;
         $('[data-specialty]', form).hidden = !EVENT_KINDS[kind.value].specialty;
+        $('[data-title]', form).hidden = !EVENT_KINDS[kind.value].title;
       });
       allDay.addEventListener('change', () => $$('.times', form).forEach(el => { el.hidden = allDay.checked; }));
       repeat.addEventListener('change', () => { $('.until', form).hidden = repeat.value === 'none'; });
@@ -387,13 +389,13 @@ function eventForm(ev, date, startTime) {
       const f = formData(form);
       const allDay = !!f.allDay;
       const k = EVENT_KINDS[f.kind];
-      if (f.kind === 'outro' && !f.title.trim()) return formError(form, 'Falta o título.');
+      if (k.title && !f.title.trim() && !f.with.trim()) return formError(form, 'Falta o título.');
       if (!f.date) return formError(form, 'Falta a data.');
       if (!allDay && !f.start) return formError(form, 'Falta o horário.');
       if (!allDay && f.end && f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
       if (f.repeat !== 'none' && f.until && f.until < f.date) return formError(form, 'A repetição termina antes de começar.');
       Object.assign(ev, {
-        title: f.title.trim(), kind: f.kind, with: k.with ? f.with.trim() : '', specialty: k.specialty ? f.specialty.trim() : '', date: f.date, allDay,
+        title: k.title ? f.title.trim() : '', kind: f.kind, with: k.with ? f.with.trim() : '', specialty: k.specialty ? f.specialty.trim() : '', date: f.date, allDay,
         start: allDay ? '' : f.start, end: allDay ? '' : f.end,
         repeat: f.repeat, until: f.repeat === 'none' ? '' : f.until,
         location: f.location.trim(), reminder: f.reminder === '' ? null : +f.reminder, notes: f.notes.trim(),

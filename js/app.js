@@ -11,6 +11,7 @@ const VIEWS = [
   { id: 'faculdade', label: 'Faculdade', icon: 'book' },
   { id: 'trabalho', label: 'Trabalho', icon: 'briefcase' },
   { id: 'treinos', label: 'Treinos', icon: 'dumbbell' },
+  { id: 'remedios', label: 'Remédios', icon: 'pill' },
   { id: 'metas', label: 'Metas', icon: 'target' },
   { id: 'ajustes', label: 'Ajustes', icon: 'gear', bottom: true },
   { id: 'admin', label: 'Admin', icon: 'shield', bottom: true, adminOnly: true },
@@ -68,6 +69,7 @@ function quickNew(anchor) {
     { sep: true },
     { label: 'Matéria', icon: 'book', run: () => subjectForm() },
     { label: 'Treino', icon: 'dumbbell', run: () => workoutForm() },
+    { label: 'Remédio', icon: 'pill', run: () => medForm() },
     { label: 'Meta', icon: 'target', run: () => activityForm() },
   ]);
 }
@@ -219,6 +221,7 @@ function checkReminders() {
       }
     }
   }
+  if (medReminders(fired, now)) changed = true;
   if (changed) try { localStorage.setItem(FIRED_KEY, JSON.stringify(fired.slice(-300))); } catch {}
 }
 
@@ -226,10 +229,15 @@ function notify(ev, d) {
   const when = ev.reminder === 0 ? 'Agora' : `${relDay(d)} às ${ev.start}`;
   const body = `${when}${ev.location ? ' · ' + ev.location : ''}`;
   toast(`Lembrete: ${eventTitle(ev)} — ${body}`, null, 12000);
+  showNotification(eventTitle(ev), body, `${ev.id}@${d}`);
+}
+
+/** Notificação do sistema (se a pessoa permitiu em Ajustes). */
+function showNotification(title, body, tag) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const opts = { body, icon: 'icon-192.png', tag: `${ev.id}@${d}` };
-  if (navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r => r.showNotification(eventTitle(ev), opts));
-  else try { new Notification(eventTitle(ev), opts); } catch {}
+  const opts = { body, icon: 'icon-192.png', tag };
+  if (navigator.serviceWorker?.controller) navigator.serviceWorker.ready.then(r => r.showNotification(title, opts));
+  else try { new Notification(title, opts); } catch {}
 }
 
 /* ---------- Inicialização ---------- */

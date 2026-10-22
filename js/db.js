@@ -10,7 +10,7 @@
    ========================================================== */
 
 const DB_NAME = 'organizador';
-const DB_VERSION = 3; // 2: coleção 'blocks' (Essa semana); 3: 'workouts' (rotina de treinos)
+const DB_VERSION = 4; // 2: coleção 'blocks' (Essa semana); 3: 'workouts' (rotina de treinos); 4: 'meds' (remédios)
 
 /** Coleções carregadas em memória. Arquivos binários ficam à parte em 'blobs' (só neste aparelho). */
 const COLLECTIONS = [
@@ -30,6 +30,7 @@ const COLLECTIONS = [
   'activityLogs',  // registros das atividades
   'blocks',        // blocos do cronograma "Essa semana"
   'workouts',      // rotina de treinos (dias, horário, exercícios)
+  'meds',          // remédios (todo dia ou toda semana, horários, doses tomadas)
 ];
 
 /** Abre (ou cria) um banco local com todas as coleções. */

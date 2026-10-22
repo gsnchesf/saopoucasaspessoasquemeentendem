@@ -17,18 +17,19 @@ HTML + CSS + JavaScript puro, sem dependências nem etapa de build.
 
 | Tela | Recursos |
 |---|---|
-| **Hoje** | Aulas, compromissos e treinos do dia (com "Faltei" e "Fiz / Não fiz"), prazos atrasados e próximos, treino do dia e metas no ritmo |
+| **Hoje** | Aulas, compromissos e treinos do dia (com "Faltei" e "Fiz / Não fiz"), remédios do dia ("Tomei / Não tomei"), prazos atrasados e próximos, treino do dia e metas no ritmo |
 | **Essa semana** | Cronograma da semana em blocos de horário, de segunda a domingo: tudo o que você pretende fazer em cada hora. Blocos podem se repetir (toda semana, dias úteis, todo dia), ser marcados como feitos e mostram o total de horas planejadas por tipo. Aulas e compromissos aparecem ao fundo. Botão para esconder o fim de semana |
 | **Horário de trabalho** | Cada pessoa informa dias, horário e tempo de deslocamento (ou "Não trabalho"); ida, trabalho e volta aparecem no fundo de Essa semana (fora da Agenda e de Hoje, porque é igual todo dia). Quem ainda não respondeu vê a pergunta em Hoje |
 | **Agenda** | Mês, semana e dia. Compromissos com tipo fechado (Consulta com especialidade, Hangout e Compromisso com "com quem", Outro), recorrência e lembrete; aulas da grade, treinos e prazos. Clicar abre a ficha; "Editar" abre o formulário. Exporta `.ics` |
 | **Faculdade** | Matérias com horários por dia, professor, sala e faltas registradas dia a dia, com limite automático de 4 faltas por dia de aula na semana (1 dia = 4, 2 dias = 8); em dia de duas aulas seguidas dá para faltar só numa (conta meia falta). Cada matéria diz como conta presença: lista, exercício ou chamada; na lista e no exercício dá para marcar "Assinaram por mim" / "Entreguei o exercício": fica registrado que você não assistiu, mas não conta falta) . Matéria pode ser marcada como **faltável** (checkbox): a falta fica registrada, mas não tem limite. No exercício dá para combinar a entrega em outro dia (vira prazo na agenda até marcar como entregue). Aula cancelada fica riscada na agenda e não tem falta. Qualquer dia (inclusive cancelado) pode ter presença por exercício, mesmo que a matéria normalmente seja lista ou chamada. Provas, trabalhos, seminários e atividades (lista fechada; atividade vale nota ou presença) com conteúdos cobrados e nota. Conteúdos estudados. Arquivos anexados (PDF, PPT, Word…). **Importa a grade do JupiterWeb** (USP) |
 | **Trabalho** | Entregas com prazo, detalhes, prioridade e checklist, num quadro por status (arraste os cartões) |
 | **Treinos** | Rotina fixa da semana (dias, horário, exercícios) que entra na agenda nesses horários; semana com "Fiz / Não fiz" em cada treino; ligado a uma meta, o treino feito já conta nela |
+| **Remédios** | Remédio todo dia ou toda semana (nos dias escolhidos), com dose, um ou mais horários e período opcional (tratamento com fim). Cada dose tem "Tomei / Não tomei", aparece em Hoje e avisa na hora (lembrete opcional). Os semanais também entram na agenda; os de todo dia não, para não poluir. Mostra quantas doses foram tomadas nos últimos 7 dias |
 | **Metas** | Áreas (Fitness, Projetos paralelos…) com atividades e metas de **tempo**, **frequência** (por semana — padrão — ou mês) ou **objetivos**. Tempo de tela com limite diário e gráfico |
 | **Admin** | Só para admins: criar usuários, mudar nome, redefinir senha, excluir |
 | **Ajustes** | Conta (trocar senha, sair), horário de trabalho, ilustração da conta (imagem própria na barra lateral), temas (Clássico, **Naruto**, Sakura, Grafite), modo claro/escuro, cor de destaque, tipos de bloco, áreas, backup |
 
-Atalhos: `N` novo · `E` compromisso · `B` bloco na semana · `P` prazo da faculdade · `W` entrega · `1`–`8` telas · `←` `→` agenda e semana.
+Atalhos: `N` novo · `E` compromisso · `B` bloco na semana · `P` prazo da faculdade · `W` entrega · `1`–`9` telas · `←` `→` agenda e semana.
 
 ## Importar a grade do JupiterWeb
 
@@ -94,6 +95,8 @@ js/importar.js        importar a grade do JupiterWeb (favorito ou colar)
 js/trabalho.js        entregas e quadro
 js/habitos.js         hábitos, tempo de tela, gráfico
 js/metas.js           áreas, atividades, registros
+js/treinos.js         rotina de treinos, Fiz / Não fiz
+js/remedios.js        remédios, doses do dia, lembrete na hora
 js/hoje.js            painel do dia
 js/ajustes.js         temas, preferências, exportações
 js/admin.js           página Admin: usuários (funções do servidor)
@@ -110,7 +113,7 @@ um servidor:
 
 `events` · `categories` · `subjects` (com `slots` de horário) · `absences` · `assessments` ·
 `contents` · `files` (+ `blobs`) · `deliverables` · `habits` · `habitLogs` · `screenTime` ·
-`areas` · `activities` · `activityLogs` · `blocks`
+`areas` · `activities` · `activityLogs` · `blocks` · `workouts` · `meds`
 
 As telas só conversam com o objeto `Store` (`js/db.js`). Para sincronizar entre o computador
 e o celular, basta trocar a implementação de `DB` por chamadas a um backend.

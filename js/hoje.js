@@ -1,15 +1,16 @@
 'use strict';
 /* ==========================================================
    Hoje: painel do dia — aulas e compromissos, prazos que se
-   aproximam, hábitos, tempo de tela e progresso das metas.
+   aproximam, remédios do dia e progresso das metas.
    ========================================================== */
 
 screens.hoje = () => {
   const t = today();
   const map = agendaItems(t, addDays(t, 14));
   const todayItems = map[t] || [];
-  const timeline = todayItems.filter(i => !i.deadline);
-  const tomorrow = (map[addDays(t, 1)] || []).filter(i => !i.deadline);
+  // Remédios têm cartão próprio.
+  const timeline = todayItems.filter(i => !i.deadline && i.kind !== 'med');
+  const tomorrow = (map[addDays(t, 1)] || []).filter(i => !i.deadline && i.kind !== 'med');
   const classesToday = timeline.filter(i => i.kind === 'class' && !i.canceled);
 
   const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false });
@@ -80,7 +81,7 @@ screens.hoje = () => {
   const body = `${art}${workPrompt()}${onboarding}${stats}
     <div class="home-grid">
       <div class="home-col">${agenda}${prazos}</div>
-      <div class="home-col">${goals}</div>
+      <div class="home-col">${medsToday()}${goals}</div>
     </div>`;
   return { head, body };
 };

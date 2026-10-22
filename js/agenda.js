@@ -74,6 +74,7 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
   }
   if (classes) classItems(from, to).forEach(add);
   workoutItems(from, to).forEach(add);
+  medItems(from, to, { daily: false }).forEach(add);
   if (work) workItems(from, to).forEach(add);
   for (const a of Store.data.assessments) {
     if (a.date < from || a.date > to) continue;
@@ -101,8 +102,8 @@ const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) ||
 
 /* ---------- Componentes ---------- */
 
-const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', work: 'edit-work', commute: 'edit-work' };
-const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"`;
+const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', med: 'open-med', work: 'edit-work', commute: 'edit-work' };
+const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"${it.kind === 'med' ? ` data-time="${it.start}"` : ''}`;
 
 /** Etiqueta do hover: de onde vem a cor (Faculdade, Date, Treino…) e quando/onde. */
 function itemTip(it) {
@@ -140,7 +141,7 @@ function itemRow(it) {
     </span>
     ${badge ? `<span class="ev-side">${badge}</span>` : ''}
   </button>`;
-  const side = it.kind === 'class' ? absenceControls(it) : it.kind === 'workout' ? workoutControls(it) : '';
+  const side = it.kind === 'class' ? absenceControls(it) : it.kind === 'workout' ? workoutControls(it) : it.kind === 'med' ? medControls(it) : '';
   return side ? `<div class="row-wrap">${row}<div class="ev-side">${side}</div></div>` : row;
 }
 
@@ -268,7 +269,7 @@ function timeGrid(days, showClasses) {
   const cols = days.map(d => {
     const timed = (map[d] || []).filter(it => !it.allDay && it.start).map(it => {
       const s = toMin(it.start);
-      let e = it.end ? toMin(it.end) : s + 60;
+      let e = it.end ? toMin(it.end) : s + (it.kind === 'med' ? 20 : 60);
       if (e <= s) e = s + 30;
       return { it, s, e };
     });

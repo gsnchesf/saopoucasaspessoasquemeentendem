@@ -120,7 +120,7 @@ function openSheet({ title, color, sub = '', rows = [], body = '', buttons = [],
   document.addEventListener('pointerleave', hide);
 })();
 
-/* ---------- Fiz / Não fiz num dia (blocos e treinos: doneDates / skippedDates) ---------- */
+/* ---------- Fiz / Não fiz num dia (blocos, treinos e doses de remédio: doneDates / skippedDates) ---------- */
 
 const dayState = (rec, date) => (rec.doneDates || []).includes(date) ? 'done' : (rec.skippedDates || []).includes(date) ? 'skipped' : null;
 
@@ -136,9 +136,9 @@ function withDayState(rec, date, st) {
 }
 
 /** Botões "Fiz" / "Não fiz" da ficha: o marcado leva ✓ e clicar de novo desmarca. */
-const dayStateButtons = (st, set) => [
-  { label: `${st === 'done' ? icon('check') : ''}Fiz`, kind: st === 'done' ? 'primary' : '', run: () => set(st === 'done' ? null : 'done') },
-  { label: `${st === 'skipped' ? icon('check') : ''}Não fiz`, kind: st === 'skipped' ? 'danger-ghost' : '', run: () => set(st === 'skipped' ? null : 'skipped') },
+const dayStateButtons = (st, set, [yes, no] = ['Fiz', 'Não fiz']) => [
+  { label: `${st === 'done' ? icon('check') : ''}${yes}`, kind: st === 'done' ? 'primary' : '', run: () => set(st === 'done' ? null : 'done') },
+  { label: `${st === 'skipped' ? icon('check') : ''}${no}`, kind: st === 'skipped' ? 'danger-ghost' : '', run: () => set(st === 'skipped' ? null : 'skipped') },
 ];
 
 /** Texto livre com quebras de linha, para as fichas. */

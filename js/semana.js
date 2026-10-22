@@ -87,7 +87,7 @@ function planGrid(days, blocks, showAgenda) {
   const cols = days.map(d => {
     const timed = (map[d] || []).filter(it => !it.allDay && it.start).map(it => {
       const s = toMin(it.start);
-      let e = it.end ? toMin(it.end) : s + 60;
+      let e = it.end ? toMin(it.end) : s + (it.kind === 'med' ? 20 : 60);
       if (e <= s) e = s + 30;
       return { it, s, e };
     });

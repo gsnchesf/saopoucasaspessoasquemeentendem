@@ -9,7 +9,8 @@
    settings.finance: { setup, start, balance, vr,
      card: { on, close, due, open }, save: { initial, monthly, day, target, deadline, skips } }
    recurring: { id, dir: 'in' | 'out', kind, name, amount, variable, method, category,
-     freq: 'mes' | 'semana' | 'ano', day, business, weekday, date, start, end, skips: [data] }
+     freq: 'mes' | 'semana' | 'ano', day, business, weekday, date, start, end, skips: [data],
+     advance: { amount, day, skips } }  ← só no salário: parte paga antes (o resto cai no dia do salário)
    transactions: { id, dir: 'in' | 'out' | 'save' | 'unsave' | 'card' | 'adjust', name, amount,
      date, kind, method, category, parts, fixedId, occ, eventId, eventDate, due, wallet }
 
@@ -22,6 +23,7 @@
 const FIN_COLOR = '#16a34a';
 const PAY = { debito: 'Débito', credito: 'Crédito', pix: 'Pix', dinheiro: 'Dinheiro', vr: 'VR' };
 const INCOME = { salario: 'Salário', adiantamento: 'Adiantamento', vr: 'Vale-refeição', outro: 'Outra' };
+const FIXED_INCOME = ['salario', 'vr', 'outro']; // adiantamento fica dentro do salário
 const SPEND = {
   moradia: ['Moradia', '#6366f1'], contas: ['Contas', '#0ea5e9'], mercado: ['Mercado', '#10b981'],
   comida: ['Alimentação', '#f59e0b'], transporte: ['Transporte', '#64748b'], saude: ['Saúde', '#ef4444'],
@@ -96,6 +98,30 @@ const fixedWhen = f => f.freq === 'semana' ? `Toda ${WEEKDAYS_LONG[f.weekday].to
   : f.business ? `${f.day}º dia útil` : `Dia ${f.day}`;
 const fixedName = f => f.name || (f.dir === 'in' ? INCOME[f.kind] : spendCat(f.category)[0]);
 
+/** Fixos como acontecem: salário com adiantamento vira duas entradas, o adiantamento e o restante. */
+function fixedList() {
+  const out = [];
+  for (const f of Store.data.recurring) {
+    const adv = f.kind === 'salario' && f.advance?.amount > 0 ? f.advance : null;
+    if (!adv) { out.push(f); continue; }
+    out.push({ ...f, amount: r2(f.amount - adv.amount), rest: true });
+    out.push({ ...f, id: `${f.id}:adv`, parent: f.id, kind: 'adiantamento', name: 'Adiantamento', amount: adv.amount,
+      freq: 'mes', day: adv.day, business: false, variable: false, skips: adv.skips || [] });
+  }
+  return out;
+}
+const getFixed = id => fixedList().find(f => f.id === id);
+
+/** Adiantamento cadastrado à parte (antes de ir para dentro do salário) passa a fazer parte dele. */
+function migrateAdvance() {
+  const a = Store.data.recurring.find(f => f.kind === 'adiantamento');
+  const sal = Store.data.recurring.find(f => f.kind === 'salario' && !f.advance);
+  if (!a || !sal) return;
+  Store.upsert('recurring', { ...structuredClone(sal), amount: r2(sal.amount + a.amount), advance: { amount: a.amount, day: a.day, skips: a.skips || [] } });
+  Store.remove('recurring', a.id);
+  for (const m of Store.data.transactions.filter(x => x.fixedId === a.id)) Store.upsert('transactions', { ...m, fixedId: `${sal.id}:adv` });
+}
+
 /* ---------- Saldos ---------- */
 
 const moves = () => Store.data.transactions.filter(m => m.date >= finStart());
@@ -156,7 +182,7 @@ function invoices(from, to) {
     for (let i = 0; i < n; i++) add(shiftDue(first, i), m.amount / n);
   }
   const done = doneOcc();
-  for (const f of Store.data.recurring) if (f.dir === 'out' && f.method === 'credito')
+  for (const f of fixedList()) if (f.dir === 'out' && f.method === 'credito')
     for (const d of fixedDates(f, addDays(from, -70), to)) if (!done.has(`${f.id}|${d}`)) add(cardDue(d), f.amount);
   if (fin().card.open) add(fin().card.openDue || nextDue(finStart()), fin().card.open);
   return Object.values(map).sort((a, b) => a.due.localeCompare(b.due)).map(v => {
@@ -197,12 +223,12 @@ function saveDates(from, to) {
 function pendings(from, to) {
   const out = [];
   const done = doneOcc();
-  for (const f of Store.data.recurring) {
+  for (const f of fixedList()) {
     if (f.dir === 'out' && f.method === 'credito') continue; // vai para a fatura
     for (const d of fixedDates(f, from, to)) if (!done.has(`${f.id}|${d}`)) out.push({
       type: 'fixed', id: f.id, date: d, name: fixedName(f), amount: f.amount, sign: f.dir === 'in' ? 1 : -1,
       wallet: fixedWallet(f), variable: f.variable, color: f.dir === 'in' ? FIN_COLOR : spendCat(f.category)[1],
-      meta: f.dir === 'in' ? (f.kind === 'vr' ? 'VR' : '') : PAY[f.method] || '',
+      meta: f.dir === 'in' ? (f.kind === 'vr' ? 'VR' : f.rest ? 'Restante' : '') : PAY[f.method] || '',
     });
   }
   for (const v of invoices(from, to)) if (v.left > 0) out.push({
@@ -252,7 +278,7 @@ function monthSpending(m) {
   const by = {};
   for (const mv of moves()) if (mv.dir === 'out' && mv.date >= from && mv.date <= to) by[mv.category || 'outros'] = (by[mv.category || 'outros'] || 0) + mv.amount;
   const done = doneOcc();
-  for (const f of Store.data.recurring) if (f.dir === 'out')
+  for (const f of fixedList()) if (f.dir === 'out')
     for (const d of fixedDates(f, from, to)) if (!done.has(`${f.id}|${d}`)) by[f.category || 'outros'] = (by[f.category || 'outros'] || 0) + f.amount;
   return Object.entries(by).map(([k, v]) => [k, r2(v)]).sort((a, b) => b[1] - a[1]);
 }
@@ -302,7 +328,10 @@ const hasVR = () => !!fin().vr || Store.data.recurring.some(f => f.kind === 'vr'
 
 /* ---------- Tela ---------- */
 
-screens.financas = () => !finOn() || state.finEdit ? finSetup() : finView();
+screens.financas = () => {
+  migrateAdvance();
+  return !finOn() || state.finEdit ? finSetup() : finView();
+};
 
 function finView() {
   const t = today();
@@ -403,7 +432,8 @@ function finView() {
 const FIN_STEPS = [['saldo', 'Saldo'], ['renda', 'Entradas fixas'], ['cartao', 'Cartão de crédito'], ['fixos', 'Gastos fixos'], ['poupanca', 'Poupança']];
 
 function fixedRow(f) {
-  const meta = [fixedWhen(f), f.dir === 'out' && PAY[f.method], f.dir === 'out' && spendCat(f.category)[0], f.variable && 'valor varia', f.end && `até ${shortDate(f.end)}`]
+  const adv = f.kind === 'salario' && f.advance?.amount > 0 && `adiantamento ${brl(f.advance.amount)} no dia ${f.advance.day}`;
+  const meta = [fixedWhen(f), adv, f.dir === 'out' && PAY[f.method], f.dir === 'out' && spendCat(f.category)[0], f.variable && 'valor varia', f.end && `até ${shortDate(f.end)}`]
     .filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
   return `<button class="ev-row" style="--c:${f.dir === 'in' ? FIN_COLOR : spendCat(f.category)[1]}" data-action="fin-fixed" data-id="${esc(f.id)}">
     <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(fixedName(f))}</span></span><span class="ev-meta">${meta}</span></span>
@@ -430,7 +460,7 @@ function finSetup() {
     </div>`);
 
   const renda = sec(1, `${ins.length ? `<div class="list">${ins.map(fixedRow).join('')}</div>` : ''}
-    <div class="btn-row" style="margin-top:10px">${Object.entries(INCOME).map(([k, l]) => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${l}</button>`).join('')}</div>`);
+    <div class="btn-row" style="margin-top:10px">${FIXED_INCOME.filter(k => k === 'outro' || !ins.some(x => x.kind === k)).map(k => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${INCOME[k]}</button>`).join('')}</div>`);
 
   const cartao = sec(2, `<label class="check"><input type="checkbox" data-fin="card.on" ${c.on ? 'checked' : ''}> Uso cartão de crédito</label>
     <div class="row" ${c.on ? '' : 'hidden'} style="margin-top:12px">
@@ -508,14 +538,14 @@ function fixedForm(f, { dir = 'out', kind = '', name = '', category = '' } = {})
     const k = dir === 'in' ? kind || 'outro' : '';
     f = { id: uid(), dir, kind: k, name: name || (k && k !== 'outro' ? INCOME[k] : ''), amount: 0, variable: ['Luz', 'Água'].includes(name),
       method: dir === 'out' ? 'debito' : '', category: category || 'outros', freq: 'mes',
-      day: k === 'salario' ? 5 : k === 'adiantamento' ? 20 : k === 'vr' ? 1 : 10, business: k === 'salario', weekday: 1, date: today(),
+      day: k === 'salario' ? 5 : k === 'vr' ? 1 : 10, business: k === 'salario', weekday: 1, date: today(),
       start: finOn() ? today() : '', end: '' }; // criado depois de configurar: não cobra os meses que já passaram
   }
   const income = f.dir === 'in';
   openModal(`<form novalidate>
     ${modalHead(isNew ? (income ? 'Nova entrada fixa' : 'Novo gasto fixo') : (income ? 'Editar entrada fixa' : 'Editar gasto fixo'))}
     <div class="modal-body">
-      ${income ? `<div><span class="fieldset-label">Tipo</span><div style="margin-top:6px">${choiceChips('kind', Object.entries(INCOME), f.kind)}</div></div>` : ''}
+      ${income ? `<div><span class="fieldset-label">Tipo</span><div style="margin-top:6px">${choiceChips('kind', FIXED_INCOME.map(k => [k, INCOME[k]]), f.kind)}</div></div>` : ''}
       <div class="row">
         <label class="field"><span>Nome</span><input name="name" maxlength="80" value="${esc(f.name)}" ${isNew && !f.name ? 'autofocus' : ''}></label>
         <label class="field"><span>Valor (R$)</span>${moneyInput('amount', f.amount || '', isNew && f.name ? 'autofocus' : '')}</label>
@@ -530,6 +560,13 @@ function fixedForm(f, { dir = 'out', kind = '', name = '', category = '' } = {})
         <label class="field xs"><span>Dia</span><input type="number" name="day" min="1" max="31" inputmode="numeric" value="${esc(f.day)}"></label>
         <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" name="business" ${f.business ? 'checked' : ''}> Dia útil</label>
       </div>
+      ${income ? `<div class="f-adv">
+        <label class="check"><input type="checkbox" name="hasAdvance" ${f.advance?.amount ? 'checked' : ''}> Recebo adiantamento</label>
+        <div class="row f-adv-fields" style="margin-top:10px">
+          <label class="field"><span>Adiantamento (R$)</span>${moneyInput('advAmount', f.advance?.amount || '')}</label>
+          <label class="field xs"><span>Dia</span><input type="number" name="advDay" min="1" max="31" inputmode="numeric" value="${esc(f.advance?.day || 20)}"></label>
+        </div>
+      </div>` : ''}
       <div class="f-semana"><span class="fieldset-label">Dia da semana</span><div style="margin-top:6px">${choiceChips('weekday', WEEKDAYS.map((w, i) => [i, w]), f.weekday)}</div></div>
       <label class="field f-ano"><span>Data</span><input type="date" name="date" value="${esc(f.date || today())}"></label>
       <div class="row">
@@ -543,6 +580,11 @@ function fixedForm(f, { dir = 'out', kind = '', name = '', category = '' } = {})
     onMount(form) {
       const sync = () => {
         const fr = form.elements.freq.value;
+        const adv = $('.f-adv', form);
+        if (adv) {
+          adv.hidden = form.elements.kind.value !== 'salario' || fr !== 'mes';
+          $('.f-adv-fields', form).hidden = !form.elements.hasAdvance.checked;
+        }
         $('.f-mes', form).hidden = fr !== 'mes';
         $('.f-semana', form).hidden = fr !== 'semana';
         $('.f-ano', form).hidden = fr !== 'ano';
@@ -567,6 +609,13 @@ function fixedForm(f, { dir = 'out', kind = '', name = '', category = '' } = {})
       if (v.freq === 'mes' && !(+v.day >= 1 && +v.day <= 31)) return formError(form, 'Dia inválido.');
       if (v.freq === 'ano' && !v.date) return formError(form, 'Falta a data.');
       if (v.start && v.end && v.end < v.start) return formError(form, 'O fim precisa ser depois do início.');
+      const withAdvance = income && v.kind === 'salario' && v.freq === 'mes' && !!v.hasAdvance;
+      const advAmount = withAdvance ? parseMoney(v.advAmount) : 0;
+      if (withAdvance && !(advAmount > 0)) return formError(form, 'Falta o valor do adiantamento.');
+      if (withAdvance && advAmount >= amount) return formError(form, 'O adiantamento precisa ser menor que o salário.');
+      if (withAdvance && !(+v.advDay >= 1 && +v.advDay <= 31)) return formError(form, 'Dia do adiantamento inválido.');
+      if (withAdvance) f.advance = { ...f.advance, amount: r2(advAmount), day: +v.advDay };
+      else delete f.advance;
       Object.assign(f, {
         kind: income ? v.kind : '', name: v.name.trim(), amount: r2(amount), variable: !!v.variable,
         method: income ? '' : v.method || 'debito', category: income ? '' : v.category, freq: v.freq,
@@ -615,7 +664,7 @@ function moveForm(m, { dir = 'out', fixed = null, occ = '', eventId = '', eventD
         <div><span class="fieldset-label">Categoria</span><div style="margin-top:6px">${choiceChips('category', Object.entries(SPEND).map(([k, [l]]) => [k, l]), m.category)}</div></div>
         <div><span class="fieldset-label">Pagamento</span><div style="margin-top:6px">${choiceChips('method', payList(), m.method)}</div></div>
         <label class="field f-parts xs"><span>Parcelas</span><select name="parts">${options(Array.from({ length: 24 }, (_, i) => [i + 1, i ? `${i + 1}x` : 'À vista']), m.parts || 1)}</select></label>` : ''}
-      ${dir === 'in' ? `<div><span class="fieldset-label">Tipo</span><div style="margin-top:6px">${choiceChips('kind', Object.entries(INCOME), m.kind)}</div></div>` : ''}
+      ${dir === 'in' ? `<div><span class="fieldset-label">Tipo</span><div style="margin-top:6px">${choiceChips('kind', Object.entries(INCOME).filter(([k]) => k !== 'adiantamento' || m.kind === k), m.kind)}</div></div>` : ''}
       <label class="field"><span>Data</span><input type="date" name="date" value="${esc(m.date)}"></label>
       ${evs.length ? `<label class="field"><span>Evento</span><select name="event"><option value="">Nenhum</option>${options(evs, m.eventId ? `${m.eventId}|${m.eventDate}` : '')}</select></label>` : ''}
       <p class="form-error" hidden></p>
@@ -665,7 +714,7 @@ function moveForm(m, { dir = 'out', fixed = null, occ = '', eventId = '', eventD
 function confirmPending(type, id, date) {
   let rec;
   if (type === 'fixed') {
-    const f = Store.get('recurring', id);
+    const f = getFixed(id);
     if (!f) return;
     if (f.variable) return moveForm(null, { dir: f.dir, fixed: f, occ: date });
     rec = { id: uid(), dir: f.dir, name: fixedName(f), amount: f.amount, date: date < today() ? date : today(), kind: f.kind, method: f.method, category: f.category, fixedId: f.id, occ: date };
@@ -684,13 +733,15 @@ function confirmPending(type, id, date) {
 
 function skipPending(type, id, date) {
   if (type === 'fixed') {
-    const f = Store.get('recurring', id);
+    const vf = getFixed(id);
+    const f = vf && Store.get('recurring', vf.parent || vf.id);
     if (!f) return;
     const next = structuredClone(f);
-    next.skips = [...(f.skips || []), date].sort();
+    if (vf.parent) next.advance.skips = [...(f.advance.skips || []), date].sort();
+    else next.skips = [...(f.skips || []), date].sort();
     Store.upsert('recurring', next);
     render();
-    toast(`${fixedName(f)} de ${shortDate(date)} pulado`, { label: 'Desfazer', fn: () => { Store.upsert('recurring', f); render(); } });
+    toast(`${fixedName(vf)} de ${shortDate(date)} pulado`, { label: 'Desfazer', fn: () => { Store.upsert('recurring', f); render(); } });
   } else if (type === 'save') {
     const s = fin().save || {};
     setFin({ save: { ...s, skips: [...(s.skips || []), date].sort() } });
@@ -704,7 +755,7 @@ function skipPending(type, id, date) {
 Object.assign(actions, {
   'fin-new': el => { if (!finOn()) location.hash = '#/financas'; else moveForm(null, { dir: el.dataset.dir || 'out' }); },
   'fin-move': el => { const m = Store.get('transactions', el.dataset.id); if (m) moveForm(m); },
-  'fin-fixed': el => { const f = Store.get('recurring', el.dataset.id); if (f) fixedForm(f); },
+  'fin-fixed': el => { const f = Store.get('recurring', getFixed(el.dataset.id)?.parent || el.dataset.id); if (f) fixedForm(f); },
   'fin-fixed-new': el => fixedForm(null, { dir: el.dataset.dir, kind: el.dataset.kind, name: el.dataset.name, category: el.dataset.cat }),
   'fin-confirm': el => confirmPending(el.dataset.type, el.dataset.id, el.dataset.date),
   'fin-skip': el => skipPending(el.dataset.type, el.dataset.id, el.dataset.date),

@@ -39,6 +39,8 @@ function openModal(html, { onSubmit, onDelete, onMount } = {}) {
     const addItem = t.closest('[data-add-item]');
     if (addItem) return addListRow(addItem.closest('.edit-list'));
     if (t.closest('[data-remove-item]')) return t.closest('.item').remove();
+    const note = t.closest('[data-note]');
+    if (note) return noteFormat($('textarea', note.closest('.note-field')), note.dataset.note);
     const addSlot = t.closest('[data-add-slot]');
     if (addSlot) {
       addSlot.insertAdjacentHTML('beforebegin', slotRow({ id: uid(), weekday: 1, start: '19:00', end: '20:40', weight: 2, room: '' }));
@@ -52,6 +54,7 @@ function openModal(html, { onSubmit, onDelete, onMount } = {}) {
       e.preventDefault();
       addListRow(e.target.closest('.edit-list'), e.target.closest('.item'));
     }
+    if (e.key === 'Enter' && !e.shiftKey && e.target.matches('.note-field textarea')) noteEnter(e);
   };
 
   onMount?.(form, root);
@@ -241,27 +244,105 @@ function formError(form, msg) {
 
 const formData = form => Object.fromEntries(new FormData(form));
 
-/** Lista editável (checklist de entrega, objetivos de meta, compras de evento com preço…). */
-function listEditor(name, items, { check = true, price = false, addLabel = 'Adicionar item' } = {}) {
-  return `<div class="edit-list" data-list="${name}" data-check="${check ? 1 : 0}" data-price="${price ? 1 : 0}">
-    ${items.map(it => listRow(it, check, price)).join('')}
+/** Lista editável (checklist de entrega, objetivos de meta…). */
+function listEditor(name, items, { check = true, addLabel = 'Adicionar item' } = {}) {
+  return `<div class="edit-list" data-list="${name}" data-check="${check ? 1 : 0}">
+    ${items.map(it => listRow(it, check)).join('')}
     <button type="button" class="btn btn-sm" data-add-item>${icon('plus')}${esc(addLabel)}</button>
   </div>`;
 }
 
-const listRow = (it, check, price) => `<div class="item" data-id="${esc(it.id)}">
+const listRow = (it, check) => `<div class="item" data-id="${esc(it.id)}">
   ${check ? `<input type="checkbox" ${it.done ? 'checked' : ''} aria-label="Concluído">` : ''}
   <input type="text" value="${esc(it.text)}" maxlength="200">
-  ${price ? `<label class="price-in"><span>R$</span><input type="number" min="0" step="any" inputmode="decimal" value="${it.price ?? ''}" aria-label="Preço"></label>` : ''}
   <button type="button" class="icon-btn ghost sm" data-remove-item aria-label="Remover item">${icon('x')}</button>
 </div>`;
 
 function addListRow(list, after) {
-  const html = listRow({ id: uid(), text: '', done: false }, list.dataset.check === '1', list.dataset.price === '1');
+  const html = listRow({ id: uid(), text: '', done: false }, list.dataset.check === '1');
   if (after) after.insertAdjacentHTML('afterend', html);
   else $('[data-add-item]', list).insertAdjacentHTML('beforebegin', html);
   const row = after ? after.nextElementSibling : $('[data-add-item]', list).previousElementSibling;
   $('input[type="text"]', row).focus();
+}
+
+/* ---------- Texto com lista e checklist ("• item", "☐ item" / "☑ item") ----------
+   Continua texto puro (sincroniza e exporta igual); a ficha mostra a lista e as caixinhas. */
+
+const NOTE_MARK = { bullet: '• ', check: '☐ ' };
+const NOTE_RE = /^\s*(?:[-*•]|☐|☑|\[[ xX]?\])\s?/;
+const noteKind = l => /^\s*(?:☐|☑|\[[ xX]?\])/.test(l) ? 'check' : /^\s*[-*•]\s/.test(l) ? 'bullet' : '';
+const noteChecked = l => /^\s*(?:☑|\[[xX]\])/.test(l);
+const noteText = l => noteKind(l) ? l.replace(NOTE_RE, '') : l;
+
+/** Campo de texto com botões de lista e checklist, como nos apps de notas. */
+const noteField = (name, value, label = 'Detalhes') => `<div class="field note-field">
+  <div class="note-head"><span>${esc(label)}</span><span class="note-tools">
+    <button type="button" class="icon-btn ghost sm" data-note="bullet" title="Lista" aria-label="Lista">${icon('list')}</button>
+    <button type="button" class="icon-btn ghost sm" data-note="check" title="Checklist" aria-label="Checklist">${icon('check')}</button>
+  </span></div>
+  <textarea name="${name}" rows="4">${esc(value || '')}</textarea>
+</div>`;
+
+/** Liga/desliga lista ou checklist nas linhas selecionadas (ou na linha do cursor). */
+function noteFormat(ta, kind) {
+  const v = ta.value;
+  const a = v.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+  let b = v.indexOf('\n', ta.selectionEnd);
+  if (b < 0) b = v.length;
+  const lines = v.slice(a, b).split('\n');
+  const off = lines.every(l => l.trim() && noteKind(l) === kind);
+  const out = lines.map(l => off ? noteText(l) : NOTE_MARK[kind] + noteText(l)).join('\n');
+  ta.value = v.slice(0, a) + out + v.slice(b);
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = a + out.length;
+}
+
+/** Enter numa linha de lista continua a lista; numa linha vazia, encerra. */
+function noteEnter(e) {
+  const ta = e.target, v = ta.value, pos = ta.selectionStart;
+  const a = v.lastIndexOf('\n', pos - 1) + 1;
+  const line = v.slice(a, pos);
+  const kind = noteKind(line);
+  if (!kind || ta.selectionEnd !== pos) return;
+  e.preventDefault();
+  if (!noteText(line).trim()) {
+    ta.value = v.slice(0, a) + v.slice(pos);
+    ta.selectionStart = ta.selectionEnd = a;
+    return;
+  }
+  const ins = '\n' + NOTE_MARK[kind];
+  ta.value = v.slice(0, pos) + ins + v.slice(pos);
+  ta.selectionStart = ta.selectionEnd = pos + ins.length;
+}
+
+/** Texto da ficha: parágrafos, listas e checklist. toggle(i) dá os atributos para marcar a linha i. */
+function noteHTML(text, toggle) {
+  if (!text) return '';
+  const groups = [];
+  text.split('\n').forEach((l, i) => {
+    const kind = noteKind(l);
+    const last = groups[groups.length - 1];
+    if (last && last.kind === kind) last.lines.push([l, i]);
+    else groups.push({ kind, lines: [[l, i]] });
+  });
+  return `<div class="note">${groups.map(({ kind, lines }) => {
+    if (kind === 'bullet') return `<ul class="sheet-list">${lines.map(([l]) => `<li>${esc(noteText(l))}</li>`).join('')}</ul>`;
+    if (kind === 'check') return `<div class="list">${lines.map(([l, i]) => {
+      const on = noteChecked(l);
+      return `<div class="task ${on ? 'done' : ''}"><button class="checkbox ${on ? 'on' : ''}" ${toggle ? toggle(i) : 'disabled'} role="checkbox" aria-checked="${on}" aria-label="Feito"></button>
+        <span class="task-main"><span class="task-title">${esc(noteText(l))}</span></span></div>`;
+    }).join('')}</div>`;
+    const txt = lines.map(([l]) => l).join('\n').trim();
+    return txt ? `<span class="pre">${esc(txt)}</span>` : '';
+  }).join('')}</div>`;
+}
+
+/** Marca ou desmarca a linha i da checklist. */
+function noteToggle(text, i) {
+  const lines = text.split('\n');
+  if (noteKind(lines[i]) === 'check') lines[i] = (noteChecked(lines[i]) ? '☐ ' : '☑ ') + noteText(lines[i]);
+  return lines.join('\n');
 }
 
 function readList(form, name) {
@@ -270,7 +351,6 @@ function readList(form, name) {
       id: row.dataset.id,
       text: $('input[type="text"]', row).value.trim(),
       done: !!$('input[type="checkbox"]', row)?.checked,
-      ...($('.price-in input', row)?.value ? { price: +$('.price-in input', row).value } : {}),
     }))
     .filter(it => it.text);
 }

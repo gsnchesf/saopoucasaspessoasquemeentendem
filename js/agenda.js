@@ -383,10 +383,7 @@ function eventForm(ev, date, startTime) {
         <label class="field" data-specialty ${EVENT_KINDS[kind].specialty ? '' : 'hidden'}><span>Especialidade</span><input name="specialty" maxlength="80" value="${esc(ev.specialty || '')}"></label>
       </div>
       <label class="field" data-title ${EVENT_KINDS[kind].title ? '' : 'hidden'}><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
-      <div data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'} class="stack" style="gap:14px">
-        <label class="field"><span>Orçamento (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
-        <div><span class="fieldset-label">Lista de compras</span><div style="margin-top:6px">${listEditor('buy', ev.buy || [], { price: true, addLabel: 'Item' })}</div></div>
-      </div>
+      <label class="field" data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'}><span>Orçamento (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
       <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
@@ -401,7 +398,7 @@ function eventForm(ev, date, startTime) {
         <label class="field"><span>Local</span><input name="location" value="${esc(ev.location)}"></label>
         <label class="field"><span>Lembrete</span><select name="reminder">${options(REMINDERS, ev.reminder ?? '')}</select></label>
       </div>
-      <label class="field"><span>Detalhes</span><textarea name="notes" rows="3">${esc(ev.notes)}</textarea></label>
+      ${noteField('notes', eventNotes(ev))}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}
@@ -444,8 +441,7 @@ function eventForm(ev, date, startTime) {
         location: f.location.trim(), reminder: f.reminder === '' ? null : +f.reminder, notes: f.notes.trim(),
       });
       if (budget) ev.budget = budget; else delete ev.budget;
-      const buy = k.money ? readList(form, 'buy') : [];
-      if (buy.length) ev.buy = buy; else delete ev.buy;
+      delete ev.buy; // a lista de compras antiga já foi para os detalhes
       delete ev.category; // o tipo agora é ev.kind
       Store.upsert('events', ev);
       closeModal();
@@ -488,16 +484,9 @@ function budgetText(n, date) {
   return brl(n) + (weeks >= 2 ? ` · ${brl(Math.ceil(n / weeks))}/semana` : '');
 }
 
-/** Linhas da ficha com a lista de compras: total (e quanto passa ou sobra do orçamento) e o já comprado. */
-function buyRows(ev) {
-  const items = ev.buy || [];
-  if (!items.some(it => it.price != null)) return [];
-  const sum = list => list.reduce((n, it) => n + (it.price || 0), 0);
-  const total = sum(items), spent = sum(items.filter(it => it.done));
-  const diff = (ev.budget || 0) - total;
-  const vs = !ev.budget ? '' : diff >= 0 ? ` · <span class="ok-text">sobram ${brl(diff)}</span>` : ` · <span class="late">${brl(-diff)} acima</span>`;
-  return [['Total da lista', esc(brl(total)) + vs], ['Gasto', spent ? esc(brl(spent)) : '']];
-}
+/** Detalhes do evento. A lista de compras (ev.buy, que existiu por pouco tempo) vira checklist no texto. */
+const eventNotes = ev => [ev.notes, ...(ev.buy || []).map(it => `${it.done ? '☑' : '☐'} ${it.text}${it.price != null ? ` · ${brl(it.price)}` : ''}`)]
+  .filter(Boolean).join('\n');
 
 /** Ficha do compromisso (no dia clicado, se for recorrente). */
 function eventView(ev, date) {
@@ -512,14 +501,10 @@ function eventView(ev, date) {
       ['Especialidade', EVENT_KINDS[eventKind(ev)].specialty ? esc(ev.specialty || '') : ''],
       ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
       ['Orçamento', ev.budget ? esc(budgetText(ev.budget, d)) : ''],
-      ...buyRows(ev),
       ['Local', esc(ev.location || '')],
       ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],
-      ['Detalhes', sheetText(ev.notes)],
+      ['Detalhes', noteHTML(eventNotes(ev), i => `data-action="toggle-note" data-id="${esc(ev.id)}" data-line="${i}" data-date="${d}"`)],
     ],
-    body: ev.buy?.length ? `<h3 class="section-label">Lista de compras</h3><div class="list">${ev.buy.map(it => `<div class="task ${it.done ? 'done' : ''}">
-      <button class="checkbox ${it.done ? 'on' : ''}" data-action="toggle-buy" data-id="${esc(ev.id)}" data-item="${esc(it.id)}" data-date="${d}" role="checkbox" aria-checked="${!!it.done}" aria-label="Comprado"></button>
-      <span class="task-main"><span class="task-title">${esc(it.text)}</span>${it.price != null ? `<span class="task-meta">${brl(it.price)}</span>` : ''}</span></div>`).join('')}</div>` : '',
     onEdit: () => eventForm(ev, date),
   });
 }
@@ -530,11 +515,12 @@ Object.assign(actions, {
   'new-event': el => eventForm(null, el.dataset.date || (state.view === 'agenda' ? state.selected : today())),
   'skip-deadline': el => skipDeadline(el.dataset.kind, el.dataset.id),
   'edit-event': el => { const ev = Store.get('events', el.dataset.id); if (ev) eventView(ev, el.dataset.date); },
-  'toggle-buy': el => {
-    const ev = structuredClone(Store.get('events', el.dataset.id) || {});
-    const it = ev.buy?.find(x => x.id === el.dataset.item);
-    if (!it) return;
-    it.done = !it.done;
+  'toggle-note': el => {
+    const cur = Store.get('events', el.dataset.id);
+    if (!cur) return;
+    const ev = structuredClone(cur);
+    ev.notes = noteToggle(eventNotes(cur), +el.dataset.line);
+    delete ev.buy;
     Store.upsert('events', ev);
     closeModal();
     render();

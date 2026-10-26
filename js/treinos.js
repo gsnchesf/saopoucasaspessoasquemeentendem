@@ -99,7 +99,7 @@ function workoutDay(w, date) {
     title: w.name, color: workoutColor(), sub: esc(`Treino · ${daysLabel(w.days || [])}`),
     rows: [
       ['Quando', esc(`${cap(relDay(date))} · ${w.start}–${w.end}`)],
-      ['Conta em', a ? esc(a.name) : ''],
+      ['Meta', a ? esc(a.name) : ''],
       ['Situação', st === 'done' ? 'Feito' : st === 'skipped' ? 'Não feito' : ''],
     ],
     body: ex.length ? `<ol class="workout-list">${ex.map(e => `<li>${esc(e.text)}</li>`).join('')}</ol>` : '',
@@ -124,7 +124,7 @@ function workoutForm(w) {
         <label class="field"><span>Fim</span><input type="time" name="end" value="${esc(w.end)}"></label>
       </div>
       <div><span class="fieldset-label">Exercícios</span><div style="margin-top:6px">${listEditor('exercises', w.exercises || [], { check: false, addLabel: 'Exercício' })}</div></div>
-      ${acts.length ? `<label class="field"><span>Conta na meta</span><select name="activityId"><option value="">Nenhuma</option>${options(acts.map(a => [a.id, a.name]), w.activityId)}</select></label>` : ''}
+      ${acts.length ? `<label class="field"><span>Meta</span><select name="activityId"><option value="">Nenhuma</option>${options(acts.map(a => [a.id, a.name]), w.activityId)}</select></label>` : ''}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(!isNew)}

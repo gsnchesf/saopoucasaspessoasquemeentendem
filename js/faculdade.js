@@ -221,7 +221,7 @@ function toggleAbsence(el) {
     { label: 'Entreguei o exercício', icon: cur?.present && !cur.delivery ? 'check' : '', run: () => setAbsence(s, date, keep, { present: !(cur?.present && !cur.delivery), delivery: undefined }) },
     { label: cur?.delivery ? `Entrega em ${shortDate(cur.delivery)}…` : 'Entrega em outro dia…', icon: cur?.delivery ? 'check' : '', run: () => exerciseForm(s, date) },
   ];
-  const exerciseToggle = { label: 'Presença por exercício neste dia', icon: ex ? 'check' : '', run: () => setExerciseDay(s, date, !ex) };
+  const exerciseToggle = { label: 'Presença por exercício', icon: ex ? 'check' : '', run: () => setExerciseDay(s, date, !ex) };
   const cancel = on => ({ label: 'Aula cancelada', icon: on ? 'check' : '', run: () => setCanceled(s, date, !on) });
 
   // Aula cancelada: às vezes a presença é o exercício entregue.
@@ -342,7 +342,7 @@ function presenceLabel(s, date) {
     : cur.delivery ? `Exercício até ${shortDate(cur.delivery)}`
     : cur.aulas?.length ? `Faltei na ${aulasLabel(cur.aulas)}` : 'Faltei';
   if (date > today()) return ex ? 'Por exercício' : '';
-  return 'Fui';
+  return 'Presente';
 }
 
 function classSheet(s, date, start) {
@@ -369,7 +369,7 @@ function classSheet(s, date, start) {
       ['Presença', esc(presenceLabel(s, date))],
       ['Faltas', info.free ? 'Faltável' : info.limit ? esc(`Restam ${absNum(Math.max(0, info.remaining))} de ${info.limit}`) : ''],
       ['Conteúdo', topics.length ? `<ul class="sheet-list">${topics.map(c => `<li class="${c.done ? 'done' : ''}">${esc(c.title)}</li>`).join('')}</ul>` : ''],
-      ['Neste dia', due.length ? `<ul class="sheet-list">${due.join('')}</ul>` : ''],
+      ['Prazos do dia', due.length ? `<ul class="sheet-list">${due.join('')}</ul>` : ''],
       ['Próximo prazo', next ? esc(`${ASSESSMENT_KINDS[next.kind]} · ${next.title} · ${relDay(next.date)}${next.date > today() ? ` (${untilLabel(next.date)})` : ''}`) : ''],
       ['Anotações', sheetText(s.classNotes?.[date])],
     ],
@@ -653,7 +653,7 @@ function subjectForm(s) {
         <label class="field xs"><span>Cor</span><input type="color" name="color" value="${esc(s.color)}"></label>
       </div>
       <div class="row">
-        <label class="field"><span>Professor(a)</span><input name="professor" maxlength="120" value="${esc(s.professor)}"></label>
+        <label class="field"><span>Professor</span><input name="professor" maxlength="120" value="${esc(s.professor)}"></label>
         <label class="field"><span>Sala padrão</span><input name="room" maxlength="60" value="${esc(s.room)}"></label>
       </div>
       <div>
@@ -743,12 +743,12 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
       <label class="field"><span>Título</span><input name="title" maxlength="160" value="${esc(a.title)}"></label>
       <div class="row">
         <label class="field"><span>Data</span><input type="date" name="date" value="${a.date}"></label>
-        <label class="field"><span>Horário (opcional)</span><input type="time" name="time" value="${a.time || ''}"></label>
+        <label class="field"><span>Horário</span><input type="time" name="time" value="${a.time || ''}"></label>
       </div>
       <label class="field"><span>Conteúdos cobrados</span><textarea name="topics" rows="3">${esc(a.topics)}</textarea></label>
       <label class="field"><span>Detalhes</span><textarea name="details" rows="2">${esc(a.details)}</textarea></label>
       <div class="row" data-grade ${valesPresenca(a) ? 'hidden' : ''}>
-        <label class="field"><span>Valor / peso</span><input name="weight" maxlength="30" value="${esc(a.weight)}"></label>
+        <label class="field"><span>Peso</span><input name="weight" maxlength="30" value="${esc(a.weight)}"></label>
         <label class="field"><span>Nota</span><input name="grade" maxlength="30" value="${esc(a.grade)}"></label>
       </div>
       <label class="check"><input type="checkbox" name="done" ${a.done ? 'checked' : ''}> Concluído / entregue</label>
@@ -799,7 +799,7 @@ function absenceForm(s) {
       <label class="field"><span>Data</span><input type="date" name="date" value="${t}"></label>
       <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
       <label class="field"><span>Observação</span><input name="note" maxlength="140"></label>
-      ${attendance(s) === 'exercicio' ? '<label class="field"><span>Entrega do exercício (se for outro dia)</span><input type="date" name="delivery"></label>' : ''}
+      ${attendance(s) === 'exercicio' ? '<label class="field"><span>Entrega do exercício</span><input type="date" name="delivery"></label>' : ''}
       ${attendance(s) === 'exercicio' ? '<label class="check"><input type="checkbox" name="present"> Entreguei o exercício</label>' : ''}
       <p class="form-error" hidden></p>
     </div>

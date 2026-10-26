@@ -140,7 +140,7 @@ screens.ajustes = () => {
         <select class="select" data-setting="dayStart">${options(Array.from({ length: 13 }, (_, h) => [h, `${pad(h)}:00`]), s.dayStart)}</select></div>
       <div class="setting"><div><div>Lembretes</div><div class="desc">Notificações ${permText}</div></div>
         ${perm === 'default' ? '<button class="btn" data-action="notify-perm">Ativar</button>' : ''}</div>
-      <h3 class="section-label" style="margin-top:12px;padding:0">Tipos de bloco (Essa semana)</h3>
+      <h3 class="section-label" style="margin-top:12px;padding:0">Tipos de bloco</h3>
       <div class="cats">${colorNameRows('categories', 'do tipo')}</div>
       <button class="btn btn-sm" data-action="add-row" data-coll="categories">${icon('plus')}Tipo</button>
     </section>

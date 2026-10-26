@@ -401,8 +401,8 @@ function activityForm(a) {
       <div class="emoji-grid" hidden>${GOAL_EMOJIS.map(e => `<button type="button" data-emoji="${e}">${e}</button>`).join('')}</div>
       ${isNew ? `<div class="goal-ideas">${ideas}</div>` : ''}
       <div class="goal-setup">
-        <section class="goal-sec"><span class="fieldset-label">Como medir</span>
-          ${chips('measure', [['vezes', 'Vezes'], ['tempo', 'Tempo'], ['quantidade', 'Quantidade'], ['valor', 'Chegar a um valor'], ['concluir', 'Concluir']], m)}</section>
+        <section class="goal-sec"><span class="fieldset-label">Tipo de meta</span>
+          ${chips('measure', [['vezes', 'Vezes'], ['tempo', 'Tempo'], ['quantidade', 'Quantidade'], ['valor', 'Valor-alvo'], ['concluir', 'Concluir']], m)}</section>
         <section class="goal-sec m-vezes"><span class="fieldset-label">Meta</span><div class="target-row">
           ${stepper('times', a.goalType === 'vezes' ? a.target : 3, 'type="number" min="1" inputmode="numeric" aria-label="Quantas"')}
           <span class="unit-word">vezes</span></div></section>
@@ -425,7 +425,7 @@ function activityForm(a) {
           <input type="date" class="due-date" name="deadline" value="${esc(a.deadline || '')}" aria-label="Data"></section>
         <section class="goal-sec"><span class="fieldset-label">Área</span>${areaChips}</section>
       </div>
-      <label class="field"><span>Por quê</span><input name="why" maxlength="140" value="${esc(a.why || '')}"></label>
+      <label class="field"><span>Motivação</span><input name="why" maxlength="140" value="${esc(a.why || '')}"></label>
       ${!isNew || a.notes ? `<label class="field"><span>Notas</span><textarea name="notes" rows="2">${esc(a.notes)}</textarea></label>` : ''}
       <p class="form-error" hidden></p>
     </div>

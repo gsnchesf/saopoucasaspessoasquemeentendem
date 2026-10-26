@@ -150,7 +150,7 @@ function itemRow(it) {
   const meta = [
     it.label && `<span>${esc(it.label)}</span>`,
     it.place && `<span>${icon('map')}${esc(it.place)}</span>`,
-    it.money && `<span>Guardar ${brl(it.money)}</span>`,
+    it.money && `<span>Orçamento ${brl(it.money)}</span>`,
     it.repeats && `<span title="Recorrente">${icon('repeat')}</span>`,
   ].filter(Boolean).join('');
   const badge = it.badge ? `<span class="badge k-${it.badge}">${it.done ? icon('check') : ''}${BADGE_LABEL[it.badge]}</span>` : '';
@@ -384,8 +384,8 @@ function eventForm(ev, date, startTime) {
       </div>
       <label class="field" data-title ${EVENT_KINDS[kind].title ? '' : 'hidden'}><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
       <div data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'} class="stack" style="gap:14px">
-        <label class="field"><span>Quanto guardar para gastar (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
-        <div><span class="fieldset-label">O que comprar</span><div style="margin-top:6px">${listEditor('buy', ev.buy || [], { price: true, addLabel: 'Item' })}</div></div>
+        <label class="field"><span>Orçamento (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
+        <div><span class="fieldset-label">Lista de compras</span><div style="margin-top:6px">${listEditor('buy', ev.buy || [], { price: true, addLabel: 'Item' })}</div></div>
       </div>
       <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
@@ -395,7 +395,7 @@ function eventForm(ev, date, startTime) {
       </div>
       <div class="row">
         <label class="field"><span>Repetir</span><select name="repeat">${options(Object.entries(REPEAT_LABELS), ev.repeat || 'none')}</select></label>
-        <label class="field until" ${repeats ? '' : 'hidden'}><span>Até (opcional)</span><input type="date" name="until" value="${ev.until || ''}"></label>
+        <label class="field until" ${repeats ? '' : 'hidden'}><span>Até</span><input type="date" name="until" value="${ev.until || ''}"></label>
       </div>
       <div class="row">
         <label class="field"><span>Local</span><input name="location" value="${esc(ev.location)}"></label>
@@ -482,23 +482,21 @@ async function deleteEvent(id, occDate) {
   toast('Compromisso excluído', { label: 'Desfazer', fn: () => { Store.upsert('events', removed); render(); } });
 }
 
-/** "R$ 300 · R$ 50 por semana até lá" (o ritmo só quando faltam duas semanas ou mais). */
+/** "R$ 300 · R$ 50/semana" (o ritmo só quando faltam duas semanas ou mais). */
 function budgetText(n, date) {
   const weeks = Math.floor(diffDays(today(), date) / 7);
-  return brl(n) + (weeks >= 2 ? ` · ${brl(Math.ceil(n / weeks))} por semana até lá` : '');
+  return brl(n) + (weeks >= 2 ? ` · ${brl(Math.ceil(n / weeks))}/semana` : '');
 }
 
-/** Soma da lista de compras do evento comparada ao que a pessoa vai guardar. */
-function buyTotals(ev) {
+/** Linhas da ficha com a lista de compras: total (e quanto passa ou sobra do orçamento) e o já comprado. */
+function buyRows(ev) {
   const items = ev.buy || [];
-  if (!items.some(it => it.price != null)) return '';
+  if (!items.some(it => it.price != null)) return [];
   const sum = list => list.reduce((n, it) => n + (it.price || 0), 0);
-  const total = sum(items), bought = sum(items.filter(it => it.done));
-  const parts = [`${brl(total)} na lista`];
-  if (bought) parts.push(`${brl(bought)} já comprado`);
+  const total = sum(items), spent = sum(items.filter(it => it.done));
   const diff = (ev.budget || 0) - total;
-  const vs = !ev.budget ? '' : diff >= 0 ? `<span class="ok-text">sobra ${brl(diff)}</span>` : `<span class="late">passa ${brl(-diff)}</span>`;
-  return esc(parts.join(' · ')) + (vs ? ` · ${vs}` : '');
+  const vs = !ev.budget ? '' : diff >= 0 ? ` · <span class="ok-text">sobram ${brl(diff)}</span>` : ` · <span class="late">${brl(-diff)} acima</span>`;
+  return [['Total da lista', esc(brl(total)) + vs], ['Gasto', spent ? esc(brl(spent)) : '']];
 }
 
 /** Ficha do compromisso (no dia clicado, se for recorrente). */
@@ -513,13 +511,13 @@ function eventView(ev, date) {
       ['Com quem', EVENT_KINDS[eventKind(ev)].with ? esc(ev.with || '') : ''],
       ['Especialidade', EVENT_KINDS[eventKind(ev)].specialty ? esc(ev.specialty || '') : ''],
       ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
-      ['Guardar', ev.budget ? esc(budgetText(ev.budget, d)) : ''],
-      ['Total', buyTotals(ev)],
+      ['Orçamento', ev.budget ? esc(budgetText(ev.budget, d)) : ''],
+      ...buyRows(ev),
       ['Local', esc(ev.location || '')],
       ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],
       ['Detalhes', sheetText(ev.notes)],
     ],
-    body: ev.buy?.length ? `<h3 class="section-label">O que comprar</h3><div class="list">${ev.buy.map(it => `<div class="task ${it.done ? 'done' : ''}">
+    body: ev.buy?.length ? `<h3 class="section-label">Lista de compras</h3><div class="list">${ev.buy.map(it => `<div class="task ${it.done ? 'done' : ''}">
       <button class="checkbox ${it.done ? 'on' : ''}" data-action="toggle-buy" data-id="${esc(ev.id)}" data-item="${esc(it.id)}" data-date="${d}" role="checkbox" aria-checked="${!!it.done}" aria-label="Comprado"></button>
       <span class="task-main"><span class="task-title">${esc(it.text)}</span>${it.price != null ? `<span class="task-meta">${brl(it.price)}</span>` : ''}</span></div>`).join('')}</div>` : '',
     onEdit: () => eventForm(ev, date),

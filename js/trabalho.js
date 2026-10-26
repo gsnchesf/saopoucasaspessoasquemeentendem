@@ -126,7 +126,7 @@ function deliverableForm(d, date = '') {
     ${modalHead(isNew ? 'Nova entrega' : 'Editar entrega')}
     <div class="modal-body">
       <label class="field"><span>Entrega</span><input name="title" maxlength="160" value="${esc(d.title)}" ${isNew ? 'autofocus' : ''}></label>
-      <label class="field"><span>Projeto / cliente</span><input name="project" maxlength="80" value="${esc(d.project)}" list="project-list"></label>
+      <label class="field"><span>Projeto</span><input name="project" maxlength="80" value="${esc(d.project)}" list="project-list"></label>
       <datalist id="project-list">${projects.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
       <div class="row">
         <label class="field"><span>Prazo</span><input type="date" name="due" value="${d.due || ''}"></label>

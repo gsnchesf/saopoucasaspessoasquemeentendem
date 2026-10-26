@@ -131,7 +131,7 @@ function blockForm(b, date, startTime) {
     ${modalHead(isNew ? 'Novo bloco' : 'Editar bloco')}
     <div class="modal-body">
       ${repeats && !isNew ? `<p class="hint-box">${icon('repeat')}Vale para todas as semanas.</p>` : ''}
-      <label class="field"><span>O que vai fazer</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''}></label>
+      <label class="field"><span>Título</span><input name="title" maxlength="160" value="${esc(b.title)}" ${isNew ? 'autofocus' : ''}></label>
       <div class="row">
         <label class="field"><span>Tipo</span><select name="category">${catOptions(b.category)}</select></label>
         <label class="field"><span>${repeats ? 'A partir de' : 'Dia'}</span><input type="date" name="date" value="${b.date}"></label>

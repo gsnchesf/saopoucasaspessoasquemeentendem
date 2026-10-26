@@ -49,7 +49,7 @@ function workSummary() {
   if (w.off) return 'Não trabalho';
   const sch = workSchedule();
   if (!sch) return 'Ainda não definido';
-  return `${workTitle(sch)} · ${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · ${fmtDuration(sch.commute)} de deslocamento` : ''}`;
+  return `${workTitle(sch)} · ${daysLabel(sch.days)} · ${sch.start}–${sch.end}${sch.commute ? ` · ${fmtDuration(sch.commute)} de trajeto` : ''}`;
 }
 
 /** Cartão de Hoje para quem ainda não respondeu se trabalha. */
@@ -79,7 +79,7 @@ function workForm() {
           <label class="field"><span>Fim</span><input type="time" name="end" value="${esc(w.end)}"></label>
         </div>
         <div>
-          <span class="fieldset-label">Deslocamento (cada trecho)</span>
+          <span class="fieldset-label">Tempo de trajeto</span>
           <div class="row" style="margin-top:6px">
             <label class="field xs"><span>Horas</span><input type="number" name="ch" min="0" max="5" value="${Math.floor(c / 60)}"></label>
             <label class="field xs"><span>Minutos</span><input type="number" name="cm" min="0" max="59" step="5" value="${c % 60}"></label>
@@ -102,7 +102,7 @@ function workForm() {
         const commute = (+f.ch || 0) * 60 + (+f.cm || 0);
         if (!days.length) return formError(form, 'Escolha pelo menos um dia.');
         if (!f.start || !f.end || f.end <= f.start) return formError(form, 'O fim precisa ser depois do começo.');
-        if (commute < 0 || commute > 5 * 60) return formError(form, 'Deslocamento: até 5 horas.');
+        if (commute < 0 || commute > 5 * 60) return formError(form, 'Trajeto: até 5 horas.');
         Store.settings.work = { days, start: f.start, end: f.end, commute, title: f.title.trim() || DEFAULT_WORK.title };
       }
       Store.saveSettings();

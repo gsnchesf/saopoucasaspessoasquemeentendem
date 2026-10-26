@@ -94,11 +94,11 @@ function planGrid(days, blocks, showAgenda) {
     const els = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
       const isBlock = it.kind === 'block';
-      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.canceled && 'canceled', it.kind === 'commute' && 'commute', it.done && 'done', it.skipped && 'skipped'].filter(Boolean).join(' ');
+      const cls = ['tg-ev', h < 36 && 'short', isBlock ? 'blk' : 'ctx', it.kind === 'class' && 'cls', it.exercise && 'ex', it.canceled && 'canceled', it.kind === 'commute' && 'commute', it.done && 'done', it.skipped && 'skipped'].filter(Boolean).join(' ');
       const attrs = isBlock ? `data-action="edit-block" data-id="${esc(it.id)}" data-date="${it.date}"` : itemAttrs(it);
       return `<button class="${cls}" ${attrs} data-tip="${itemTip(isBlock ? { ...it, group: cat(it.category)?.name || 'Bloco' } : it)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
-        <span class="t">${it.done ? icon('check') : ''}${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}</span></button>`;
+        <span class="t">${it.done ? icon('check') : ''}${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}${it.exercise ? ' · exercício' : ''}</span></button>`;
     }).join('');
     const now = d === t ? `<div class="now-line" style="top:${nowMin() / 60 * HOUR}px"></div>` : '';
     return `<div class="tg-col ${d === t ? 'today' : ''}" data-date="${d}">${els}${now}</div>`;

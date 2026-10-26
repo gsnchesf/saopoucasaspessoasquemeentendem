@@ -574,6 +574,7 @@ kbd {
 .chip.allday { background: color-mix(in srgb, var(--c) 30%, transparent); font-weight: 550; }
 .chip.deadline { background: transparent; box-shadow: inset 2px 0 0 var(--c); border-radius: 2px; font-weight: 550; }
 .chip.cls { background: transparent; color: var(--muted); }
+.chip.ex { background: color-mix(in srgb, var(--c) 28%, transparent); box-shadow: inset 3px 0 0 var(--c); color: inherit; font-weight: 600; }
 .more { padding-left: 6px; font-size: 12px; color: var(--muted); }
 .day-panel { position: sticky; top: 24px; }
 .panel-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
@@ -610,6 +611,7 @@ kbd {
 }
 .tg-ev.commute { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--c) 10%, var(--surface)) 0 5px, color-mix(in srgb, var(--c) 18%, var(--surface)) 5px 10px); color: var(--muted); border-left-style: dotted; }
 .tg-ev.cls { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 14%, var(--surface)) 0 6px, color-mix(in srgb, var(--c) 22%, var(--surface)) 6px 12px); }
+.tg-ev.cls.ex { background: color-mix(in srgb, var(--c) 26%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--c); }
 .tg-ev:hover { z-index: 2; box-shadow: var(--shadow-lg); }
 .tg-ev .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tg-ev .h { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -648,6 +650,7 @@ kbd {
 .tg-ev .t .icon { width: 12px; height: 12px; margin-right: 3px; vertical-align: -2px; }
 .tg-ev.ctx { opacity: .6; border-left-style: dashed; }
 .tg-ev.ctx:not(.cls) { background: color-mix(in srgb, var(--c) 9%, var(--surface)); }
+.tg-ev.ctx.ex { opacity: 1; }
 .tg-ev.ctx:hover { opacity: 1; }
 .plan-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .plan-chip {

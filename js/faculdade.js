@@ -312,6 +312,106 @@ function assessmentRow(a, { showSubject = true } = {}) {
   </div>`;
 }
 
+/* ---------- Ficha da aula (uma data de uma matéria) ---------- */
+
+/** Qual aula do semestre é esse dia: conta os dias de aula, sem os cancelados. */
+function classNumber(s, date) {
+  const { semesterStart: a, semesterEnd: b } = Store.settings;
+  if (!a || !b || date < a || date > b || isCanceled(s, date)) return null;
+  const days = new Set((s.slots || []).map(x => x.weekday));
+  let n = 0, total = 0;
+  for (let d = a; d <= b; d = addDays(d, 1)) {
+    if (!days.has(weekday(d)) || isCanceled(s, d)) continue;
+    total++;
+    if (d <= date) n++;
+  }
+  return { n, total };
+}
+
+/** Como ficou a presença nesse dia, no mesmo texto do botão da linha. */
+function presenceLabel(s, date) {
+  const cur = absenceOn(s.id, date);
+  const ex = exerciseDay(s, date);
+  if (isCanceled(s, date)) return ex ? 'Cancelada · presença por exercício' : 'Cancelada';
+  if (cur) return cur.present ? ATTENDANCE[dayMode(s, date)].state || 'Com presença'
+    : cur.delivery ? `Exercício até ${shortDate(cur.delivery)}`
+    : cur.aulas?.length ? `Faltei na ${aulasLabel(cur.aulas)}` : 'Faltei';
+  if (date > today()) return ex ? 'Por exercício' : '';
+  return 'Fui';
+}
+
+function classSheet(s, date, start) {
+  const slot = (s.slots || []).find(x => x.weekday === weekday(date) && (!start || x.start === start)) || {};
+  const num = classNumber(s, date);
+  const n = dayClasses(s, date).length;
+  const info = absInfo(s);
+  const cur = absenceOn(s.id, date);
+  const topics = contentsOf(s.id).filter(c => c.date === date);
+  const due = [
+    ...assessmentsOf(s.id).filter(a => a.date === date).map(a => `<li class="${a.done ? 'done' : ''}"><span class="badge k-${a.kind}">${ASSESSMENT_KINDS[a.kind]}</span> ${esc(a.title)}</li>`),
+    ...Store.data.absences.filter(a => a.subjectId === s.id && a.delivery === date && !a.present)
+      .map(a => `<li><span class="badge k-exercicio">Exercício</span> Aula de ${shortDate(a.date)}</li>`),
+  ];
+  const next = assessmentsOf(s.id).find(a => !a.done && a.date > date);
+  const past = date <= today() && !isCanceled(s, date);
+  openSheet({
+    title: s.name, color: s.color,
+    sub: esc(['Faculdade', num ? `Aula ${num.n} de ${num.total}` : 'Aula'].join(' · ')),
+    rows: [
+      ['Quando', esc(`${cap(relDay(date))} · ${slot.start || ''}–${slot.end || ''}${n > 1 ? ` · ${n} aulas` : ''}`)],
+      ['Sala', esc(slot.room || s.room || '')],
+      ['Professor', esc(s.professor || '')],
+      ['Presença', esc(presenceLabel(s, date))],
+      ['Faltas', info.free ? 'Faltável' : info.limit ? esc(`Restam ${absNum(Math.max(0, info.remaining))} de ${info.limit}`) : ''],
+      ['Conteúdo', topics.length ? `<ul class="sheet-list">${topics.map(c => `<li class="${c.done ? 'done' : ''}">${esc(c.title)}</li>`).join('')}</ul>` : ''],
+      ['Neste dia', due.length ? `<ul class="sheet-list">${due.join('')}</ul>` : ''],
+      ['Próximo prazo', next ? esc(`${ASSESSMENT_KINDS[next.kind]} · ${next.title} · ${relDay(next.date)}${next.date > today() ? ` (${untilLabel(next.date)})` : ''}`) : ''],
+      ['Anotações', sheetText(s.classNotes?.[date])],
+    ],
+    buttons: [
+      { label: 'Ver matéria', run: () => { location.hash = `#/faculdade/${s.id}`; } },
+      ...(past ? [{ label: cur ? 'Tirar falta' : 'Faltei', run: () => setAbsence(s, date, cur ? null : []) }] : []),
+    ],
+    onEdit: () => classForm(s, date, start),
+  });
+}
+
+/** Conteúdo e anotações de uma aula. Conteúdo é o mesmo da lista da matéria, com a data da aula. */
+function classForm(s, date, start) {
+  const topics = contentsOf(s.id).filter(c => c.date === date);
+  openModal(`<form novalidate>
+    ${modalHead(`${s.name} · ${shortDate(date)}`)}
+    <div class="modal-body">
+      <div><span class="fieldset-label">Conteúdo</span><div style="margin-top:6px">${listEditor('topics', topics.map(c => ({ id: c.id, text: c.title, done: c.done })), { addLabel: 'Conteúdo' })}</div></div>
+      <label class="field"><span>Anotações</span><textarea name="notes" rows="4">${esc(s.classNotes?.[date] || '')}</textarea></label>
+    </div>
+    ${modalFoot(false)}
+  </form>`, {
+    onSubmit(form) {
+      const items = readList(form, 'topics');
+      const keep = new Set(items.map(i => i.id));
+      topics.filter(c => !keep.has(c.id)).forEach(c => Store.remove('contents', c.id));
+      items.forEach(i => {
+        const c = Store.get('contents', i.id);
+        if (c?.title === i.text && !!c.done === i.done) return;
+        Store.upsert('contents', { ...(c || { id: i.id, subjectId: s.id, date }), title: i.text, done: i.done });
+      });
+      const notes = formData(form).notes.trim();
+      const cur = subject(s.id);
+      if (cur && notes !== (cur.classNotes?.[date] || '')) {
+        const next = structuredClone(cur);
+        next.classNotes = { ...cur.classNotes, [date]: notes };
+        if (!notes) delete next.classNotes[date];
+        if (!Object.keys(next.classNotes).length) delete next.classNotes;
+        Store.upsert('subjects', next);
+      }
+      closeModal();
+      render();
+      classSheet(subject(s.id) || s, date, start);
+    },
+  });
+}
+
 /* ---------- Tela: lista de matérias ---------- */
 
 screens.faculdade = () => {
@@ -784,6 +884,7 @@ function semesterForm() {
 
 Object.assign(actions, {
   'open-subject': el => { location.hash = `#/faculdade/${el.dataset.id}`; },
+  'open-class': el => { const s = subject(el.dataset.id); if (s) classSheet(s, el.dataset.date, el.dataset.time); },
   'new-subject': () => subjectForm(),
   'edit-subject': el => { const s = subject(el.dataset.id); if (s) subjectForm(s); },
   'fac-tab': el => { state.facTab = el.dataset.tab; render(); },

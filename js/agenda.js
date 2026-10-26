@@ -46,9 +46,10 @@ function classItems(from, to) {
   for (const s of Store.data.subjects) for (const sl of s.slots || []) byDay[sl.weekday]?.push([s, sl]);
   for (let d = from; d <= to; d = addDays(d, 1)) {
     for (const [s, sl] of byDay[weekday(d)]) {
+      const ex = exerciseDay(s, d);
       out.push({
-        kind: 'class', id: s.id, date: d, title: s.name, start: sl.start, end: sl.end,
-        color: s.color, group: 'Faculdade', what: 'Aula', place: sl.room || s.room, label: s.professor ? `Prof. ${s.professor}` : '',
+        kind: 'class', id: s.id, date: d, title: s.name, start: sl.start, end: sl.end, exercise: ex,
+        color: s.color, group: 'Faculdade', what: ex ? 'Aula · presença por exercício' : 'Aula', place: sl.room || s.room, label: s.professor ? `Prof. ${s.professor}` : '',
         weight: sl.weight || 1, allDay: false, deadline: false, canceled: (s.canceled || []).includes(d),
       });
     }
@@ -91,8 +92,8 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
   for (const a of Store.data.absences) {
     if (!a.delivery || a.present || a.delivery < from || a.delivery > to) continue;
     const s = subject(a.subjectId);
-    if (s) add({ kind: 'exercise', id: a.id, date: a.delivery, title: `Exercício da aula de ${fmt(a.date, { day: 'numeric', month: 'short' })}`,
-      start: '', allDay: true, deadline: true, color: s.color, group: 'Faculdade', groupSub: s.name, what: 'Exercício', label: s.name, badge: 'exercicio', done: false });
+    if (s) add({ kind: 'exercise', id: a.id, date: a.delivery, title: s.name, exercise: true,
+      start: '', allDay: true, deadline: true, color: s.color, group: 'Faculdade', groupSub: s.name, what: 'Exercício', label: `Aula de ${shortDate(a.date)}`, badge: 'exercicio', done: false });
   }
   for (const d in map) map[d].sort(itemSort);
   return map;
@@ -102,8 +103,8 @@ const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) ||
 
 /* ---------- Componentes ---------- */
 
-const ITEM_ACTION = { event: 'edit-event', class: 'open-subject', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', med: 'open-med', work: 'edit-work', commute: 'edit-work' };
-const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"${it.kind === 'med' ? ` data-time="${it.start}"` : ''}`;
+const ITEM_ACTION = { event: 'edit-event', class: 'open-class', assessment: 'edit-assessment', deliverable: 'edit-deliverable', exercise: 'edit-exercise', workout: 'open-workout', med: 'open-med', work: 'edit-work', commute: 'edit-work' };
+const itemAttrs = it => `data-action="${ITEM_ACTION[it.kind]}" data-id="${esc(it.id)}" data-date="${it.date}"${it.kind === 'med' || it.kind === 'class' ? ` data-time="${it.start}"` : ''}`;
 
 /** Etiqueta do hover: de onde vem a cor (Faculdade, Date, Treino…) e quando/onde. */
 function itemTip(it) {
@@ -146,10 +147,11 @@ function itemRow(it) {
 }
 
 function itemChip(it) {
-  const cls = it.deadline ? 'deadline' : it.kind === 'class' ? `cls${it.canceled ? ' canceled' : ''}` : it.allDay ? 'allday' : '';
+  const cls = (it.deadline ? 'deadline' : it.kind === 'class' ? `cls${it.canceled ? ' canceled' : ''}` : it.allDay ? 'allday' : '') + (it.exercise ? ' ex' : '');
   const time = !it.deadline && !it.allDay && it.start ? `<b>${it.start}</b>` : '';
-  const prefix = it.deadline ? `${BADGE_LABEL[it.badge]}: ` : '';
-  return `<button class="chip ${cls}" style="--c:${esc(it.color)}" ${itemAttrs(it)} data-tip="${itemTip(it)}">${time}${esc(prefix + it.title)}</button>`;
+  // Exercício: a matéria vem primeiro, para não sumir quando o chip é cortado.
+  const text = it.exercise ? `${it.title} · exercício` : it.deadline ? `${BADGE_LABEL[it.badge]}: ${it.title}` : it.title;
+  return `<button class="chip ${cls}" style="--c:${esc(it.color)}" ${itemAttrs(it)} data-tip="${itemTip(it)}">${time}${esc(text)}</button>`;
 }
 
 /* ---------- Tela ---------- */
@@ -275,9 +277,9 @@ function timeGrid(days, showClasses) {
     });
     const blocks = layoutDay(timed).map(({ it, s, e, col, n }) => {
       const top = s / 60 * HOUR, h = Math.max((e - s) / 60 * HOUR, 20), w = 100 / n;
-      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''} ${it.canceled ? 'canceled' : ''} ${it.kind === 'commute' ? 'commute' : ''}" ${itemAttrs(it)} data-tip="${itemTip(it)}"
+      return `<button class="tg-ev ${h < 36 ? 'short' : ''} ${it.kind === 'class' ? 'cls' : ''} ${it.exercise ? 'ex' : ''} ${it.canceled ? 'canceled' : ''} ${it.kind === 'commute' ? 'commute' : ''}" ${itemAttrs(it)} data-tip="${itemTip(it)}"
         style="--c:${esc(it.color)};top:${top}px;height:${h - 2}px;left:calc(${col * w}% + 2px);width:calc(${w}% - 4px)">
-        <span class="t">${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}</span></button>`;
+        <span class="t">${esc(it.title)}</span><span class="h">${it.start}${it.end ? '–' + it.end : ''}${it.exercise ? ' · exercício' : ''}</span></button>`;
     }).join('');
     const now = d === t ? `<div class="now-line" style="top:${nowMin() / 60 * HOUR}px"></div>` : '';
     return `<div class="tg-col ${d === t ? 'today' : ''}" data-date="${d}">${blocks}${now}</div>`;

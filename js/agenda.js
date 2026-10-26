@@ -66,12 +66,18 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
   const add = it => (map[it.date] ||= []).push(it);
 
   for (const ev of Store.data.events) {
-    for (const d of occurrences(ev, from, to)) add({
-      kind: 'event', id: ev.id, date: d, title: eventTitle(ev),
-      start: ev.allDay ? '' : ev.start, end: ev.allDay ? '' : ev.end, allDay: !!ev.allDay, deadline: false,
-      color: EVENT_KINDS[eventKind(ev)].color, group: EVENT_KINDS[eventKind(ev)].label, what: eventExtra(ev), label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
-      repeats: !!ev.repeat && ev.repeat !== 'none', money: ev.budget || 0,
-    });
+    // Termina no dia seguinte (22:00–02:00): o resto aparece no outro dia, a partir de 00:00.
+    const overnight = endsNextDay(ev);
+    for (const d of occurrences(ev, overnight ? addDays(from, -1) : from, to)) {
+      const it = {
+        kind: 'event', id: ev.id, date: d, title: eventTitle(ev),
+        start: ev.allDay ? '' : ev.start, end: ev.allDay ? '' : ev.end, allDay: !!ev.allDay, deadline: false, overnight,
+        color: EVENT_KINDS[eventKind(ev)].color, group: EVENT_KINDS[eventKind(ev)].label, what: eventExtra(ev), label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
+        repeats: !!ev.repeat && ev.repeat !== 'none', money: ev.budget || 0,
+      };
+      if (d >= from) add(it);
+      if (overnight && addDays(d, 1) <= to) add({ ...it, date: addDays(d, 1), start: '00:00', overnight: false });
+    }
   }
   if (classes) classItems(from, to).forEach(add);
   workoutItems(from, to).forEach(add);
@@ -98,6 +104,9 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
   for (const d in map) map[d].sort(itemSort);
   return map;
 }
+
+/** Evento com fim antes do início: termina no dia seguinte. */
+const endsNextDay = ev => !ev.allDay && !!ev.start && !!ev.end && ev.end < ev.start;
 
 const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) || (a.start || '').localeCompare(b.start || '');
 
@@ -141,7 +150,7 @@ function itemRow(it) {
   else if (it.canceled) st = 'canceled';
   else if (it.date < t) st = 'past';
   else if (it.date === t && it.start) {
-    const s = toMin(it.start), e = it.end ? toMin(it.end) : s + 60;
+    const s = toMin(it.start), e = it.overnight ? 1440 : it.end ? toMin(it.end) : s + 60;
     st = n >= e ? 'past' : n >= s ? 'now' : '';
   }
   const time = it.deadline
@@ -292,7 +301,7 @@ function timeGrid(days, showClasses) {
   const cols = days.map(d => {
     const timed = (map[d] || []).filter(it => !it.allDay && it.start).map(it => {
       const s = toMin(it.start);
-      let e = it.end ? toMin(it.end) : s + (it.kind === 'med' ? 20 : 60);
+      let e = it.overnight ? 1440 : it.end ? toMin(it.end) : s + (it.kind === 'med' ? 20 : 60);
       if (e <= s) e = s + 30;
       return { it, s, e };
     });
@@ -388,7 +397,7 @@ function eventForm(ev, date, startTime) {
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
         <label class="field times" ${ev.allDay ? 'hidden' : ''}><span>Início</span><input type="time" name="start" value="${ev.start || ''}"></label>
-        <label class="field times" ${ev.allDay ? 'hidden' : ''}><span>Fim</span><input type="time" name="end" value="${ev.end || ''}"></label>
+        <label class="field times" ${ev.allDay ? 'hidden' : ''}><span data-end-label>${endsNextDay(ev) ? 'Fim (dia seguinte)' : 'Fim'}</span><input type="time" name="end" value="${ev.end || ''}"></label>
       </div>
       <div class="row">
         <label class="field"><span>Repetir</span><select name="repeat">${options(Object.entries(REPEAT_LABELS), ev.repeat || 'none')}</select></label>
@@ -412,6 +421,9 @@ function eventForm(ev, date, startTime) {
         $('[data-money]', form).hidden = !EVENT_KINDS[kind.value].money;
       });
       allDay.addEventListener('change', () => $$('.times', form).forEach(el => { el.hidden = allDay.checked; }));
+      const endLabel = () => { $('[data-end-label]', form).textContent = start.value && end.value && end.value < start.value ? 'Fim (dia seguinte)' : 'Fim'; };
+      start.addEventListener('change', endLabel);
+      end.addEventListener('change', endLabel);
       repeat.addEventListener('change', () => { $('.until', form).hidden = repeat.value === 'none'; });
       let prev = start.value;
       start.addEventListener('change', () => {
@@ -432,7 +444,7 @@ function eventForm(ev, date, startTime) {
       if (budget != null && !(budget >= 0)) return formError(form, 'Valor inválido.');
       if (!f.date) return formError(form, 'Falta a data.');
       if (!allDay && !f.start) return formError(form, 'Falta o horário.');
-      if (!allDay && f.end && f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
+      if (!allDay && f.end && f.end === f.start) return formError(form, 'O fim precisa ser diferente do início.');
       if (f.repeat !== 'none' && f.until && f.until < f.date) return formError(form, 'A repetição termina antes de começar.');
       Object.assign(ev, {
         title: k.title ? f.title.trim() : '', kind: f.kind, with: k.with ? f.with.trim() : '', specialty: k.specialty ? f.specialty.trim() : '', date: f.date, allDay,
@@ -491,7 +503,7 @@ const eventNotes = ev => [ev.notes, ...(ev.buy || []).map(it => `${it.done ? '�
 /** Ficha do compromisso (no dia clicado, se for recorrente). */
 function eventView(ev, date) {
   const d = date || ev.date;
-  const when = `${cap(relDay(d))}${ev.allDay ? ' · dia inteiro' : ` · ${ev.start}${ev.end ? '–' + ev.end : ''}`}`;
+  const when = `${cap(relDay(d))}${ev.allDay ? ' · dia inteiro' : ` · ${ev.start}${ev.end ? '–' + ev.end : ''}${endsNextDay(ev) ? ' do dia seguinte' : ''}`}`;
   const rem = REMINDERS.find(([v]) => v === String(ev.reminder ?? ''));
   openSheet({
     title: eventTitle(ev), color: EVENT_KINDS[eventKind(ev)].color, sub: esc(EVENT_KINDS[eventKind(ev)].label),
@@ -501,10 +513,12 @@ function eventView(ev, date) {
       ['Especialidade', EVENT_KINDS[eventKind(ev)].specialty ? esc(ev.specialty || '') : ''],
       ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
       ['Orçamento', ev.budget ? esc(budgetText(ev.budget, d)) : ''],
+      ['Gasto', ev.budget && eventSpent(ev.id, d) ? esc(`${brl(r2(eventSpent(ev.id, d)))} · ${eventSpent(ev.id, d) > ev.budget ? `${brl(r2(eventSpent(ev.id, d) - ev.budget))} acima` : `restam ${brl(r2(ev.budget - eventSpent(ev.id, d)))}`}`) : ''],
       ['Local', esc(ev.location || '')],
       ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],
       ['Detalhes', noteHTML(eventNotes(ev), i => `data-action="toggle-note" data-id="${esc(ev.id)}" data-line="${i}" data-date="${d}"`)],
     ],
+    buttons: ev.budget && finOn() ? [{ label: `${icon('plus')}Gasto`, run: () => moveForm(null, { dir: 'out', eventId: ev.id, eventDate: d }) }] : [],
     onEdit: () => eventForm(ev, date),
   });
 }

@@ -81,7 +81,7 @@ screens.hoje = () => {
   const body = `${art}${workPrompt()}${onboarding}${stats}
     <div class="home-grid">
       <div class="home-col">${agenda}${prazos}</div>
-      <div class="home-col">${medsToday()}${goals}</div>
+      <div class="home-col">${medsToday()}${finToday()}${goals}</div>
     </div>`;
   return { head, body };
 };

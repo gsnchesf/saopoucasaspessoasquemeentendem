@@ -1113,3 +1113,22 @@ kbd {
 .goal-sec .edit-list { margin: 0; }
 .goal-title { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .goal-why { margin: -2px 0 0; font-size: 13px; font-style: italic; color: var(--muted); }
+
+/* ---------- Finanças ---------- */
+.amt { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.amt.in { color: var(--ok); }
+.fin-sum { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; margin: 0; }
+.fin-sum dt { color: var(--muted); }
+.fin-sum dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.fin-mini { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); }
+.fin-mini b { color: var(--text); font-variant-numeric: tabular-nums; }
+.fin-mini b.late { color: var(--danger); }
+.fin-cats { display: grid; gap: 10px; }
+.fin-steps { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fin-dots { display: flex; gap: 6px; }
+.fin-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+.fin-dots i.done { background: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.fin-dots i.on { background: var(--accent); width: 22px; border-radius: 4px; }
+.fin-setup { max-width: 760px; }
+.money-big input { height: 52px; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ev-side .meter { width: 90px; }

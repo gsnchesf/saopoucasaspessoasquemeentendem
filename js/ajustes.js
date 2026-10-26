@@ -207,7 +207,7 @@ function exportICS() {
   for (const ev of Store.data.events) {
     const lines = [];
     if (ev.allDay) lines.push(`DTSTART;VALUE=DATE:${d8(ev.date)}`, `DTEND;VALUE=DATE:${d8(addDays(ev.date, 1))}`);
-    else lines.push(`DTSTART:${d8(ev.date)}T${t6(ev.start)}`, `DTEND:${d8(ev.date)}T${t6(ev.end || fromMin(Math.min(toMin(ev.start) + 60, 1439)))}`);
+    else lines.push(`DTSTART:${d8(ev.date)}T${t6(ev.start)}`, `DTEND:${d8(endsNextDay(ev) ? addDays(ev.date, 1) : ev.date)}T${t6(ev.end || fromMin(Math.min(toMin(ev.start) + 60, 1439)))}`);
     if (ev.location) lines.push(`LOCATION:${txt(ev.location)}`);
     if (ev.notes) lines.push(`DESCRIPTION:${txt(ev.notes)}`);
     if (RR[ev.repeat]) lines.push(`RRULE:${RR[ev.repeat]}${ev.until ? `;UNTIL=${d8(ev.until)}${ev.allDay ? '' : 'T235959'}` : ''}`);

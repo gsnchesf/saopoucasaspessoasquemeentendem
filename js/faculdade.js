@@ -6,7 +6,10 @@
 
 /* ---------- Faltas ---------- */
 
-const absencesOf = id => Store.data.absences.filter(a => a.subjectId === id).sort((a, b) => b.date.localeCompare(a.date));
+/** Lista assinada por outra pessoa não é falta. Registros antigos de "Assinaram por mim" ficam de fora. */
+const signedList = a => a.present && !a.delivery && dayMode(subject(a.subjectId) || {}, a.date) === 'lista';
+
+const absencesOf = id => Store.data.absences.filter(a => a.subjectId === id && !signedList(a)).sort((a, b) => b.date.localeCompare(a.date));
 
 /** Dias da semana em que a matéria tem aula. */
 const classDays = slots => new Set(slots.map(x => x.weekday)).size;
@@ -21,10 +24,10 @@ function dayClasses(s, date) {
   return out;
 }
 
-/** Como a matéria conta presença. Na lista ou no exercício dá para ter presença sem assistir a aula;
-    na chamada, não. */
+/** Como a matéria conta presença. No exercício dá para ter presença sem assistir a aula
+    (entregou o exercício); na lista assinada, a pessoa simplesmente não faltou. */
 const ATTENDANCE = {
-  lista: { label: 'Lista', action: 'Assinaram por mim', state: 'Lista assinada' },
+  lista: { label: 'Lista' },
   exercicio: { label: 'Exercício', action: 'Entreguei o exercício', state: 'Exercício entregue' },
   chamada: { label: 'Chamada' },
 };
@@ -100,7 +103,7 @@ function absenceControls(it) {
 
 const shortDate = d => fmt(d, { day: 'numeric', month: 'short' });
 
-const absenceOn = (subjectId, date) => Store.data.absences.find(a => a.subjectId === subjectId && a.date === date);
+const absenceOn = (subjectId, date) => Store.data.absences.find(a => a.subjectId === subjectId && a.date === date && !signedList(a));
 
 /* ---------- Aula cancelada (fica na matéria: s.canceled = datas) ---------- */
 
@@ -150,6 +153,7 @@ function setAbsence(s, date, aulas, extra = {}) {
     toast('Falta desmarcada');
     return;
   }
+  if (!cur) Store.removeWhere('absences', a => a.subjectId === s.id && a.date === date); // "Assinaram por mim" antigo
   const rec = cur ? { ...cur } : { id: uid(), subjectId: s.id, date, note: '' };
   if (aulas.length) rec.aulas = aulas.slice().sort(); else delete rec.aulas;
   for (const [k, v] of Object.entries(extra)) { if (v === undefined || v === false) delete rec[k]; else rec[k] = v; }
@@ -158,7 +162,7 @@ function setAbsence(s, date, aulas, extra = {}) {
   absenceToast(s, rec);
 }
 
-/** Presença sem ter assistido (assinaram a lista, entregou o exercício): fica registrado, mas não conta falta. */
+/** Presença sem ter assistido (entregou o exercício): fica registrado, mas não conta falta. */
 function setPresent(s, date, on) {
   const cur = absenceOn(s.id, date);
   if (!cur) return;
@@ -204,7 +208,7 @@ function exerciseForm(s, date) {
 }
 
 /** Botão "Faltei": dia com uma aula marca direto; com aulas seguidas, deixa escolher qual.
-    Com falta marcada, o menu também tem a presença sem assistir ("Assinaram por mim"). */
+    Em dia de exercício, o menu também tem a entrega ("Entreguei o exercício"). */
 function toggleAbsence(el) {
   const s = subject(el.dataset.id);
   if (!s) return;
@@ -237,8 +241,6 @@ function toggleAbsence(el) {
     { label: n === 2 ? 'Faltei nas duas' : 'Faltei em todas', icon: all ? 'check' : '', run: () => setAbsence(s, date, all ? null : []) },
     ...Array.from({ length: n }, (_, i) => ({ label: `Só na ${i + 1}ª aula`, icon: only(i) ? 'check' : '', run: () => setAbsence(s, date, only(i) ? null : [i]) })),
   ];
-  if (mode === 'lista') items.push({ sep: true },
-    { label: 'Assinaram por mim', icon: cur?.present ? 'check' : '', run: () => setAbsence(s, date, keep, { present: !cur?.present }) });
   if (mode === 'exercicio') items.push({ sep: true }, ...exerciseItems);
   items.push({ sep: true });
   if (attendance(s) !== 'exercicio') items.push(exerciseToggle);
@@ -794,7 +796,7 @@ function absenceForm(s) {
       <label class="field" data-aulas hidden><span>Aulas</span><select name="aulas"></select></label>
       <label class="field"><span>Observação</span><input name="note" maxlength="140"></label>
       ${attendance(s) === 'exercicio' ? '<label class="field"><span>Entrega do exercício (se for outro dia)</span><input type="date" name="delivery"></label>' : ''}
-      ${ATTENDANCE[attendance(s)].action ? `<label class="check"><input type="checkbox" name="present"> ${ATTENDANCE[attendance(s)].action}</label>` : ''}
+      ${attendance(s) === 'exercicio' ? '<label class="check"><input type="checkbox" name="present"> Entreguei o exercício</label>' : ''}
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false, 'Registrar')}
@@ -814,12 +816,13 @@ function absenceForm(s) {
       const f = formData(form);
       if (!f.date) return formError(form, 'Falta a data.');
       if (f.date > today()) return formError(form, 'Esse dia ainda não chegou.');
-      if (Store.data.absences.some(a => a.subjectId === s.id && a.date === f.date)) return formError(form, `Já tem falta em ${relDay(f.date).toLowerCase()}.`);
+      if (absenceOn(s.id, f.date)) return formError(form, `Já tem falta em ${relDay(f.date).toLowerCase()}.`);
       if (isCanceled(s, f.date) && !exerciseDay(s, f.date)) return formError(form, 'A aula desse dia foi cancelada.');
       const rec = { id: uid(), subjectId: s.id, date: f.date, note: f.note.trim() };
       if (f.aulas && dayClasses(s, f.date).length > 1) rec.aulas = [+f.aulas];
       if (f.present) rec.present = true;
       if (f.delivery && f.delivery !== f.date) rec.delivery = f.delivery;
+      Store.removeWhere('absences', a => a.subjectId === s.id && a.date === f.date); // "Assinaram por mim" antigo
       Store.upsert('absences', rec);
       closeModal();
       render();

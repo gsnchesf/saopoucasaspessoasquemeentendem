@@ -241,22 +241,23 @@ function formError(form, msg) {
 
 const formData = form => Object.fromEntries(new FormData(form));
 
-/** Lista editável (checklist de entrega, objetivos de meta…). */
-function listEditor(name, items, { check = true, addLabel = 'Adicionar item' } = {}) {
-  return `<div class="edit-list" data-list="${name}" data-check="${check ? 1 : 0}">
-    ${items.map(it => listRow(it, check)).join('')}
+/** Lista editável (checklist de entrega, objetivos de meta, compras de evento com preço…). */
+function listEditor(name, items, { check = true, price = false, addLabel = 'Adicionar item' } = {}) {
+  return `<div class="edit-list" data-list="${name}" data-check="${check ? 1 : 0}" data-price="${price ? 1 : 0}">
+    ${items.map(it => listRow(it, check, price)).join('')}
     <button type="button" class="btn btn-sm" data-add-item>${icon('plus')}${esc(addLabel)}</button>
   </div>`;
 }
 
-const listRow = (it, check) => `<div class="item" data-id="${esc(it.id)}">
+const listRow = (it, check, price) => `<div class="item" data-id="${esc(it.id)}">
   ${check ? `<input type="checkbox" ${it.done ? 'checked' : ''} aria-label="Concluído">` : ''}
   <input type="text" value="${esc(it.text)}" maxlength="200">
+  ${price ? `<label class="price-in"><span>R$</span><input type="number" min="0" step="any" inputmode="decimal" value="${it.price ?? ''}" aria-label="Preço"></label>` : ''}
   <button type="button" class="icon-btn ghost sm" data-remove-item aria-label="Remover item">${icon('x')}</button>
 </div>`;
 
 function addListRow(list, after) {
-  const html = listRow({ id: uid(), text: '', done: false }, list.dataset.check === '1');
+  const html = listRow({ id: uid(), text: '', done: false }, list.dataset.check === '1', list.dataset.price === '1');
   if (after) after.insertAdjacentHTML('afterend', html);
   else $('[data-add-item]', list).insertAdjacentHTML('beforebegin', html);
   const row = after ? after.nextElementSibling : $('[data-add-item]', list).previousElementSibling;
@@ -269,6 +270,7 @@ function readList(form, name) {
       id: row.dataset.id,
       text: $('input[type="text"]', row).value.trim(),
       done: !!$('input[type="checkbox"]', row)?.checked,
+      ...($('.price-in input', row)?.value ? { price: +$('.price-in input', row).value } : {}),
     }))
     .filter(it => it.text);
 }

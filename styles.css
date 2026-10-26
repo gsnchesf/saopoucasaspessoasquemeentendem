@@ -511,6 +511,7 @@ kbd {
 .task.done .task-title { color: var(--muted); text-decoration: line-through; }
 .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--muted); font-size: 12.5px; }
 .late { color: var(--danger); font-weight: 600; }
+.ok-text { color: var(--ok); font-weight: 600; }
 .soon { color: var(--warn); font-weight: 600; }
 
 .quick-add {
@@ -920,6 +921,8 @@ kbd {
 .edit-list .item { display: flex; gap: 6px; align-items: center; }
 .edit-list .item input[type="text"] { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
 .edit-list .item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.price-in { display: flex; align-items: center; gap: 4px; width: 120px; flex: none; height: 36px; padding: 0 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--muted); font-size: 13px; }
+.price-in input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 14px; outline: none; }
 
 .menu {
   position: fixed; z-index: 40; min-width: 220px; padding: 6px;

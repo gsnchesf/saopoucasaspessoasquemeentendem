@@ -70,7 +70,7 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
       kind: 'event', id: ev.id, date: d, title: eventTitle(ev),
       start: ev.allDay ? '' : ev.start, end: ev.allDay ? '' : ev.end, allDay: !!ev.allDay, deadline: false,
       color: EVENT_KINDS[eventKind(ev)].color, group: EVENT_KINDS[eventKind(ev)].label, what: eventExtra(ev), label: ev.title ? [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ') : '', place: ev.location,
-      repeats: !!ev.repeat && ev.repeat !== 'none',
+      repeats: !!ev.repeat && ev.repeat !== 'none', money: ev.budget || 0,
     });
   }
   if (classes) classItems(from, to).forEach(add);
@@ -130,6 +130,7 @@ function itemRow(it) {
   const meta = [
     it.label && `<span>${esc(it.label)}</span>`,
     it.place && `<span>${icon('map')}${esc(it.place)}</span>`,
+    it.money && `<span>Guardar ${brl(it.money)}</span>`,
     it.repeats && `<span title="Recorrente">${icon('repeat')}</span>`,
   ].filter(Boolean).join('');
   const badge = it.badge ? `<span class="badge k-${it.badge}">${it.done ? icon('check') : ''}${BADGE_LABEL[it.badge]}</span>` : '';
@@ -310,6 +311,7 @@ const EVENT_KINDS = {
   consulta: { label: 'Consulta', color: '#0ea5e9', specialty: true },
   hangout: { label: 'Hangout', color: '#ec4899', with: true },
   date: { label: 'Date', color: '#e11d48', with: true },
+  evento: { label: 'Evento', color: '#8b5cf6', with: true, title: true, needsTitle: true, money: true },
   outro: { label: 'Outro', color: '#64748b', with: true, title: true },
 };
 
@@ -327,8 +329,11 @@ const eventExtra = ev => {
   return k.specialty ? ev.specialty || '' : k.with && ev.with ? `com ${ev.with}` : '';
 };
 
-/** Título exibido: o digitado (só em "Outro") ou o tipo com o complemento. */
+/** Título exibido: o digitado (em "Evento" e "Outro") ou o tipo com o complemento. */
 const eventTitle = ev => ev.title || [EVENT_KINDS[eventKind(ev)].label, eventExtra(ev)].filter(Boolean).join(' · ');
+
+/** R$ 300 / R$ 12,50. */
+const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
 /* ---------- Formulário de compromisso ---------- */
 
@@ -358,6 +363,10 @@ function eventForm(ev, date, startTime) {
         <label class="field" data-specialty ${EVENT_KINDS[kind].specialty ? '' : 'hidden'}><span>Especialidade</span><input name="specialty" maxlength="80" value="${esc(ev.specialty || '')}"></label>
       </div>
       <label class="field" data-title ${EVENT_KINDS[kind].title ? '' : 'hidden'}><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
+      <div data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'} class="stack" style="gap:14px">
+        <label class="field"><span>Quanto guardar para gastar (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
+        <div><span class="fieldset-label">O que comprar</span><div style="margin-top:6px">${listEditor('buy', ev.buy || [], { price: true, addLabel: 'Item' })}</div></div>
+      </div>
       <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
@@ -383,6 +392,7 @@ function eventForm(ev, date, startTime) {
         $('[data-with]', form).hidden = !EVENT_KINDS[kind.value].with;
         $('[data-specialty]', form).hidden = !EVENT_KINDS[kind.value].specialty;
         $('[data-title]', form).hidden = !EVENT_KINDS[kind.value].title;
+        $('[data-money]', form).hidden = !EVENT_KINDS[kind.value].money;
       });
       allDay.addEventListener('change', () => $$('.times', form).forEach(el => { el.hidden = allDay.checked; }));
       repeat.addEventListener('change', () => { $('.until', form).hidden = repeat.value === 'none'; });
@@ -400,7 +410,9 @@ function eventForm(ev, date, startTime) {
       const f = formData(form);
       const allDay = !!f.allDay;
       const k = EVENT_KINDS[f.kind];
-      if (k.title && !f.title.trim() && !f.with.trim()) return formError(form, 'Falta o título.');
+      if (k.title && !f.title.trim() && (k.needsTitle || !f.with.trim())) return formError(form, 'Falta o título.');
+      const budget = k.money && f.budget !== '' ? +f.budget : null;
+      if (budget != null && !(budget >= 0)) return formError(form, 'Valor inválido.');
       if (!f.date) return formError(form, 'Falta a data.');
       if (!allDay && !f.start) return formError(form, 'Falta o horário.');
       if (!allDay && f.end && f.end <= f.start) return formError(form, 'O fim precisa ser depois do início.');
@@ -411,6 +423,9 @@ function eventForm(ev, date, startTime) {
         repeat: f.repeat, until: f.repeat === 'none' ? '' : f.until,
         location: f.location.trim(), reminder: f.reminder === '' ? null : +f.reminder, notes: f.notes.trim(),
       });
+      if (budget) ev.budget = budget; else delete ev.budget;
+      const buy = k.money ? readList(form, 'buy') : [];
+      if (buy.length) ev.buy = buy; else delete ev.buy;
       delete ev.category; // o tipo agora é ev.kind
       Store.upsert('events', ev);
       closeModal();
@@ -447,6 +462,25 @@ async function deleteEvent(id, occDate) {
   toast('Compromisso excluído', { label: 'Desfazer', fn: () => { Store.upsert('events', removed); render(); } });
 }
 
+/** "R$ 300 · R$ 50 por semana até lá" (o ritmo só quando faltam duas semanas ou mais). */
+function budgetText(n, date) {
+  const weeks = Math.floor(diffDays(today(), date) / 7);
+  return brl(n) + (weeks >= 2 ? ` · ${brl(Math.ceil(n / weeks))} por semana até lá` : '');
+}
+
+/** Soma da lista de compras do evento comparada ao que a pessoa vai guardar. */
+function buyTotals(ev) {
+  const items = ev.buy || [];
+  if (!items.some(it => it.price != null)) return '';
+  const sum = list => list.reduce((n, it) => n + (it.price || 0), 0);
+  const total = sum(items), bought = sum(items.filter(it => it.done));
+  const parts = [`${brl(total)} na lista`];
+  if (bought) parts.push(`${brl(bought)} já comprado`);
+  const diff = (ev.budget || 0) - total;
+  const vs = !ev.budget ? '' : diff >= 0 ? `<span class="ok-text">sobra ${brl(diff)}</span>` : `<span class="late">passa ${brl(-diff)}</span>`;
+  return esc(parts.join(' · ')) + (vs ? ` · ${vs}` : '');
+}
+
 /** Ficha do compromisso (no dia clicado, se for recorrente). */
 function eventView(ev, date) {
   const d = date || ev.date;
@@ -459,10 +493,15 @@ function eventView(ev, date) {
       ['Com quem', EVENT_KINDS[eventKind(ev)].with ? esc(ev.with || '') : ''],
       ['Especialidade', EVENT_KINDS[eventKind(ev)].specialty ? esc(ev.specialty || '') : ''],
       ['Repete', ev.repeat && ev.repeat !== 'none' ? esc(REPEAT_LABELS[ev.repeat] + (ev.until ? ` até ${fmt(ev.until, { day: 'numeric', month: 'short' })}` : '')) : ''],
+      ['Guardar', ev.budget ? esc(budgetText(ev.budget, d)) : ''],
+      ['Total', buyTotals(ev)],
       ['Local', esc(ev.location || '')],
       ['Lembrete', ev.reminder != null && rem ? esc(rem[1]) : ''],
       ['Detalhes', sheetText(ev.notes)],
     ],
+    body: ev.buy?.length ? `<h3 class="section-label">O que comprar</h3><div class="list">${ev.buy.map(it => `<div class="task ${it.done ? 'done' : ''}">
+      <button class="checkbox ${it.done ? 'on' : ''}" data-action="toggle-buy" data-id="${esc(ev.id)}" data-item="${esc(it.id)}" data-date="${d}" role="checkbox" aria-checked="${!!it.done}" aria-label="Comprado"></button>
+      <span class="task-main"><span class="task-title">${esc(it.text)}</span>${it.price != null ? `<span class="task-meta">${brl(it.price)}</span>` : ''}</span></div>`).join('')}</div>` : '',
     onEdit: () => eventForm(ev, date),
   });
 }
@@ -472,6 +511,16 @@ function eventView(ev, date) {
 Object.assign(actions, {
   'new-event': el => eventForm(null, el.dataset.date || (state.view === 'agenda' ? state.selected : today())),
   'edit-event': el => { const ev = Store.get('events', el.dataset.id); if (ev) eventView(ev, el.dataset.date); },
+  'toggle-buy': el => {
+    const ev = structuredClone(Store.get('events', el.dataset.id) || {});
+    const it = ev.buy?.find(x => x.id === el.dataset.item);
+    if (!it) return;
+    it.done = !it.done;
+    Store.upsert('events', ev);
+    closeModal();
+    render();
+    eventView(ev, el.dataset.date);
+  },
   'select-day': el => {
     const d = el.dataset.date;
     if (d.slice(0, 7) !== state.cursor.slice(0, 7)) state.cursor = d;

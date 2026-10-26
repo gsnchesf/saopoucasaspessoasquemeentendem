@@ -81,12 +81,12 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
     if (a.date < from || a.date > to) continue;
     const s = subject(a.subjectId);
     add({ kind: 'assessment', id: a.id, date: a.date, title: a.title, start: a.time || '', allDay: true, deadline: true,
-      color: s?.color || 'var(--faint)', group: 'Faculdade', groupSub: s?.name, what: BADGE_LABEL[a.kind], label: s?.name, badge: a.kind, done: !!a.done });
+      color: s?.color || 'var(--faint)', group: 'Faculdade', groupSub: s?.name, what: BADGE_LABEL[a.kind], label: s?.name, badge: a.kind, done: !!a.done, skipped: !a.done && !!a.skipped });
   }
   for (const d of Store.data.deliverables) {
     if (!d.due || d.due < from || d.due > to) continue;
     add({ kind: 'deliverable', id: d.id, date: d.due, title: d.title, start: d.time || '', allDay: true, deadline: true,
-      color: workColor(), group: 'Trabalho', groupSub: d.project, what: 'Entrega', label: d.project, badge: 'entrega', done: d.status === 'entregue' });
+      color: workColor(), group: 'Trabalho', groupSub: d.project, what: 'Entrega', label: d.project, badge: 'entrega', done: d.status === 'entregue', skipped: d.status !== 'entregue' && !!d.skipped });
   }
   // Exercício de aula faltada combinado para outro dia (presença por exercício).
   for (const a of Store.data.absences) {
@@ -100,6 +100,26 @@ function agendaItems(from, to, { classes = true, work = false } = {}) {
 }
 
 const itemSort = (a, b) => (b.deadline - a.deadline) || (b.allDay - a.allDay) || (a.start || '').localeCompare(b.start || '');
+
+/* ---------- Prazo atrasado: "Não fiz" ---------- */
+
+const DEADLINE_COLL = { assessment: 'assessments', deliverable: 'deliverables', exercise: 'absences' };
+
+/** Tira o prazo de Atrasados registrando que não foi feito. Exercício não entregue perde a entrega
+    combinada e fica só a falta. on = false desfaz. */
+function skipDeadline(kind, id, on = true) {
+  const coll = DEADLINE_COLL[kind];
+  const cur = Store.get(coll, id);
+  if (!cur) return;
+  const next = structuredClone(cur);
+  if (kind === 'exercise') delete next.delivery;
+  else if (on) next.skipped = true;
+  else delete next.skipped;
+  Store.upsert(coll, next);
+  render();
+  if (on) toast(kind === 'exercise' ? 'Exercício não entregue · conta falta' : 'Marcado como não feito',
+    { label: 'Desfazer', fn: () => { Store.upsert(coll, cur); render(); } });
+}
 
 /* ---------- Componentes ---------- */
 
@@ -117,7 +137,7 @@ function itemTip(it) {
 function itemRow(it) {
   const t = today(), n = nowMin();
   let st = '';
-  if (it.deadline) st = it.done ? 'past' : '';
+  if (it.deadline) st = it.done || it.skipped ? 'past' : '';
   else if (it.canceled) st = 'canceled';
   else if (it.date < t) st = 'past';
   else if (it.date === t && it.start) {
@@ -148,7 +168,7 @@ function itemRow(it) {
 }
 
 function itemChip(it) {
-  const cls = (it.deadline ? 'deadline' : it.kind === 'class' ? `cls${it.canceled ? ' canceled' : ''}` : it.allDay ? 'allday' : '') + (it.exercise ? ' ex' : '');
+  const cls = (it.deadline ? 'deadline' : it.kind === 'class' ? `cls${it.canceled ? ' canceled' : ''}` : it.allDay ? 'allday' : '') + (it.exercise ? ' ex' : '') + (it.skipped ? ' skipped' : '');
   const time = !it.deadline && !it.allDay && it.start ? `<b>${it.start}</b>` : '';
   // Exercício: a matéria vem primeiro, para não sumir quando o chip é cortado.
   const text = it.exercise ? `${it.title} · exercício` : it.deadline ? `${BADGE_LABEL[it.badge]}: ${it.title}` : it.title;
@@ -510,6 +530,7 @@ function eventView(ev, date) {
 
 Object.assign(actions, {
   'new-event': el => eventForm(null, el.dataset.date || (state.view === 'agenda' ? state.selected : today())),
+  'skip-deadline': el => skipDeadline(el.dataset.kind, el.dataset.id),
   'edit-event': el => { const ev = Store.get('events', el.dataset.id); if (ev) eventView(ev, el.dataset.date); },
   'toggle-buy': el => {
     const ev = structuredClone(Store.get('events', el.dataset.id) || {});

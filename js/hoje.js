@@ -14,11 +14,11 @@ screens.hoje = () => {
   const classesToday = timeline.filter(i => i.kind === 'class' && !i.canceled);
 
   const overdueMap = agendaItems(addDays(t, -90), addDays(t, -1), { classes: false });
-  const overdue = Object.values(overdueMap).flat().filter(i => i.deadline && !i.done);
+  const overdue = Object.values(overdueMap).flat().filter(i => i.deadline && !i.done && !i.skipped);
   const upcoming = [];
   for (let i = 0; i <= 14; i++) {
     const d = addDays(t, i);
-    const items = (map[d] || []).filter(x => x.deadline && !x.done);
+    const items = (map[d] || []).filter(x => x.deadline && !x.done && !x.skipped);
     if (items.length) upcoming.push([d, items]);
   }
   const next7 = upcoming.filter(([d]) => diffDays(t, d) <= 7).reduce((n, [, l]) => n + l.length, 0);
@@ -86,10 +86,10 @@ screens.hoje = () => {
   return { head, body };
 };
 
-/** Linha de prazo com o contexto (matéria ou projeto) e a distância em dias. */
+/** Linha de prazo com o contexto (matéria ou projeto) e a distância em dias. Atrasado tem "Não fiz". */
 function deadlineRow(it) {
   const late = it.date < today();
-  return `<button class="ev-row" style="--c:${esc(it.color)}" ${itemAttrs(it)}>
+  const row = `<button class="ev-row" style="--c:${esc(it.color)}" ${itemAttrs(it)}>
     <span class="ev-bar"></span>
     <span class="ev-main">
       <span class="ev-title"><span>${esc(it.title)}</span></span>
@@ -97,4 +97,5 @@ function deadlineRow(it) {
     </span>
     <span class="ev-side"><span class="badge k-${it.badge}">${BADGE_LABEL[it.badge]}</span></span>
   </button>`;
+  return late ? `<div class="row-wrap">${row}<div class="ev-side"><button class="btn btn-sm" data-action="skip-deadline" data-kind="${it.kind}" data-id="${esc(it.id)}">Não fiz</button></div></div>` : row;
 }

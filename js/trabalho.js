@@ -11,7 +11,7 @@ const deliverySort = (a, b) => (a.due || '9999').localeCompare(b.due || '9999')
 
 function deliveryCard(d) {
   const t = today();
-  const open = d.status !== 'entregue';
+  const open = d.status !== 'entregue' && !d.skipped;
   const late = open && d.due && d.due < t;
   const soon = open && !late && d.due && diffDays(t, d.due) <= 2;
   const items = d.checklist || [];
@@ -23,6 +23,7 @@ function deliveryCard(d) {
     <span class="meta">
       ${d.project ? `<span>${esc(d.project)}</span>` : ''}
       ${d.due ? `<span class="${late ? 'late' : soon ? 'soon' : ''}">${icon('clock')} ${relDay(d.due)}${d.time ? ' · ' + d.time : ''}</span>` : '<span>Sem prazo</span>'}
+      ${d.skipped && d.status !== 'entregue' ? '<span>Não feita</span>' : ''}
       ${prio}
     </span>
     ${items.length ? `<span class="meta"><span>${done}/${items.length} itens</span></span>${meter(done / items.length)}` : ''}
@@ -51,7 +52,7 @@ screens.trabalho = () => {
   const t = today();
   const all = Store.data.deliverables;
   const open = all.filter(d => d.status !== 'entregue');
-  const late = open.filter(d => d.due && d.due < t).length;
+  const late = open.filter(d => d.due && d.due < t && !d.skipped).length;
   const weekEnd = periodRange('semana')[1];
   const thisWeek = open.filter(d => d.due && d.due >= t && d.due <= weekEnd).length;
   const doing = open.filter(d => d.status === 'andamento' || d.status === 'revisao').length;
@@ -108,6 +109,7 @@ function setDeliveryStatus(d, status) {
   const before = d.status;
   d.status = status;
   d.deliveredAt = status === 'entregue' ? Date.now() : null;
+  if (status === 'entregue') delete d.skipped;
   Store.upsert('deliverables', d);
   render();
   const label = DELIVERY_STATUS.find(s => s[0] === status)[1];
@@ -151,6 +153,7 @@ function deliverableForm(d, date = '') {
       });
       if (f.status === 'entregue' && !wasDelivered) d.deliveredAt = Date.now();
       if (f.status !== 'entregue') d.deliveredAt = null;
+      if (f.status === 'entregue' || !f.due || f.due >= today()) delete d.skipped; // entregue ou remarcada
       Store.upsert('deliverables', d);
       closeModal();
       render();
@@ -170,17 +173,19 @@ function deliverableView(d) {
   const st = DELIVERY_STATUS.find(([v]) => v === d.status)?.[1] || '';
   const prio = PRIORITIES.find(([v]) => v === d.priority)?.[1];
   const items = d.checklist || [];
-  const late = d.due && d.status !== 'entregue' && d.due < today();
+  const late = d.due && d.status !== 'entregue' && !d.skipped && d.due < today();
   openSheet({
     title: d.title, color: workColor(), sub: esc(['Trabalho', d.project, st].filter(Boolean).join(' · ')),
     rows: [
       ['Prazo', d.due ? esc(`${cap(relDay(d.due))}${d.time ? ' · até ' + d.time : ''}`) + (late ? ' <span class="late">atrasada</span>' : '') : ''],
+      ['Situação', d.skipped && d.status !== 'entregue' ? 'Não feita' : ''],
       ['Prioridade', d.priority ? esc(prio) : ''],
       ['Detalhes', sheetText(d.details)],
     ],
     body: items.length ? `<div><span class="fieldset-label">Checklist · ${items.filter(x => x.done).length}/${items.length}</span>
       <ul class="sheet-list" style="margin-top:6px">${items.map(x => `<li class="${x.done ? 'done' : ''}">${esc(x.text)}</li>`).join('')}</ul></div>` : '',
-    buttons: d.status === 'entregue' ? [] : [{ label: `${icon('check')}Entregue`, run: () => setDeliveryStatus(Store.get('deliverables', d.id), 'entregue') }],
+    buttons: d.status === 'entregue' ? [] : [{ label: `${icon('check')}Entregue`, run: () => setDeliveryStatus(Store.get('deliverables', d.id), 'entregue') },
+      late ? { label: 'Não fiz', run: () => skipDeadline('deliverable', d.id) } : d.skipped && { label: 'Reabrir', run: () => skipDeadline('deliverable', d.id, false) }].filter(Boolean),
     onEdit: () => deliverableForm(d),
   });
 }

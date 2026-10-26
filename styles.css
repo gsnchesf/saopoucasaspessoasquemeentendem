@@ -575,6 +575,7 @@ kbd {
 .chip.allday { background: color-mix(in srgb, var(--c) 30%, transparent); font-weight: 550; }
 .chip.deadline { background: transparent; box-shadow: inset 2px 0 0 var(--c); border-radius: 2px; font-weight: 550; }
 .chip.cls { background: transparent; color: var(--muted); }
+.chip.skipped { opacity: .5; text-decoration: line-through; }
 .chip.ex { background: color-mix(in srgb, var(--c) 28%, transparent); box-shadow: inset 3px 0 0 var(--c); color: inherit; font-weight: 600; }
 .more { padding-left: 6px; font-size: 12px; color: var(--muted); }
 .day-panel { position: sticky; top: 24px; }

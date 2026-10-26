@@ -279,18 +279,20 @@ const valesPresenca = a => a.kind === 'atividade' && a.counts === 'presenca';
 /** Ficha do prazo da faculdade. */
 function assessmentView(a) {
   const s = subject(a.subjectId);
-  const flip = () => { const x = Store.get('assessments', a.id); if (!x) return; x.done = !x.done; Store.upsert('assessments', x); render(); };
+  const flip = () => { const x = Store.get('assessments', a.id); if (!x) return; if (x.skipped) delete x.skipped; else x.done = !x.done; Store.upsert('assessments', x); render(); };
+  const late = !a.done && !a.skipped && a.date < today();
   openSheet({
     title: a.title, color: s?.color, sub: esc(['Faculdade', s?.name, kindLabel(a)].filter(Boolean).join(' · ')),
     rows: [
-      ['Data', esc(`${cap(relDay(a.date))}${a.time ? ' · ' + a.time : ''}`) + (!a.done && a.date < today() ? ' <span class="late">atrasado</span>' : '')],
-      ['Situação', a.done ? 'Feito' : ''],
+      ['Data', esc(`${cap(relDay(a.date))}${a.time ? ' · ' + a.time : ''}`) + (late ? ' <span class="late">atrasado</span>' : '')],
+      ['Situação', a.done ? 'Feito' : a.skipped ? 'Não feito' : ''],
       ['Valor', esc(a.weight || '')],
       ['Nota', esc(a.grade || '')],
       ['Conteúdos', sheetText(a.topics)],
       ['Detalhes', sheetText(a.details)],
     ],
-    buttons: [{ label: a.done ? 'Reabrir' : `${icon('check')}Feito`, run: flip }],
+    buttons: [{ label: a.done || a.skipped ? 'Reabrir' : `${icon('check')}Feito`, run: flip },
+      ...(late ? [{ label: 'Não fiz', run: () => skipDeadline('assessment', a.id) }] : [])],
     onEdit: () => assessmentForm(a),
   });
 }
@@ -298,9 +300,9 @@ const kindLabel = a => ASSESSMENT_KINDS[a.kind] + (a.kind === 'atividade' ? ` ·
 
 function assessmentRow(a, { showSubject = true } = {}) {
   const s = subject(a.subjectId);
-  const late = !a.done && a.date < today();
-  const soon = !a.done && !late && diffDays(today(), a.date) <= 3;
-  return `<div class="task ${a.done ? 'done' : ''}">
+  const late = !a.done && !a.skipped && a.date < today();
+  const soon = !a.done && !a.skipped && !late && diffDays(today(), a.date) <= 3;
+  return `<div class="task ${a.done || a.skipped ? 'done' : ''}">
     <button class="checkbox ${a.done ? 'on' : ''}" data-action="toggle-assessment" data-id="${esc(a.id)}" role="checkbox" aria-checked="${!!a.done}" aria-label="Concluir ${esc(a.title)}"></button>
     <button class="task-main" data-action="edit-assessment" data-id="${esc(a.id)}">
       <span class="task-title">${esc(a.title)}</span>
@@ -308,6 +310,7 @@ function assessmentRow(a, { showSubject = true } = {}) {
         <span class="badge k-${a.kind}">${kindLabel(a)}</span>
         ${showSubject && s ? `<span class="pill" style="--c:${esc(s.color)}">${esc(s.name)}</span>` : ''}
         <span class="${late ? 'late' : soon ? 'soon' : ''}">${relDay(a.date)}${a.time ? ' · ' + a.time : ''}${Math.abs(diffDays(today(), a.date)) > 1 ? ` (${untilLabel(a.date)})` : ''}</span>
+        ${a.skipped && !a.done ? '<span>Não feito</span>' : ''}
         ${a.grade ? `<span>Nota: ${esc(a.grade)}</span>` : ''}
       </span>
     </button>
@@ -483,10 +486,10 @@ function deadlinesTab() {
   const list = Store.data.assessments.filter(a => !sel || a.subjectId === sel).sort((a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || ''));
   const t = today();
   const groups = [
-    ['Atrasados', list.filter(a => !a.done && a.date < t), 'danger'],
-    ['Próximos 7 dias', list.filter(a => !a.done && a.date >= t && diffDays(t, a.date) <= 7)],
-    ['Mais adiante', list.filter(a => !a.done && diffDays(t, a.date) > 7)],
-    ['Concluídos', list.filter(a => a.done).reverse().slice(0, 15)],
+    ['Atrasados', list.filter(a => !a.done && !a.skipped && a.date < t), 'danger'],
+    ['Próximos 7 dias', list.filter(a => !a.done && !a.skipped && a.date >= t && diffDays(t, a.date) <= 7)],
+    ['Mais adiante', list.filter(a => !a.done && !a.skipped && diffDays(t, a.date) > 7)],
+    ['Concluídos', list.filter(a => a.done || a.skipped).reverse().slice(0, 15)],
   ].filter(g => g[1].length);
   return `<div class="card card-pad">
     <div class="filters" style="margin-bottom:8px">
@@ -771,6 +774,7 @@ function assessmentForm(a, { date = '', subjectId = '' } = {}) {
         topics: f.topics.trim(), details: f.details.trim(), weight: f.weight.trim(), grade: f.grade.trim(), done: !!f.done,
       });
       if (f.kind === 'atividade') a.counts = f.counts; else delete a.counts;
+      if (a.done || a.date >= today()) delete a.skipped; // feito ou remarcado
       Store.upsert('assessments', a);
       closeModal();
       render();
@@ -898,6 +902,7 @@ Object.assign(actions, {
     const a = Store.get('assessments', el.dataset.id);
     if (!a) return;
     a.done = !a.done;
+    delete a.skipped;
     Store.upsert('assessments', a);
     render();
     if (a.done) toast('Feito', { label: 'Desfazer', fn: () => { a.done = false; Store.upsert('assessments', a); render(); } });

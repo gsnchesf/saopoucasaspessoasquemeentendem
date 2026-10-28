@@ -9,7 +9,7 @@
    settings.finance: { setup, start, balance, vr,
      cards: [{ id, name, close, due, open, openDue }], save: { initial, monthly, day, target, deadline, skips } }
      (o antigo `card: { on, close, due, open }` é lido como um cartão só, id 'card')
-   recurring: { id, dir: 'in' | 'out', kind, name, amount, variable, method, card, category,
+   recurring: { id, dir: 'in' | 'out', kind, name, amount, method, card, category,
      freq: 'mes' | 'semana' | 'ano', day, business, last, weekday, date, start, end, skips: [data],
      daily,  ← só no VR: amount é por dia, vezes os dias de trabalho do mês seguinte
      advance: { amount, day, skips } }  ← só no salário: parte paga antes (o resto cai no dia do salário)
@@ -134,7 +134,7 @@ function fixedList() {
     if (!adv) { out.push(f); continue; }
     out.push({ ...f, amount: r2(f.amount - adv.amount), rest: true });
     out.push({ ...f, id: `${f.id}:adv`, parent: f.id, kind: 'adiantamento', name: 'Adiantamento', amount: adv.amount,
-      freq: 'mes', day: adv.day, business: false, last: false, variable: false, skips: adv.skips || [] });
+      freq: 'mes', day: adv.day, business: false, last: false, skips: adv.skips || [] });
   }
   return out;
 }
@@ -270,7 +270,7 @@ function pendings(from, to) {
     if (f.dir === 'out' && f.method === 'credito') continue; // vai para a fatura
     for (const d of fixedDates(f, from, to)) if (!done.has(`${f.id}|${d}`)) out.push({
       type: 'fixed', id: f.id, date: d, name: fixedName(f), amount: fixedAmount(f, d), sign: f.dir === 'in' ? 1 : -1,
-      wallet: fixedWallet(f), variable: f.variable, color: f.dir === 'in' ? FIN_COLOR : spendCat(f.category)[1],
+      wallet: fixedWallet(f), color: f.dir === 'in' ? FIN_COLOR : spendCat(f.category)[1],
       meta: f.dir === 'in' ? (f.kind === 'vr' ? 'VR' : f.rest ? 'Restante' : '') : payLabel(f) || '',
     });
   }
@@ -337,7 +337,7 @@ function pendRow(p) {
   const late = p.date < today();
   const open = p.type === 'fixed' ? `data-action="fin-fixed" data-id="${esc(p.id)}"`
     : p.type === 'event' ? `data-action="edit-event" data-id="${esc(p.id)}" data-date="${p.date}"` : '';
-  const meta = [`<span class="${late ? 'late' : ''}">${relDay(p.date)}</span>`, p.meta && `<span>${esc(p.meta)}</span>`, p.variable && '<span>valor varia</span>'].filter(Boolean).join('');
+  const meta = [`<span class="${late ? 'late' : ''}">${relDay(p.date)}</span>`, p.meta && `<span>${esc(p.meta)}</span>`].filter(Boolean).join('');
   const btns = p.type === 'event' ? '' : `<button class="btn btn-sm" data-action="fin-confirm" data-type="${p.type}" data-id="${esc(p.id)}" data-date="${p.date}">${CONFIRM_LABEL(p)}</button>
     ${p.type !== 'invoice' ? `<button class="btn btn-sm btn-ghost" data-action="fin-skip" data-type="${p.type}" data-id="${esc(p.id)}" data-date="${p.date}">Pular</button>` : ''}`;
   return `<div class="row-wrap"><button class="ev-row" style="--c:${esc(p.color)}" ${open}>
@@ -477,7 +477,7 @@ const FIN_STEPS = [['saldo', 'Saldo'], ['renda', 'Entradas fixas'], ['cartao', '
 function fixedRow(f) {
   const adv = f.kind === 'salario' && f.advance?.amount > 0 && `adiantamento ${brl(f.advance.amount)} no dia ${f.advance.day}`;
   const next = f.daily && fixedDates(f, today(), addDays(today(), 400))[0];
-  const meta = [fixedWhen(f), adv, f.daily && `${brl(f.amount)} por dia`, f.dir === 'out' && payLabel(f), f.variable && 'valor varia', f.end && `até ${shortDate(f.end)}`]
+  const meta = [fixedWhen(f), adv, f.daily && `${brl(f.amount)} por dia`, f.dir === 'out' && payLabel(f), f.end && `até ${shortDate(f.end)}`]
     .filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
   return `<button class="ev-row" style="--c:${f.dir === 'in' ? FIN_COLOR : spendCat(f.category)[1]}" data-action="fin-fixed" data-id="${esc(f.id)}">
     <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(fixedName(f))}</span></span><span class="ev-meta">${meta}</span></span>
@@ -603,7 +603,7 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
   if (f) f = structuredClone(f);
   else {
     const k = dir === 'in' ? kind || 'outro' : '';
-    f = { id: uid(), dir, kind: k, name: k && k !== 'outro' ? INCOME[k] : '', amount: 0, variable: false,
+    f = { id: uid(), dir, kind: k, name: k && k !== 'outro' ? INCOME[k] : '', amount: 0,
       method: dir === 'out' ? 'debito' : '', category: category || 'outros', freq: 'mes',
       day: k === 'salario' ? 5 : 10, business: k === 'salario', last: k === 'vr', weekday: 1, date: today(),
       start: finOn() ? today() : '', end: '' }; // criado depois de configurar: não cobra os meses que já passaram
@@ -621,7 +621,6 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
       ${income ? '' : `<datalist id="fin-fixed-names">${names(cat)}</datalist>`}
       <div class="f-per"><span class="fieldset-label">Valor</span><div style="margin-top:6px">${choiceChips('per', [['mes', 'Por mês'], ['dia', 'Por dia']], f.daily ? 'dia' : 'mes')}</div></div>
       <label class="field money-big"><span class="f-amount-label">${f.daily ? 'Valor por dia' : 'Valor'}</span>${moneyInput('amount', f.amount || '', isNew && f.name ? 'autofocus' : '')}</label>
-      <label class="check"><input type="checkbox" name="variable" ${f.variable ? 'checked' : ''}> Valor muda todo mês</label>
       ${income ? '' : `<div><span class="fieldset-label">Pagamento</span><div style="margin-top:6px">${choiceChips('method', payList(), payValue(f))}</div></div>`}
       <div><span class="fieldset-label">Frequência</span><div style="margin-top:6px">${choiceChips('freq', Object.entries(FREQ), f.freq)}</div></div>
       <div class="f-mes"><span class="fieldset-label">Dia</span>
@@ -691,13 +690,14 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
       if (withAdvance) f.advance = { ...f.advance, amount: r2(advAmount), day: +v.advDay };
       else delete f.advance;
       Object.assign(f, {
-        kind: income ? v.kind : '', name: v.name.trim(), amount: r2(amount), variable: !!v.variable,
+        kind: income ? v.kind : '', name: v.name.trim(), amount: r2(amount),
         daily: income && v.kind === 'vr' && v.freq === 'mes' && v.per === 'dia',
         category: income ? '' : v.category || 'outros', freq: v.freq,
         day: +v.day || 1, business: when === 'util', last: when === 'ultimo', weekday: +v.weekday || 0, date: v.date || '',
         start: range ? v.start || '' : f.start || '', end: range ? v.end || '' : '',
       });
       if (income) { f.method = ''; delete f.card; } else setPay(f, v.method);
+      delete f.variable; // valor que varia entra como lançamento comum
       Store.upsert('recurring', f);
       closeModal();
       render();
@@ -834,7 +834,6 @@ function confirmPending(type, id, date) {
   if (type === 'fixed') {
     const f = getFixed(id);
     if (!f) return;
-    if (f.variable) return moveForm(null, { dir: f.dir, fixed: f, occ: date, amount: fixedAmount(f, date) });
     rec = { id: uid(), dir: f.dir, name: fixedName(f), amount: fixedAmount(f, date), date: date < today() ? date : today(), kind: f.kind, method: f.method, category: f.category, fixedId: f.id, occ: date };
     if (f.card) rec.card = f.card;
   } else if (type === 'invoice') {

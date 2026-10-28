@@ -52,7 +52,8 @@ const FIXED_NAMES = {
 /** Gastos do dia a dia, lançados na hora. */
 const MOVE_CATS = ['mercado', 'restaurante', 'delivery', 'transporte', 'lazer', 'compras', 'roupas', 'saude', 'beleza', 'presentes', 'viagem', 'casa', 'eventos', 'outros'];
 const FREQ = { mes: 'Todo mês', semana: 'Toda semana', ano: 'Todo ano' };
-const WHEN = [['dia', 'Dia do mês'], ['util', 'Dia útil'], ['ultimo', 'Último dia útil']];
+const WHEN = [['dia', 'Dia do mês'], ['util', 'Dia útil']];
+const LAST = 'Último', MAX_BUSINESS = 20; // dia útil vai do 1º ao 20º, e o último fecha a volta
 const MOVE_TITLE = { out: 'gasto', in: 'entrada', save: 'Guardar', unsave: 'Resgatar', card: 'Pagar fatura', adjust: 'Ajuste de saldo' };
 const CARD_COLOR = '#334155';
 
@@ -597,6 +598,22 @@ function setPay(x, value) {
 }
 const catList = (keys, sel) => (keys.includes(sel) || !SPEND[sel] ? keys : [...keys, sel]).map(k => [k, spendCat(k)[0]]);
 const dayInput = (name, value) => `<input type="number" name="${name}" min="1" max="31" inputmode="numeric" value="${esc(value)}">`;
+const dayStepper = value => `<div class="stepper sm">
+  <button type="button" class="icon-btn" data-step="-1" aria-label="Menos">−</button>
+  <input name="day" inputmode="numeric" autocomplete="off" aria-label="Dia" value="${esc(value)}">
+  <button type="button" class="icon-btn" data-step="1" aria-label="Mais">+</button></div>`;
+
+/** Dia da caixinha: 1–31 no dia do mês; no dia útil, 1–20 e "Último" (depois do 20º e antes do 1º). */
+function stepDay(value, mode, step = 0) {
+  if (mode === 'util') {
+    const order = [LAST, ...Array.from({ length: MAX_BUSINESS }, (_, i) => String(i + 1))];
+    const n = parseInt(value, 10);
+    const i = n >= 1 && n <= MAX_BUSINESS ? n : 0; // fora do 1–20 (ou "Último") é o último
+    return order[(i + step + order.length) % order.length];
+  }
+  const n = value === LAST ? 31 : parseInt(value, 10);
+  return String(clamp((n >= 1 ? n : 1) + step, 1, 31));
+}
 
 function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
   const isNew = !f;
@@ -610,7 +627,7 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
   }
   const income = f.dir === 'in';
   const cat = income ? '' : fixedCat(f);
-  const when = f.last ? 'ultimo' : f.business ? 'util' : 'dia';
+  const when = f.last || f.business ? 'util' : 'dia';
   const names = k => (FIXED_NAMES[k] || []).map(n => `<option value="${esc(n)}">`).join('');
   openModal(`<form novalidate>
     ${modalHead(isNew ? (income ? 'Nova entrada fixa' : 'Novo gasto fixo') : (income ? 'Editar entrada fixa' : 'Editar gasto fixo'))}
@@ -624,7 +641,7 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
       ${income ? '' : `<div><span class="fieldset-label">Pagamento</span><div style="margin-top:6px">${choiceChips('method', payList(), payValue(f))}</div></div>`}
       <div><span class="fieldset-label">Frequência</span><div style="margin-top:6px">${choiceChips('freq', Object.entries(FREQ), f.freq)}</div></div>
       <div class="f-mes"><span class="fieldset-label">Dia</span>
-        <div class="fin-day"><label class="field xs f-day">${dayInput('day', f.day)}</label>${choiceChips('when', WHEN, when)}</div></div>
+        <div class="fin-day">${dayStepper(f.last ? LAST : f.day)}<label class="field"><select name="when" aria-label="Tipo de dia">${options(WHEN, when)}</select></label></div></div>
       ${income ? `<div class="f-adv">
         <label class="check"><input type="checkbox" name="hasAdvance" ${f.advance?.amount ? 'checked' : ''}> Recebo adiantamento</label>
         <div class="row f-adv-fields" style="margin-top:10px">
@@ -656,12 +673,16 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
         $('.f-per', form).hidden = k !== 'vr' || fr !== 'mes';
         $('.f-amount-label', form).textContent = k === 'vr' && fr === 'mes' && el.per.value === 'dia' ? 'Valor por dia' : 'Valor';
         $('.f-mes', form).hidden = fr !== 'mes';
-        $('.f-day', form).hidden = el.when.value === 'ultimo';
         $('.f-semana', form).hidden = fr !== 'semana';
         $('.f-ano', form).hidden = fr !== 'ano';
       };
+      const day = el.day;
+      const stepIt = n => { day.value = stepDay(day.value, el.when.value, n); };
+      form.addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) stepIt(+b.dataset.step); });
+      day.addEventListener('keydown', e => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stepIt(e.key === 'ArrowUp' ? 1 : -1); } });
       let prevKind = f.kind;
       form.addEventListener('change', e => {
+        if (e.target === day || e.target === el.when) stepIt(0);
         // Trocar o tipo troca o nome, se ele ainda for o nome do tipo.
         if (e.target.name === 'kind') {
           const n = el.name;
@@ -677,8 +698,9 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
       const v = formData(form);
       const amount = parseMoney(v.amount);
       const when = v.freq === 'mes' ? v.when : 'dia';
+      const last = when === 'util' && v.day === LAST;
       if (!(amount > 0)) return formError(form, 'Falta o valor.');
-      if (v.freq === 'mes' && when !== 'ultimo' && !(+v.day >= 1 && +v.day <= 31)) return formError(form, 'Dia inválido.');
+      if (v.freq === 'mes' && !last && !(+v.day >= 1 && +v.day <= 31)) return formError(form, 'Dia inválido.');
       if (v.freq === 'ano' && !v.date) return formError(form, 'Falta a data.');
       const range = !income || v.kind === 'outro';
       if (range && v.start && v.end && v.end < v.start) return formError(form, 'O fim precisa ser depois do início.');
@@ -693,7 +715,7 @@ function fixedForm(f, { dir = 'out', kind = '', category = '' } = {}) {
         kind: income ? v.kind : '', name: v.name.trim(), amount: r2(amount),
         daily: income && v.kind === 'vr' && v.freq === 'mes' && v.per === 'dia',
         category: income ? '' : v.category || 'outros', freq: v.freq,
-        day: +v.day || 1, business: when === 'util', last: when === 'ultimo', weekday: +v.weekday || 0, date: v.date || '',
+        day: +v.day || f.day || 1, business: when === 'util' && !last, last, weekday: +v.weekday || 0, date: v.date || '',
         start: range ? v.start || '' : f.start || '', end: range ? v.end || '' : '',
       });
       if (income) { f.method = ''; delete f.card; } else setPay(f, v.method);

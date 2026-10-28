@@ -1133,7 +1133,10 @@ kbd {
 .money-big input { height: 52px; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .money { font-variant-numeric: tabular-nums; }
 .fin-day { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
-.fin-day > .field { flex: 0 0 72px; }
+.fin-day > .field { flex: 0 1 170px; }
+.stepper.sm { padding: 2px; border-radius: 9px; }
+.stepper.sm .icon-btn { width: 32px; height: 32px; border-radius: 7px; font-size: 18px; }
+.stepper.sm input { width: 62px; height: 32px; font-family: inherit; font-size: 15px; font-weight: 600; }
 .fin-groups { display: grid; }
 .fin-group + .fin-group { border-top: 1px solid var(--border); }
 .fin-group-head { display: flex; align-items: center; gap: 10px; min-height: 44px; }

@@ -244,6 +244,30 @@ function formError(form, msg) {
 
 const formData = form => Object.fromEntries(new FormData(form));
 
+/* ---------- Dinheiro ---------- */
+
+/** "R$ 1.500,50", "1500.5", "30" → número. */
+function parseMoney(s) {
+  s = String(s ?? '').trim().replace(/[R$\s]/g, '');
+  if (!s) return NaN;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  return +s;
+}
+const moneyText = n => n || n === 0
+  ? `${n < 0 ? '-' : ''}R$ ${Math.abs(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+const moneyInput = (name, value, attrs = '') =>
+  `<input class="money" name="${name}" inputmode="numeric" autocomplete="off" value="${esc(moneyText(value === '' ? null : value))}" ${attrs}>`;
+
+/** Campo de dinheiro se formata enquanto digita, como em app de banco: os dígitos entram pelos centavos. Um "-" troca o sinal. */
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el.classList?.contains('money')) return;
+  const digits = el.value.replace(/\D/g, '').replace(/^0+/, '');
+  const neg = (el.value.match(/-/g) || []).length % 2 === 1;
+  el.value = digits ? moneyText((neg ? -1 : 1) * +digits / 100) : neg ? '-' : '';
+  el.setSelectionRange(el.value.length, el.value.length);
+});
+
 /** Lista editável (checklist de entrega, objetivos de meta…). */
 function listEditor(name, items, { check = true, addLabel = 'Adicionar item' } = {}) {
   return `<div class="edit-list" data-list="${name}" data-check="${check ? 1 : 0}">

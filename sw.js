@@ -1,7 +1,7 @@
 /* Service worker: deixa o organizador funcionando offline quando
    servido por http(s) e permite instalá-lo como app no celular. */
 
-const CACHE = 'organizador-v37';
+const CACHE = 'organizador-v38';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable-512.png',

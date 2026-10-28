@@ -392,7 +392,7 @@ function eventForm(ev, date, startTime) {
         <label class="field" data-specialty ${EVENT_KINDS[kind].specialty ? '' : 'hidden'}><span>Especialidade</span><input name="specialty" maxlength="80" value="${esc(ev.specialty || '')}"></label>
       </div>
       <label class="field" data-title ${EVENT_KINDS[kind].title ? '' : 'hidden'}><span>Título</span><input name="title" maxlength="200" value="${esc(ev.title)}"></label>
-      <label class="field" data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'}><span>Orçamento (R$)</span><input type="number" name="budget" min="0" step="any" inputmode="decimal" value="${ev.budget ?? ''}"></label>
+      <label class="field" data-money ${EVENT_KINDS[kind].money ? '' : 'hidden'}><span>Orçamento</span>${moneyInput('budget', ev.budget ?? '')}</label>
       <label class="field"><span>Data</span><input type="date" name="date" value="${ev.date}"></label>
       <div class="row">
         <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? 'checked' : ''}> Dia inteiro</label>
@@ -440,7 +440,7 @@ function eventForm(ev, date, startTime) {
       const allDay = !!f.allDay;
       const k = EVENT_KINDS[f.kind];
       if (k.title && !f.title.trim() && (k.needsTitle || !f.with.trim())) return formError(form, 'Falta o título.');
-      const budget = k.money && f.budget !== '' ? +f.budget : null;
+      const budget = k.money && f.budget !== '' ? parseMoney(f.budget) : null;
       if (budget != null && !(budget >= 0)) return formError(form, 'Valor inválido.');
       if (!f.date) return formError(form, 'Falta a data.');
       if (!allDay && !f.start) return formError(form, 'Falta o horário.');

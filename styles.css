@@ -1131,4 +1131,14 @@ kbd {
 .fin-dots i.on { background: var(--accent); width: 22px; border-radius: 4px; }
 .fin-setup { max-width: 760px; }
 .money-big input { height: 52px; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.money { font-variant-numeric: tabular-nums; }
+.fin-day { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.fin-day > .field { flex: 0 0 72px; }
+.fin-groups { display: grid; }
+.fin-group + .fin-group { border-top: 1px solid var(--border); }
+.fin-group-head { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.fin-group-name { flex: 1; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.fin-group-name::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.fin-group-head .muted { font-variant-numeric: tabular-nums; font-size: 13px; }
+.fin-group > .list { margin-bottom: 8px; }
 .ev-side .meter { width: 90px; }

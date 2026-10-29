@@ -948,12 +948,45 @@ function dayItem(type, id, date) {
   const [cid, due] = id.split('|');
   const c = cards().find(x => x.id === cid);
   if (!c) return null;
+  const v = invoices(due, due).find(x => x.id === id) || { amount: 0, paid: 0, left: 0 };
   return {
-    name: invoiceName(c), color: CARD_COLOR, amount: invoices(due, due).find(v => v.id === id)?.left || 0,
+    name: invoiceName(c), color: CARD_COLOR, amount: v.left, invoice: v, card: c,
     sub: [`Fecha dia ${c.close}`, `vence dia ${c.due}`],
     rec: { dir: 'card', name: invoiceName(c), due, card: c.id, full: true },
     setup: ['Configurar cartão', () => cardForm(c)],
   };
+}
+
+/** Linha "Total · pago · restam" da fatura, quando já tem pagamento. */
+const invoiceStatus = v => v.paid ? `<p class="muted" style="margin:0">Total ${esc(brl(v.amount))} · pago ${esc(brl(v.paid))} · restam <b>${esc(brl(v.left))}</b></p>` : '';
+
+/** Paga parte da fatura: sai da conta no dia e o resto continua previsto para o vencimento. */
+function partialForm(c, v) {
+  openModal(`<form novalidate>
+    ${modalHead('Pagar parte')}
+    <div class="modal-body">
+      <p class="sheet-sub" style="--c:${CARD_COLOR}"><span class="dot"></span>${esc(`${invoiceName(c)} · vence ${shortDate(v.due)} · restam ${brl(v.left)}`)}</p>
+      <label class="field money-big"><span>Valor</span>${moneyInput('amount', '', 'autofocus')}</label>
+      <label class="field"><span>Data</span><input type="date" name="date" value="${today()}"></label>
+      <p class="form-error" hidden></p>
+    </div>
+    ${modalFoot(false, 'Pagar')}
+  </form>`, {
+    onSubmit(form) {
+      const f = formData(form);
+      const value = r2(parseMoney(f.amount));
+      if (!(value > 0)) return formError(form, 'Falta o valor.');
+      if (!f.date) return formError(form, 'Falta a data.');
+      if (f.date < finStart()) return formError(form, `Antes de ${shortDate(finStart())}, quando o saldo foi informado.`);
+      const rec = { id: uid(), dir: 'card', name: invoiceName(c), amount: value, date: f.date, due: v.due, card: c.id };
+      if (value >= v.left) rec.full = true; // pagou tudo o que faltava
+      Store.upsert('transactions', rec);
+      closeModal();
+      render();
+      const left = invoices(v.due, v.due).find(x => x.id === v.id)?.left || 0;
+      toast(left ? `Restam ${brl(left)} da fatura` : 'Fatura paga', { label: 'Desfazer', fn: () => { Store.remove('transactions', rec.id); render(); } });
+    },
+  });
 }
 
 /** Ficha de um dia do fixo, fatura ou poupança (previsto ou já lançado em `m`): muda valor e data na hora, cancela ou abre a configuração. */
@@ -962,17 +995,23 @@ function dayForm(type, id, date, m = null) {
   if (!it) return m && moveForm(m);
   const canceled = !m && it.canceled;
   const amount = m ? m.amount : it.amount, when = m ? m.date : date;
+  const v = it.invoice, partial = m && type === 'invoice' && !m.full;
+  // Na fatura com pagamento parcial, o valor do previsto é o que falta pagar.
+  const label = partial ? 'Valor pago' : v?.paid && !m ? 'Restante' : 'Valor';
   openModal(`<form novalidate>
     ${modalHead(m?.name || it.name)}
     <div class="modal-body">
-      <p class="sheet-sub" style="--c:${esc(it.color)}"><span class="dot"></span>${esc(it.sub.filter(Boolean).join(' · '))}</p>
+      <p class="sheet-sub" style="--c:${esc(it.color)}"><span class="dot"></span>${esc([partial && 'Pagamento parcial', ...it.sub].filter(Boolean).join(' · '))}</p>
+      ${v ? invoiceStatus(v) : ''}
       ${canceled ? `<p class="muted" style="margin:0">Cancelado em ${esc(shortDate(date))}.</p>` : `
-        <label class="field money-big"><span>Valor</span>${moneyInput('amount', amount)}</label>
+        <label class="field money-big"><span>${label}</span>${moneyInput('amount', amount)}</label>
         <label class="field"><span>Data</span><input type="date" name="date" value="${esc(when)}"></label>`}
       <p class="form-error" hidden></p>
     </div>
     <footer class="modal-actions wrap">
       ${it.canCancel && !canceled ? '<button type="button" class="btn btn-danger-ghost" data-day-cancel>Cancelar</button>' : ''}
+      ${v && m ? '<button type="button" class="btn btn-danger-ghost" data-day-delete>Excluir</button>' : ''}
+      ${v && !m && v.left > 0 ? '<button type="button" class="btn" data-day-partial>Pagar parte</button>' : ''}
       <button type="button" class="btn" data-day-setup>${esc(it.setup[0])}</button>
       <span class="spacer"></span>
       ${canceled ? '<button type="button" class="btn btn-primary" data-day-restore>Reativar</button>' : '<button type="submit" class="btn btn-primary">Salvar</button>'}
@@ -980,6 +1019,15 @@ function dayForm(type, id, date, m = null) {
   </form>`, {
     onMount(form) {
       $('[data-day-setup]', form).onclick = () => { closeModal(); it.setup[1](); };
+      const part = $('[data-day-partial]', form);
+      if (part) part.onclick = () => { closeModal(); partialForm(it.card, v); };
+      const del = $('[data-day-delete]', form);
+      if (del) del.onclick = () => {
+        Store.remove('transactions', m.id);
+        closeModal();
+        render();
+        toast('Pagamento excluído', { label: 'Desfazer', fn: () => { Store.upsert('transactions', m); render(); } });
+      };
       const restore = $('[data-day-restore]', form);
       if (restore) restore.onclick = () => { setSkip(type, id, date, false); closeModal(); render(); toast(`${it.name} de volta`); };
       const cancel = $('[data-day-cancel]', form);
@@ -998,7 +1046,7 @@ function dayForm(type, id, date, m = null) {
       if (!v.date) return formError(form, 'Falta a data.');
       if (v.date < finStart()) return formError(form, `Antes de ${shortDate(finStart())}, quando o saldo foi informado.`);
       // Previsto que não mudou continua previsto (e acompanha o fixo); o que mudou vira lançamento do dia.
-      if (m) Store.upsert('transactions', { ...structuredClone(m), amount: value, date: v.date, ...(type === 'invoice' ? { full: true } : {}) });
+      if (m) Store.upsert('transactions', { ...structuredClone(m), amount: value, date: v.date }); // parcial continua parcial
       else if (value !== r2(it.amount) || v.date !== date) Store.upsert('transactions', { id: uid(), ...it.rec, amount: value, date: v.date });
       closeModal();
       render();

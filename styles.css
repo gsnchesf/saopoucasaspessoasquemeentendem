@@ -1132,6 +1132,14 @@ kbd {
 .inv-item.soon { opacity: .6; }
 .inv-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inv-amt { font-variant-numeric: tabular-nums; }
+.tl-block + .tl-block { margin-top: 12px; }
+.tl-head { margin: 0 0 2px; padding: 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.tl-saldo { display: flex; justify-content: flex-end; align-items: baseline; gap: 6px 10px; margin: 2px 8px 0; padding-top: 6px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--muted); }
+.tl-saldo b { color: var(--text); font-variant-numeric: tabular-nums; }
+.tl-saldo b.late { color: var(--danger); }
+.tl-saldo { flex-wrap: wrap; }
+.tl-low { margin-right: auto; }
+.ev-side.on-card .amt { color: var(--faint); }
 .fin-steps { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .fin-dots { display: flex; gap: 6px; }
 .fin-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }

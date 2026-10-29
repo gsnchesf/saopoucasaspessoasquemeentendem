@@ -210,6 +210,8 @@ const cardOn = () => cards().length > 0;
 /** Cartão de uma compra, fixo ou pagamento; sem cartão marcado é o primeiro. */
 const itemCard = x => x.card ? cards().find(c => c.id === x.card) : cards()[0];
 const payLabel = x => x.method === 'credito' && cards().length > 1 ? itemCard(x)?.name || PAY.credito : PAY[x.method];
+/** "no cartão" (ou "no Nu", com mais de um): compra no crédito não mexe no caixa, só na fatura. */
+const noCard = x => `no ${cards().length > 1 ? itemCard(x)?.name || 'cartão' : 'cartão'}`;
 const invoiceName = c => cards().length > 1 ? `Fatura ${c.name}` : 'Fatura do cartão';
 
 /** Vencimento da fatura de uma compra feita nesse dia (no dia do fechamento já vai para a próxima). */
@@ -228,8 +230,9 @@ function nextDue(c, date) {
 }
 
 /** Faturas de cada cartão com vencimento entre from e to: compras (parcelas), fixos no crédito e a fatura informada no começo.
-    Com `bought`, só o que foi comprado até esse dia. `items` detalha o que entrou e `pays` os pagamentos. */
-function invoices(from, to, bought = to) {
+    Com `bought`, só o que foi comprado até esse dia; com `paidBy`, só os pagamentos até esse dia.
+    `items` detalha o que entrou e `pays` os pagamentos. */
+function invoices(from, to, bought = to, paidBy = '9999-12-31') {
   if (!cardOn()) return [];
   const map = {};
   const add = (c, due, amount, item) => {
@@ -251,7 +254,7 @@ function invoices(from, to, bought = to) {
   }
   for (const c of cards()) if (c.open) add(c, c.openDue || nextDue(c, finStart()), c.open, { name: 'Fatura informada', date: finStart(), color: CARD_COLOR });
   return Object.entries(map).sort(([, a], [, b]) => a.due.localeCompare(b.due)).map(([id, v]) => {
-    const pays = moves().filter(m => m.dir === 'card' && m.due === v.due && itemCard(m)?.id === v.card.id);
+    const pays = moves().filter(m => m.dir === 'card' && m.due === v.due && itemCard(m)?.id === v.card.id && m.date <= paidBy);
     const paid = pays.reduce((n, m) => n + m.amount, 0);
     // Pagamento com `full` é o valor real da fatura: não sobra resto.
     const left = pays.some(m => m.full) ? 0 : Math.max(0, v.amount - paid);
@@ -266,6 +269,10 @@ function cardUsed(c) {
   const t = today();
   return r2(invoices(addDays(t, 1), addMonths(t, 26), t).filter(v => v.card.id === c.id).reduce((n, v) => n + v.left, 0));
 }
+
+/** Já comprado no crédito até o dia e ainda não pago (faturas que vencem depois dele). */
+const cardCommitted = date => cardOn()
+  ? r2(invoices(addDays(date, 1), addMonths(date, 26), date, date).reduce((n, v) => n + v.left, 0)) : 0;
 
 /* ---------- Eventos e poupança ---------- */
 
@@ -388,24 +395,49 @@ const moveSign = m => m.dir === 'in' || m.dir === 'unsave' || (m.dir === 'adjust
 function pendRow(p) {
   const open = p.type === 'event' ? `data-action="edit-event" data-id="${esc(p.id)}" data-date="${p.date}"`
     : `data-action="fin-item" data-type="${p.type}" data-id="${esc(p.id)}" data-date="${p.date}"`;
-  const meta = [relDay(p.date), p.meta].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
+  const meta = [relDay(p.date), p.credit ? noCard(getFixed(p.id) || {}) : p.meta].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
   return `<button class="ev-row ${p.canceled ? 'canceled' : ''}" style="--c:${esc(p.color)}" ${open}>
     <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(p.name)}</span></span><span class="ev-meta">${meta}</span></span>
-    <span class="ev-side">${amt(p.amount, p.sign)}</span></button>`;
+    <span class="ev-side ${p.credit ? 'on-card' : ''}">${amt(p.amount, p.sign)}</span></button>`;
 }
 
 const tlRow = it => it.move ? moveRow(it.move, it.part) : pendRow(it.pend);
+
+/** Extrato em blocos por dia ou por semana (dentro de from–to), cada um fechando com a posição de caixa no fim dele. */
+function tlBlocks(items, by, from, to) {
+  const blocks = [];
+  for (const it of items) {
+    const key = by === 'semana' ? startOfWeek(it.date) : it.date;
+    if (blocks.at(-1)?.key !== key) blocks.push({ key, items: [] });
+    blocks.at(-1).items.push(it);
+  }
+  return blocks.map(({ key, items: list }) => {
+    const start = key < from ? from : key, wkEnd = by === 'semana' ? addDays(key, 6) : key, end = wkEnd > to ? to : wkEnd;
+    const at = d => d > today() ? projected(d) : balances(d);
+    const b = at(end), owed = cardCommitted(end);
+    const label = by === 'dia' ? relDay(key) : start === end ? relDay(start) : `${shortDate(start)} – ${shortDate(end)}`;
+    // Na semana, o fechamento pode esconder um dia no vermelho: avisa o menor saldo.
+    let low = null;
+    if (by === 'semana') for (let d = start; d < end; d = addDays(d, 1)) { const c = at(d).conta; if (c < 0 && (!low || c < low.conta)) low = { date: d, conta: c }; }
+    const money = (l, n) => `<span>${l}</span><b class="${n < 0 ? 'late' : ''}">${esc(brl(r2(n)))}</b>`;
+    return `<div class="tl-block"><h4 class="tl-head">${esc(label)}</h4>
+      <div class="list">${list.map(tlRow).join('')}</div>
+      <div class="tl-saldo">${low ? `<span class="late tl-low">menor saldo ${esc(brl(r2(low.conta)))} ${esc(relDay(low.date).toLowerCase())}</span>` : ''}
+        ${money('Saldo', b.conta)}${owed ? money('Livre', b.conta - owed) : ''}${hasVR() ? money('VR', b.vr) : ''}</div></div>`;
+  });
+}
 
 /** Linha de um lançamento; com `part`, só aquela parcela (gasto parcelado fora do crédito). */
 function moveRow(m, part = null) {
   const color = m.dir === 'out' ? spendCat(m.category)[1] : m.dir === 'card' ? CARD_COLOR : FIN_COLOR;
   const ev = m.eventId && Store.get('events', m.eventId);
-  const meta = [relDay(part ? part.date : m.date), m.dir === 'out' && payLabel(m), m.dir === 'card' && cards().length > 1 && itemCard(m)?.name,
+  const credit = m.dir === 'out' && m.method === 'credito';
+  const meta = [relDay(part ? part.date : m.date), m.dir === 'out' && (credit ? noCard(m) : payLabel(m)), m.dir === 'card' && cards().length > 1 && itemCard(m)?.name,
     part ? `${part.i}/${part.n}` : m.parts > 1 && `${m.parts}x`, m.dir === 'in' && m.kind === 'vr' && 'VR',
     m.dir === 'out' && spendCat(m.category)[0], ev && eventTitle(ev)].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('');
   return `<button class="ev-row" style="--c:${esc(color)}" data-action="fin-move" data-id="${esc(m.id)}">
     <span class="ev-bar"></span><span class="ev-main"><span class="ev-title"><span>${esc(m.name || MOVE_TITLE[m.dir])}</span></span><span class="ev-meta">${meta}</span></span>
-    <span class="ev-side">${amt(Math.abs(part ? part.amount : m.amount), moveSign(m))}</span></button>`;
+    <span class="ev-side ${credit ? 'on-card' : ''}">${amt(Math.abs(part ? part.amount : m.amount), moveSign(m))}</span></button>`;
 }
 
 /** Cartão de Hoje: saldos e o que entra e sai hoje. */
@@ -471,14 +503,16 @@ function finView() {
     </dl>
   </section>`;
 
-  // Próximos do mais perto ao mais longe; o que já caiu, do mais novo ao mais antigo.
+  // Próximos do mais perto ao mais longe; o que já caiu, do mais novo ao mais antigo. Cada bloco fecha com o saldo.
   const tl = timeline(from, to);
   const next = tl.filter(it => it.date > t), done = tl.filter(it => it.date <= t).reverse();
   const both = next.length && done.length;
+  const by = Store.settings.finGroup === 'semana' ? 'semana' : 'dia';
   const extrato = `<section class="card card-pad">
-    <div class="card-head"><h2>Extrato</h2></div>
-    ${next.length ? `${both ? '<h3 class="section-label">Próximos</h3>' : ''}<div class="list">${next.map(tlRow).join('')}</div>` : ''}
-    ${done.length ? `${both ? '<h3 class="section-label">Até hoje</h3>' : ''}<div class="list">${done.map(tlRow).join('')}</div>` : ''}
+    <div class="card-head"><h2>Extrato</h2>
+      <div class="segmented">${[['dia', 'Dia'], ['semana', 'Semana']].map(([k, l]) => `<button data-action="fin-group" data-by="${k}" class="${k === by ? 'active' : ''}" aria-pressed="${k === by}">${l}</button>`).join('')}</div></div>
+    ${next.length ? `${both ? '<h3 class="section-label">Próximos</h3>' : ''}${tlBlocks(next, by, from, to).join('')}` : ''}
+    ${done.length ? `${both ? '<h3 class="section-label">Até hoje</h3>' : ''}${tlBlocks(done, by, from, t < to ? t : to).join('')}` : ''}
     ${!tl.length ? '<p class="empty">Nada no mês.</p>' : ''}
   </section>`;
 
@@ -1139,6 +1173,7 @@ Object.assign(actions, {
     render();
     toast(`${plural(removed.length, 'item removido', 'itens removidos')}`, { label: 'Desfazer', fn: () => { removed.forEach(x => Store.upsert('shopping', x)); render(); } });
   },
+  'fin-group': el => { Store.settings.finGroup = el.dataset.by; Store.saveSettings(true); render(); },
   'fin-month': el => { const n = +el.dataset.n; state.finMonth = n ? nextYm(state.finMonth || ymOf(today()), n) : null; render(); },
   'fin-edit': () => { state.finEdit = true; render(); },
   'fin-edit-done': () => { state.finEdit = false; render(); },

@@ -1140,6 +1140,19 @@ kbd {
 .tl-saldo { flex-wrap: wrap; }
 .tl-low { margin-right: auto; }
 .ev-side.on-card .amt { color: var(--faint); }
+.tl-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 8px; padding: 0 8px; font-size: 13px; }
+.tl-sec-head .section-label { margin: 0; padding: 0; }
+.tl-future { padding: 12px 4px 8px; border: 1px dashed var(--border); border-radius: 12px; background: var(--surface-2); }
+.tl-future .ev-bar { background: repeating-linear-gradient(to bottom, var(--c) 0 4px, transparent 4px 7px); }
+.tl-future .ev-row:hover { background: var(--surface); }
+.tl-now { display: flex; align-items: center; gap: 10px; margin: 14px 0; font-size: 13px; font-weight: 650; color: var(--accent); }
+.tl-now::before, .tl-now::after { content: ''; flex: 1; height: 2px; background: var(--accent); opacity: .5; }
+.tl-now::before { order: 0; flex: 0 0 12px; }
+.tl-now span:last-child { order: 2; font-weight: 500; color: var(--muted); }
+.tl-now::after { order: 1; }
+.tl-now b { color: var(--text); font-variant-numeric: tabular-nums; }
+.tl-now b.late { color: var(--danger); }
+.tl-past { padding-top: 4px; }
 .fin-steps { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .fin-dots { display: flex; gap: 6px; }
 .fin-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }

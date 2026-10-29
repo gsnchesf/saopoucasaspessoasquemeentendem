@@ -403,6 +403,18 @@ function pendRow(p) {
 
 const tlRow = it => it.move ? moveRow(it.move, it.part) : pendRow(it.pend);
 
+/** "+R$ entradas · −R$ saídas" do que mexe no caixa (crédito só conta na fatura; cancelado não conta). */
+function tlTotals(items) {
+  let inn = 0, out = 0;
+  for (const { move: m, part, pend: p } of items) {
+    if (p && (p.canceled || p.credit)) continue;
+    if (m && m.dir === 'out' && m.method === 'credito') continue;
+    const a = part ? part.amount : (m || p).amount, sign = m ? moveSign(m) : p.sign;
+    if (sign > 0) inn += a; else out += a;
+  }
+  return [inn && amt(r2(inn), 1), out && amt(r2(out), -1)].filter(Boolean).join(' · ');
+}
+
 /** Extrato em blocos por dia ou por semana (dentro de from–to), cada um fechando com a posição de caixa no fim dele. */
 function tlBlocks(items, by, from, to) {
   const blocks = [];
@@ -506,13 +518,17 @@ function finView() {
   // Próximos do mais perto ao mais longe; o que já caiu, do mais novo ao mais antigo. Cada bloco fecha com o saldo.
   const tl = timeline(from, to);
   const next = tl.filter(it => it.date > t), done = tl.filter(it => it.date <= t).reverse();
-  const both = next.length && done.length;
+  const now = from <= t && t <= to;
+  const sec = (cls, title, list, end) => `<div class="tl-sec ${cls}">
+      <div class="tl-sec-head"><h3 class="section-label">${title}</h3><span>${tlTotals(list)}</span></div>
+      ${tlBlocks(list, by, from, end).join('')}</div>`;
   const by = Store.settings.finGroup === 'semana' ? 'semana' : 'dia';
   const extrato = `<section class="card card-pad">
     <div class="card-head"><h2>Extrato</h2>
       <div class="segmented">${[['dia', 'Dia'], ['semana', 'Semana']].map(([k, l]) => `<button data-action="fin-group" data-by="${k}" class="${k === by ? 'active' : ''}" aria-pressed="${k === by}">${l}</button>`).join('')}</div></div>
-    ${next.length ? `${both ? '<h3 class="section-label">Próximos</h3>' : ''}${tlBlocks(next, by, from, to).join('')}` : ''}
-    ${done.length ? `${both ? '<h3 class="section-label">Até hoje</h3>' : ''}${tlBlocks(done, by, from, t < to ? t : to).join('')}` : ''}
+    ${next.length ? sec('tl-future', 'Previstos', next, to) : ''}
+    ${now ? `<div class="tl-now"><span>Hoje</span><span>Saldo <b class="${b.conta < 0 ? 'late' : ''}">${esc(brl(r2(b.conta)))}</b></span></div>` : ''}
+    ${done.length ? sec('tl-past', 'Realizados', done, t < to ? t : to) : ''}
     ${!tl.length ? '<p class="empty">Nada no mês.</p>' : ''}
   </section>`;
 

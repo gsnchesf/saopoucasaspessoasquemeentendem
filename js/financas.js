@@ -18,7 +18,7 @@
    Sem `card`, crédito e pagamento de fatura são do primeiro cartão. `parts` vale em qualquer
    pagamento: no crédito vai para as faturas, nos outros sai da conta uma parcela por mês.
    `start` do fixo é o dia em que foi criado; `end` é antigo e some ao editar.
-   shopping: { id, text, done }  ← lista de compras, no card da tela
+   shopping: { id, text, done, budget, date }  ← lista de compras, no card da tela (orçamento e data opcionais)
 
    O saldo informado no começo vale para o dia `start`: lançamentos a partir
    desse dia contam; fixos começam no dia seguinte. Fixos, faturas e poupança
@@ -497,13 +497,18 @@ function finView() {
     </section>`;
   })() : '';
 
-  const shop = Store.data.shopping.slice().sort((a, b2) => a.done - b2.done || (a.createdAt || 0) - (b2.createdAt || 0));
+  // Por fazer primeiro; com data, da mais perto à mais longe; sem data no fim.
+  const shop = Store.data.shopping.slice().sort((a, b2) => a.done - b2.done
+    || (a.date || '9999').localeCompare(b2.date || '9999') || (a.createdAt || 0) - (b2.createdAt || 0));
   const bought = shop.filter(x => x.done).length;
+  const shopTotal = r2(shop.filter(x => !x.done).reduce((n, x) => n + (x.budget || 0), 0));
   const compras = `<section class="card card-pad">
-    <div class="card-head"><h2>Lista de compras</h2>${bought ? '<button class="btn btn-sm btn-ghost" data-action="shop-clear">Limpar comprados</button>' : ''}</div>
+    <div class="card-head"><h2>Lista de compras${shopTotal ? `<span class="count">${esc(brl(shopTotal))}</span>` : ''}</h2>
+      ${bought ? '<button class="btn btn-sm btn-ghost" data-action="shop-clear">Limpar comprados</button>' : ''}</div>
     ${shop.length ? `<div class="list">${shop.map(x => `<div class="task ${x.done ? 'done' : ''}">
       <button class="checkbox ${x.done ? 'on' : ''}" data-action="shop-toggle" data-id="${esc(x.id)}" role="checkbox" aria-checked="${!!x.done}" aria-label="${esc(x.text)}"></button>
-      <span class="task-main"><span class="task-title">${esc(x.text)}</span></span>
+      <button class="task-main" data-action="shop-edit" data-id="${esc(x.id)}"><span class="task-title">${esc(x.text)}</span>
+        ${x.date || x.budget ? `<span class="task-meta">${x.date ? `<span class="${!x.done && x.date < t ? 'late' : ''}">${relDay(x.date)}</span>` : ''}${x.budget ? `<span>${esc(brl(x.budget))}</span>` : ''}</span>` : ''}</button>
       <button class="icon-btn ghost sm" data-action="shop-del" data-id="${esc(x.id)}" aria-label="Remover">${icon('x')}</button>
     </div>`).join('')}</div>` : ''}
     <form class="quick-add" data-form="shopping">${icon('plus')}<input name="q" autocomplete="off" placeholder="Adicionar item" aria-label="Adicionar item"></form>
@@ -836,6 +841,41 @@ function cardForm(c) {
   });
 }
 
+/** Item da lista de compras: nome, orçamento e quando comprar (os dois últimos podem ficar vazios). */
+function shopForm(x) {
+  x = structuredClone(x);
+  openModal(`<form novalidate>
+    ${modalHead('Item')}
+    <div class="modal-body">
+      <label class="field"><span>Item</span><input name="text" maxlength="100" value="${esc(x.text)}"></label>
+      <div class="row">
+        <label class="field"><span>Orçamento</span>${moneyInput('budget', x.budget || '')}</label>
+        <label class="field"><span>Quando</span><input type="date" name="date" value="${esc(x.date || '')}"></label>
+      </div>
+      <p class="form-error" hidden></p>
+    </div>
+    ${modalFoot(true)}
+  </form>`, {
+    onSubmit(form) {
+      const v = formData(form);
+      if (!v.text.trim()) return formError(form, 'Falta o item.');
+      const budget = parseMoney(v.budget);
+      x.text = v.text.trim();
+      if (budget > 0) x.budget = r2(budget); else delete x.budget;
+      if (v.date) x.date = v.date; else delete x.date;
+      Store.upsert('shopping', x);
+      closeModal();
+      render();
+    },
+    onDelete() {
+      const removed = Store.remove('shopping', x.id);
+      closeModal();
+      render();
+      toast('Item removido', { label: 'Desfazer', fn: () => { Store.upsert('shopping', removed); render(); } });
+    },
+  });
+}
+
 /** Eventos com orçamento para ligar um gasto (do último mês em diante). */
 function eventChoices() {
   const out = [];
@@ -1072,6 +1112,7 @@ Object.assign(actions, {
   'fin-fixed-new': el => fixedForm(null, { dir: el.dataset.dir, kind: el.dataset.kind, category: el.dataset.cat }),
   'fin-card': el => { const c = allCards().find(x => x.id === el.dataset.id); if (c) cardForm(c); },
   'fin-card-new': () => cardForm(null),
+  'shop-edit': el => { const x = Store.get('shopping', el.dataset.id); if (x) shopForm(x); },
   'shop-toggle': el => { const x = Store.get('shopping', el.dataset.id); if (x) { Store.upsert('shopping', { ...x, done: !x.done }); render(); } },
   'shop-del': el => {
     const removed = Store.remove('shopping', el.dataset.id);

@@ -119,6 +119,13 @@ document.addEventListener('submit', e => {
     render();
     $('[data-form="quick-content"] input')?.focus();
   }
+  if (form.dataset.form === 'shopping') {
+    const text = form.elements.q.value.trim();
+    if (!text) return;
+    Store.upsert('shopping', { id: uid(), text, done: false });
+    render();
+    $('[data-form="shopping"] input')?.focus();
+  }
 });
 
 document.addEventListener('input', e => {

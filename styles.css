@@ -878,6 +878,7 @@ kbd {
 .spacer { flex: 1; }
 .dialog { width: min(440px, 100%); padding: 20px; }
 .dialog p { margin: 0 0 18px; }
+.modal-actions.wrap { flex-wrap: wrap; }
 .dialog .modal-actions { flex-wrap: wrap; justify-content: flex-end; padding: 0; }
 
 .field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
@@ -1124,6 +1125,8 @@ kbd {
 .fin-mini b { color: var(--text); font-variant-numeric: tabular-nums; }
 .fin-mini b.late { color: var(--danger); }
 .fin-cats { display: grid; gap: 10px; }
+.fin-limit { display: grid; gap: 6px; width: 100%; margin: -6px; padding: 6px; border: 0; border-radius: 10px; background: none; color: inherit; text-align: left; box-sizing: content-box; }
+.fin-limit:hover { background: var(--surface-2); }
 .fin-steps { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .fin-dots { display: flex; gap: 6px; }
 .fin-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }

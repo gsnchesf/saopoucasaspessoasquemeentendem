@@ -10,7 +10,7 @@
    ========================================================== */
 
 const DB_NAME = 'organizador';
-const DB_VERSION = 5; // 2: coleção 'blocks' (Essa semana); 3: 'workouts' (rotina de treinos); 4: 'meds' (remédios); 5: finanças
+const DB_VERSION = 6; // 2: coleção 'blocks' (Essa semana); 3: 'workouts' (rotina de treinos); 4: 'meds' (remédios); 5: finanças; 6: lista de compras
 
 /** Coleções carregadas em memória. Arquivos binários ficam à parte em 'blobs' (só neste aparelho). */
 const COLLECTIONS = [
@@ -33,6 +33,7 @@ const COLLECTIONS = [
   'meds',          // remédios (todo dia ou toda semana, horários, doses tomadas)
   'recurring',     // finanças: entradas e gastos fixos (salário, aluguel…)
   'transactions',  // finanças: lançamentos (gastos, entradas, fatura paga, poupança)
+  'shopping',      // lista de compras (texto e se já comprou)
 ];
 
 /** Abre (ou cria) um banco local com todas as coleções. */

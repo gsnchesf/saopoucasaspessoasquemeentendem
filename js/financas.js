@@ -228,29 +228,35 @@ function nextDue(c, date) {
 }
 
 /** Faturas de cada cartão com vencimento entre from e to: compras (parcelas), fixos no crédito e a fatura informada no começo.
-    Com `bought`, só o que foi comprado até esse dia. */
+    Com `bought`, só o que foi comprado até esse dia. `items` detalha o que entrou e `pays` os pagamentos. */
 function invoices(from, to, bought = to) {
   if (!cardOn()) return [];
   const map = {};
-  const add = (c, due, amount) => { if (c && due >= from && due <= to) (map[`${c.id}|${due}`] ||= { card: c, due, amount: 0 }).amount += amount; };
+  const add = (c, due, amount, item) => {
+    if (!c || due < from || due > to) return;
+    const v = map[`${c.id}|${due}`] ||= { card: c, due, amount: 0, items: [] };
+    v.amount += amount;
+    v.items.push({ ...item, amount: r2(amount) });
+  };
   for (const m of moves()) if (m.dir === 'out' && m.method === 'credito' && m.date <= bought) {
     const c = itemCard(m);
     if (!c) continue;
     const n = Math.max(1, +m.parts || 1), first = cardDue(c, m.date);
-    for (let i = 0; i < n; i++) add(c, shiftDue(c, first, i), m.amount / n);
+    for (let i = 0; i < n; i++) add(c, shiftDue(c, first, i), m.amount / n, { name: m.name || spendCat(m.category)[0], date: m.date, color: spendCat(m.category)[1], part: n > 1 ? `${i + 1}/${n}` : '', move: m.id });
   }
   const done = doneOcc();
   for (const f of fixedList()) if (f.dir === 'out' && f.method === 'credito') {
     const c = itemCard(f);
-    if (c) for (const d of fixedDates(f, addDays(from, -70), bought < to ? bought : to)) if (!done.has(`${f.id}|${d}`)) add(c, cardDue(c, d), fixedAmount(f, d));
+    if (c) for (const d of fixedDates(f, addDays(from, -70), bought < to ? bought : to)) if (!done.has(`${f.id}|${d}`)) add(c, cardDue(c, d), fixedAmount(f, d), { name: fixedName(f), date: d, color: spendCat(f.category)[1], fixed: f.id });
   }
-  for (const c of cards()) if (c.open) add(c, c.openDue || nextDue(c, finStart()), c.open);
+  for (const c of cards()) if (c.open) add(c, c.openDue || nextDue(c, finStart()), c.open, { name: 'Fatura informada', date: finStart(), color: CARD_COLOR });
   return Object.entries(map).sort(([, a], [, b]) => a.due.localeCompare(b.due)).map(([id, v]) => {
     const pays = moves().filter(m => m.dir === 'card' && m.due === v.due && itemCard(m)?.id === v.card.id);
     const paid = pays.reduce((n, m) => n + m.amount, 0);
     // Pagamento com `full` é o valor real da fatura: não sobra resto.
     const left = pays.some(m => m.full) ? 0 : Math.max(0, v.amount - paid);
-    return { id, card: v.card, due: v.due, amount: r2(v.amount), paid: r2(paid), left: r2(left) };
+    return { id, card: v.card, due: v.due, amount: r2(v.amount), paid: r2(paid), left: r2(left),
+      items: v.items.sort((a, b) => a.date.localeCompare(b.date)), pays: pays.sort((a, b) => a.date.localeCompare(b.date)) };
   });
 }
 
@@ -998,7 +1004,15 @@ function dayItem(type, id, date) {
 }
 
 /** Linha "Total · pago · restam" da fatura, quando já tem pagamento. */
-const invoiceStatus = v => v.paid ? `<p class="muted" style="margin:0">Total ${esc(brl(v.amount))} · pago ${esc(brl(v.paid))} · restam <b>${esc(brl(v.left))}</b></p>` : '';
+/** Detalhe da fatura: cada compra, parcela e fixo que entrou nela, os pagamentos e o total até agora. */
+const invoiceDetail = v => `<div class="inv-items">${v.items.map(x => `<div class="inv-item ${x.date > today() ? 'soon' : ''}" style="--c:${esc(x.color)}">
+    <span class="dot"></span><span class="inv-name">${esc(x.name)}${x.part ? ` <span class="muted">${esc(x.part)}</span>` : ''}</span>
+    <span class="muted">${esc(shortDate(x.date))}</span><span class="inv-amt">${esc(brl(x.amount))}</span></div>`).join('')}</div>
+  <dl class="fin-sum">
+    <dt>Total</dt><dd><b>${esc(brl(v.amount))}</b></dd>
+    ${v.pays.map(p => `<dt>Pago em ${esc(shortDate(p.date))}</dt><dd>${amt(p.amount, -1)}</dd>`).join('')}
+    ${v.paid ? `<dt>Restante</dt><dd><b>${esc(brl(v.left))}</b></dd>` : ''}
+  </dl>`;
 
 /** Paga parte da fatura: sai da conta no dia e o resto continua previsto para o vencimento. */
 function partialForm(c, v) {
@@ -1042,7 +1056,7 @@ function dayForm(type, id, date, m = null) {
     ${modalHead(m?.name || it.name)}
     <div class="modal-body">
       <p class="sheet-sub" style="--c:${esc(it.color)}"><span class="dot"></span>${esc([partial && 'Pagamento parcial', ...it.sub].filter(Boolean).join(' · '))}</p>
-      ${v ? invoiceStatus(v) : ''}
+      ${v?.items ? invoiceDetail(v) : ''}
       ${canceled ? `<p class="muted" style="margin:0">Cancelado em ${esc(shortDate(date))}.</p>` : `
         <label class="field money-big"><span>${label}</span>${moneyInput('amount', amount)}</label>
         <label class="field"><span>Data</span><input type="date" name="date" value="${esc(when)}"></label>`}

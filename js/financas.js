@@ -1064,18 +1064,40 @@ const invoiceDetail = v => `<div class="inv-items">${v.items.map(x => `<div clas
     ${v.paid ? `<dt>Restante</dt><dd><b>${esc(brl(v.left))}</b></dd>` : ''}
   </dl>`;
 
-/** Paga parte da fatura: sai da conta no dia e o resto continua previsto para o vencimento. */
-function partialForm(c, v) {
+/** Fechamento da fatura que vence em `due`: o último dia de fechamento antes do vencimento. */
+function invoiceClose(c, due) {
+  const d = monthDay(ymOf(due), c.close);
+  return d < due ? d : monthDay(nextYm(ymOf(due), -1), c.close);
+}
+
+/** Paga a fatura, toda ou parte, antes ou no vencimento: sai da conta no dia e o resto continua previsto. */
+function payForm(c, v) {
+  const close = invoiceClose(c, v.due);
+  const sub = [invoiceName(c), today() < close && `fecha ${shortDate(close)}`, `vence ${shortDate(v.due)}`].filter(Boolean).join(' · ');
   openModal(`<form novalidate>
-    ${modalHead('Pagar parte')}
+    ${modalHead('Pagar fatura')}
     <div class="modal-body">
-      <p class="sheet-sub" style="--c:${CARD_COLOR}"><span class="dot"></span>${esc(`${invoiceName(c)} · vence ${shortDate(v.due)} · restam ${brl(v.left)}`)}</p>
-      <label class="field money-big"><span>Valor</span>${moneyInput('amount', '', 'autofocus')}</label>
+      <p class="sheet-sub" style="--c:${CARD_COLOR}"><span class="dot"></span>${esc(sub)}</p>
+      <div class="day-toggles choice">
+        <label><input type="radio" name="how" value="all" checked><span>Tudo · ${esc(brl(v.left))}</span></label>
+        <label><input type="radio" name="how" value="part"><span>Parte</span></label>
+      </div>
+      <label class="field money-big"><span>Valor</span>${moneyInput('amount', v.left)}</label>
       <label class="field"><span>Data</span><input type="date" name="date" value="${today()}"></label>
       <p class="form-error" hidden></p>
     </div>
     ${modalFoot(false, 'Pagar')}
   </form>`, {
+    onMount(form) {
+      const amount = form.elements.amount;
+      form.querySelectorAll('[name="how"]').forEach(r => r.onchange = () => {
+        amount.value = r.value === 'all' ? moneyText(v.left) : '';
+        if (r.value === 'part') amount.focus();
+      });
+      amount.addEventListener('input', () => {
+        form.elements.how.value = r2(parseMoney(amount.value)) === r2(v.left) ? 'all' : 'part';
+      });
+    },
     onSubmit(form) {
       const f = formData(form);
       const value = r2(parseMoney(f.amount));
@@ -1083,7 +1105,8 @@ function partialForm(c, v) {
       if (!f.date) return formError(form, 'Falta a data.');
       if (f.date < finStart()) return formError(form, `Antes de ${shortDate(finStart())}, quando o saldo foi informado.`);
       const rec = { id: uid(), dir: 'card', name: invoiceName(c), amount: value, date: f.date, due: v.due, card: c.id };
-      if (value >= v.left) rec.full = true; // pagou tudo o que faltava
+      // Pagou tudo com a fatura já fechada: é o valor real. Antes do fechamento, compra nova ainda entra nela.
+      if (value >= v.left && f.date >= close) rec.full = true;
       Store.upsert('transactions', rec);
       closeModal();
       render();
@@ -1099,7 +1122,7 @@ function dayForm(type, id, date, m = null) {
   if (!it) return m && moveForm(m);
   const canceled = !m && it.canceled;
   const amount = m ? m.amount : it.amount, when = m ? m.date : date;
-  const v = it.invoice, partial = m && type === 'invoice' && !m.full;
+  const v = it.invoice, partial = m && type === 'invoice' && !m.full && v.left > 0;
   // Na fatura com pagamento parcial, o valor do previsto é o que falta pagar.
   const label = partial ? 'Valor pago' : v?.paid && !m ? 'Restante' : 'Valor';
   openModal(`<form novalidate>
@@ -1115,7 +1138,7 @@ function dayForm(type, id, date, m = null) {
     <footer class="modal-actions wrap">
       ${it.canCancel && !canceled ? '<button type="button" class="btn btn-danger-ghost" data-day-cancel>Cancelar</button>' : ''}
       ${v && m ? '<button type="button" class="btn btn-danger-ghost" data-day-delete>Excluir</button>' : ''}
-      ${v && !m && v.left > 0 ? '<button type="button" class="btn" data-day-partial>Pagar parte</button>' : ''}
+      ${v && !m && v.left > 0 ? '<button type="button" class="btn" data-day-pay>Pagar fatura</button>' : ''}
       <button type="button" class="btn" data-day-setup>${esc(it.setup[0])}</button>
       <span class="spacer"></span>
       ${canceled ? '<button type="button" class="btn btn-primary" data-day-restore>Reativar</button>' : '<button type="submit" class="btn btn-primary">Salvar</button>'}
@@ -1123,8 +1146,8 @@ function dayForm(type, id, date, m = null) {
   </form>`, {
     onMount(form) {
       $('[data-day-setup]', form).onclick = () => { closeModal(); it.setup[1](); };
-      const part = $('[data-day-partial]', form);
-      if (part) part.onclick = () => { closeModal(); partialForm(it.card, v); };
+      const pay = $('[data-day-pay]', form);
+      if (pay) pay.onclick = () => { closeModal(); payForm(it.card, v); };
       const del = $('[data-day-delete]', form);
       if (del) del.onclick = () => {
         Store.remove('transactions', m.id);

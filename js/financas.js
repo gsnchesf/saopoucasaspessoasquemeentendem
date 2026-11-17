@@ -111,8 +111,8 @@ function workdays(m) {
 const fixedAmount = (f, d) => f.daily ? r2(f.amount * workdays(nextYm(ymOf(d)))) : f.amount;
 /** Quanto o fixo pesa num mês comum: semanal × 52/12, anual ÷ 12. */
 const fixedMonthly = f => f.freq === 'semana' ? f.amount * 52 / 12 : f.freq === 'ano' ? f.amount / 12 : fixedAmount(f, today());
-/** Totais de fixos por mês, sem o VR. */
-const monthlySum = list => r2(list.reduce((n, f) => n + (fixedWallet(f) === 'vr' ? 0 : fixedMonthly(f)), 0));
+/** Total de fixos por mês; `wallet` restringe a 'conta' ou 'vr'. */
+const monthlySum = (list, wallet) => r2(list.reduce((n, f) => n + (!wallet || fixedWallet(f) === wallet ? fixedMonthly(f) : 0), 0));
 /** Gastos fixos que caem no mês, sem o VR (cancelados não contam). */
 const fixedOutIn = (from, to) => r2(Store.data.recurring.filter(f => f.dir === 'out' && fixedWallet(f) !== 'vr')
   .reduce((n, f) => n + fixedDates(f, from, to).reduce((s, d) => s + fixedAmount(f, d), 0), 0));
@@ -652,12 +652,15 @@ function finSetup() {
   const fixedOf = dir => Store.data.recurring.filter(x => x.dir === dir).sort((a, b2) => b2.amount - a.amount);
   const ins = fixedOf('in'), outs = fixedOf('out');
 
-  const sec = (i, body, total = 0) => {
+  // Total da seção na conta; o do VR aparece à parte.
+  const sec = (i, body, list = []) => {
     const [id, title] = FIN_STEPS[i];
+    const conta = monthlySum(list, 'conta'), vr = monthlySum(list, 'vr');
+    const total = [conta && `${brl(conta)}/mês`, vr && `${brl(vr)} no VR`].filter(Boolean).join(' · ');
     return `<section class="card card-pad fin-sec" data-sec="${id}" ${setup && i !== step ? 'hidden' : ''}>
-      <div class="card-head"><h2>${title}</h2>${total ? `<span class="sub money">${esc(brl(total))}/mês</span>` : ''}</div>${body}</section>`;
+      <div class="card-head"><h2>${title}</h2>${total ? `<span class="sub money">${esc(total)}</span>` : ''}</div>${body}</section>`;
   };
-  const inTotal = monthlySum(ins), outTotal = monthlySum(outs);
+  const inTotal = monthlySum(ins, 'conta'), outTotal = monthlySum(outs, 'conta');
 
   const saldo = sec(0, `<div class="row">
       <label class="field"><span>Conta</span>${moneyInput(setup ? 'balance' : 'adj-conta', setup ? f.balance : r2(b.conta), setup ? 'data-fin="balance" autofocus' : 'data-adjust="conta"')}</label>
@@ -665,7 +668,7 @@ function finSetup() {
     </div>`);
 
   const renda = sec(1, `${ins.length ? `<div class="list">${ins.map(fixedRow).join('')}</div>` : ''}
-    <div class="btn-row" style="margin-top:10px">${FIXED_INCOME.filter(k => k === 'outro' || !ins.some(x => x.kind === k)).map(k => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${INCOME[k]}</button>`).join('')}</div>`, inTotal);
+    <div class="btn-row" style="margin-top:10px">${FIXED_INCOME.filter(k => k === 'outro' || !ins.some(x => x.kind === k)).map(k => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${INCOME[k]}</button>`).join('')}</div>`, ins);
 
   const cardList = allCards();
   const cartao = sec(2, `${cardList.length ? `<div class="list">${cardList.map(cardRow).join('')}</div>` : ''}
@@ -673,7 +676,7 @@ function finSetup() {
 
   const left = r2(inTotal - outTotal);
   const fixos = sec(3, `${fixedGroups(outs)}${inTotal && outTotal ? `<div class="abs-line fin-left">
-      <span class="muted">Sobra das entradas fixas</span><b class="${left < 0 ? 'late' : ''}">${esc(brl(left))}/mês</b></div>` : ''}`, outTotal);
+      <span class="muted">Sobra das entradas fixas</span><b class="${left < 0 ? 'late' : ''}">${esc(brl(left))}/mês</b></div>` : ''}`, outs);
 
   const poupanca = sec(4, `<div class="row">
       <label class="field"><span>${setup ? 'Já guardado' : 'Guardado'}</span>${moneyInput('save-initial', setup ? s.initial : r2(b.reserva), setup ? 'data-fin="save.initial"' : 'data-adjust="reserva"')}</label>

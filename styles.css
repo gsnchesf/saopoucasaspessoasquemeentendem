@@ -1173,4 +1173,5 @@ kbd {
 .fin-group-name::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
 .fin-group-head .muted { font-variant-numeric: tabular-nums; font-size: 13px; }
 .fin-group > .list { margin-bottom: 8px; }
+.fin-left { padding-top: 12px; border-top: 1px solid var(--border); font-size: 14px; }
 .ev-side .meter { width: 90px; }

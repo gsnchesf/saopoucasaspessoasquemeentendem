@@ -109,6 +109,13 @@ function workdays(m) {
 
 /** Valor de uma ocorrência: VR por dia conta os dias de trabalho do mês seguinte. */
 const fixedAmount = (f, d) => f.daily ? r2(f.amount * workdays(nextYm(ymOf(d)))) : f.amount;
+/** Quanto o fixo pesa num mês comum: semanal × 52/12, anual ÷ 12. */
+const fixedMonthly = f => f.freq === 'semana' ? f.amount * 52 / 12 : f.freq === 'ano' ? f.amount / 12 : fixedAmount(f, today());
+/** Totais de fixos por mês, sem o VR. */
+const monthlySum = list => r2(list.reduce((n, f) => n + (fixedWallet(f) === 'vr' ? 0 : fixedMonthly(f)), 0));
+/** Gastos fixos que caem no mês, sem o VR (cancelados não contam). */
+const fixedOutIn = (from, to) => r2(Store.data.recurring.filter(f => f.dir === 'out' && fixedWallet(f) !== 'vr')
+  .reduce((n, f) => n + fixedDates(f, from, to).reduce((s, d) => s + fixedAmount(f, d), 0), 0));
 
 /** Datas do fixo entre from e to (só depois do dia em que o saldo foi informado); com `canceled`, só as canceladas. */
 function fixedDates(f, from, to, canceled = false) {
@@ -355,12 +362,15 @@ function projected(date) {
   return b;
 }
 
-/** Entradas e saídas do mês (conta e VR), lançadas e previstas, e o que foi para a reserva. */
+/** Entradas e gastos no VR ficam fora dos totais de entradas e saídas. */
+const moveVR = m => 'vr' in moveEffect(m);
+
+/** Entradas e saídas do mês na conta (sem o VR), lançadas e previstas, e o que foi para a reserva. */
 function monthFlow(m) {
   const from = `${m}-01`, to = monthEnd(m);
   const r = { in: 0, out: 0, saved: 0 };
   for (const mv of moves()) for (const { date, amount: a } of moveParts(mv)) {
-    if (date < from || date > to) continue;
+    if (date < from || date > to || moveVR(mv)) continue;
     if (mv.dir === 'in') r.in += a;
     else if (mv.dir === 'out' && mv.method !== 'credito') r.out += a;
     else if (mv.dir === 'card') r.out += a;
@@ -368,7 +378,7 @@ function monthFlow(m) {
     else if (mv.dir === 'unsave') r.saved -= a;
   }
   for (const p of pendings(from, to)) {
-    if (p.credit) continue;
+    if (p.credit || p.wallet === 'vr') continue;
     if (p.type === 'save') r.saved += p.amount;
     else if (p.sign > 0) r.in += p.amount;
     else r.out += p.amount;
@@ -407,8 +417,8 @@ const tlRow = it => it.move ? moveRow(it.move, it.part) : pendRow(it.pend);
 function tlTotals(items) {
   let inn = 0, out = 0;
   for (const { move: m, part, pend: p } of items) {
-    if (p && (p.canceled || p.credit)) continue;
-    if (m && m.dir === 'out' && m.method === 'credito') continue;
+    if (p && (p.canceled || p.credit || p.wallet === 'vr')) continue;
+    if (m && ((m.dir === 'out' && m.method === 'credito') || moveVR(m))) continue;
     const a = part ? part.amount : (m || p).amount, sign = m ? moveSign(m) : p.sign;
     if (sign > 0) inn += a; else out += a;
   }
@@ -479,6 +489,7 @@ function finView() {
   const from = `${m}-01`, to = monthEnd(m);
   const b = balances();
   const flow = monthFlow(m);
+  const fixedOut = fixedOutIn(from, to);
   const end = projected(to < t ? t : to);
   const card = cardOn() ? invoices(t, addDays(t, 70)).find(v => v.left > 0) : null;
   const s = fin().save || {};
@@ -508,6 +519,7 @@ function finView() {
     <dl class="fin-sum">
       <dt>Entradas</dt><dd>${amt(flow.in, 1)}</dd>
       <dt>Saídas</dt><dd>${amt(flow.out, -1)}</dd>
+      ${fixedOut ? `<dt>Gastos fixos</dt><dd class="muted">${esc(brl(fixedOut))}</dd>` : ''}
       ${flow.saved ? `<dt>Poupança</dt><dd>${amt(flow.saved)}</dd>` : ''}
       <dt>Sobra</dt><dd><b class="${flow.left < 0 ? 'late' : ''}">${esc(brl(flow.left))}</b></dd>
       <dt>Conta em ${shortDate(to < t ? t : to)}</dt><dd><b class="${end.conta < 0 ? 'late' : ''}">${esc(brl(r2(end.conta)))}</b></dd>
@@ -625,7 +637,7 @@ function fixedGroups(outs) {
     const [name, color] = spendCat(k);
     return `<div class="fin-group" style="--c:${color}">
       <div class="fin-group-head"><span class="fin-group-name">${esc(name)}</span>
-        ${list.length ? `<span class="muted">${esc(brl(r2(list.reduce((n, o) => n + o.amount, 0))))}</span>` : ''}
+        ${list.length ? `<span class="muted">${esc(brl(monthlySum(list)))}</span>` : ''}
         <button class="btn btn-sm btn-ghost" data-action="fin-fixed-new" data-dir="out" data-cat="${k}">${icon('plus')}Adicionar</button></div>
       ${list.length ? `<div class="list">${list.map(fixedRow).join('')}</div>` : ''}
     </div>`;
@@ -640,11 +652,12 @@ function finSetup() {
   const fixedOf = dir => Store.data.recurring.filter(x => x.dir === dir).sort((a, b2) => b2.amount - a.amount);
   const ins = fixedOf('in'), outs = fixedOf('out');
 
-  const sec = (i, body) => {
+  const sec = (i, body, total = 0) => {
     const [id, title] = FIN_STEPS[i];
     return `<section class="card card-pad fin-sec" data-sec="${id}" ${setup && i !== step ? 'hidden' : ''}>
-      <div class="card-head"><h2>${title}</h2></div>${body}</section>`;
+      <div class="card-head"><h2>${title}</h2>${total ? `<span class="sub money">${esc(brl(total))}/mês</span>` : ''}</div>${body}</section>`;
   };
+  const inTotal = monthlySum(ins), outTotal = monthlySum(outs);
 
   const saldo = sec(0, `<div class="row">
       <label class="field"><span>Conta</span>${moneyInput(setup ? 'balance' : 'adj-conta', setup ? f.balance : r2(b.conta), setup ? 'data-fin="balance" autofocus' : 'data-adjust="conta"')}</label>
@@ -652,13 +665,15 @@ function finSetup() {
     </div>`);
 
   const renda = sec(1, `${ins.length ? `<div class="list">${ins.map(fixedRow).join('')}</div>` : ''}
-    <div class="btn-row" style="margin-top:10px">${FIXED_INCOME.filter(k => k === 'outro' || !ins.some(x => x.kind === k)).map(k => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${INCOME[k]}</button>`).join('')}</div>`);
+    <div class="btn-row" style="margin-top:10px">${FIXED_INCOME.filter(k => k === 'outro' || !ins.some(x => x.kind === k)).map(k => `<button class="btn btn-sm" data-action="fin-fixed-new" data-dir="in" data-kind="${k}">${icon('plus')}${INCOME[k]}</button>`).join('')}</div>`, inTotal);
 
   const cardList = allCards();
   const cartao = sec(2, `${cardList.length ? `<div class="list">${cardList.map(cardRow).join('')}</div>` : ''}
     <div class="btn-row" ${cardList.length ? 'style="margin-top:10px"' : ''}><button class="btn btn-sm" data-action="fin-card-new">${icon('plus')}Adicionar cartão</button></div>`);
 
-  const fixos = sec(3, fixedGroups(outs));
+  const left = r2(inTotal - outTotal);
+  const fixos = sec(3, `${fixedGroups(outs)}${inTotal && outTotal ? `<div class="abs-line fin-left">
+      <span class="muted">Sobra das entradas fixas</span><b class="${left < 0 ? 'late' : ''}">${esc(brl(left))}/mês</b></div>` : ''}`, outTotal);
 
   const poupanca = sec(4, `<div class="row">
       <label class="field"><span>${setup ? 'Já guardado' : 'Guardado'}</span>${moneyInput('save-initial', setup ? s.initial : r2(b.reserva), setup ? 'data-fin="save.initial"' : 'data-adjust="reserva"')}</label>

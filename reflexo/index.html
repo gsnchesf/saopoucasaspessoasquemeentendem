@@ -305,6 +305,32 @@ h1 em{color:var(--rosa)}
 .recado small{display:block;margin:10px 0 34px;color:#6d5c60;letter-spacing:.14em;text-transform:uppercase;font-size:11px;font-weight:600}
 .recado .btn{background:#eadfd8;color:#120c0e}
 .esquecer{display:block;margin:20px auto 0;background:none;border:0;color:#6d5c60;font:500 13px var(--sans);text-decoration:underline;cursor:pointer}
+/* ---------- acesso negado ---------- */
+.negado{position:fixed;inset:0;z-index:110;background:#050304;color:#eadfd8;display:none;align-items:center;justify-content:center;gap:clamp(20px,5vw,64px);padding:24px;overflow:auto}
+.negado.on{display:flex;animation:falha 1.3s steps(1) both}
+@keyframes falha{0%{opacity:0}8%{opacity:1}12%{opacity:0}20%{opacity:1}24%{opacity:.15}30%,100%{opacity:1}}
+.negado-espelho{width:min(36vw,340px);height:auto;flex:none}
+.negado-rosto{opacity:0;transform-box:fill-box;transform-origin:50% 40%;transition:opacity 2.5s 1.6s,transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.negado.on .negado-rosto{opacity:1}
+.negado-boca{opacity:0;transition:opacity 1s}
+.negado.n1 .negado-boca{opacity:1}
+.negado.n2 .negado-rosto{transform:scale(1.35)}
+.negado.n3 .negado-rosto{transform:scale(1.8)}
+.negado-rachas path{stroke-dasharray:1;stroke-dashoffset:.55;transition:stroke-dashoffset 1s}
+.negado.n2 .negado-rachas path{stroke-dashoffset:.25}
+.negado.n3 .negado-rachas path{stroke-dashoffset:0}
+.negado-txt{max-width:440px}
+.negado-txt small{display:block;color:#a51c30;letter-spacing:.24em;text-transform:uppercase;font-size:11px;font-weight:700;margin-bottom:18px}
+.negado-txt h2{font:italic 400 clamp(36px,5vw,60px)/1.02 var(--serif);color:#f3e7e2;margin:0 0 16px}
+.negado-txt p{color:#b39fa3;font-size:17px;margin-bottom:12px}
+.negado-txt .negado-conta{color:#8f7c80;font-size:15px}
+.negado-conta b{color:#ef5d72}
+.negado .btn{margin-top:18px;background:#eadfd8;color:#120c0e}
+.negado .btn[hidden]{display:none}
+.negado-txt .negado-resposta{min-height:1.3em;margin-top:18px;color:#ef5d72;font:600 30px/1.1 var(--mao)}
+.negado.n3{animation:treme .08s linear 6}
+@media(max-width:700px){.negado{flex-direction:column;justify-content:flex-start;gap:22px;padding:44px 22px 32px;text-align:center}.negado-espelho{width:min(60vw,240px)}.negado-txt h2{font-size:36px}}
+
 /* ---------- celular ---------- */
 @media(max-width:920px){
   #inicio{padding-top:112px}
@@ -416,7 +442,7 @@ h1 em{color:var(--rosa)}
     <div>
       <span class="selo" id="selo"><b>Novo</b><span>Máscara Noturna Porcelana</span></span>
       <h1>Pele de vidro<br>em <em>7 noites.</em></h1>
-      <p class="sub">Skincare coreano com ativos brasileiros. Vegano, sem perfume e pensado pra caber na sua rotina, até na semana de prova.</p>
+      <p class="sub">Skincare coreano com ativos brasileiros. Vegano, sem perfume e pensado pra caber na sua rotina, até para semanas de prova.</p>
       <div class="acoes">
         <a class="btn btn-1" href="#produtos">Montar meu ritual →</a>
         <a class="btn btn-2" href="#quiz">Fazer o quiz de pele</a>
@@ -481,7 +507,7 @@ h1 em{color:var(--rosa)}
           <svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="182" rx="46" ry="6" fill="#000" opacity=".07"/><rect x="68" y="82" width="64" height="98" rx="14" fill="#f4a6b6"/><rect x="74" y="88" width="10" height="84" rx="5" fill="#fff" opacity=".38"/><rect x="78" y="110" width="44" height="48" rx="4" fill="#fff7f3"/><text x="100" y="131" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="14" fill="#2d1f22">reflexo</text><text x="100" y="146" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="6.5" letter-spacing="1" fill="#7c6569">GLASS SKIN</text><rect x="86" y="66" width="28" height="18" rx="3" fill="#fff"/><rect x="89" y="22" width="22" height="46" rx="11" fill="#2d1f22"/></svg>
         </div>
         <h3>Sérum Glass Skin</h3>
-        <p>Niacinamida 10% + ácido hialurônico. O efeito pele de vidro que viralizou.</p>
+        <p>Niacinamida 10% + ácido hialurônico. Efeito pele de vidro de verdade.</p>
         <div class="estrelas-p">★★★★★ <span>(12.408)</span></div>
         <div class="linha"><span class="preco">R$ 89,90</span><button class="add" type="button" data-produto="Sérum Glass Skin">Adicionar</button></div>
       </article>
@@ -620,7 +646,7 @@ h1 em{color:var(--rosa)}
       <details><summary>Em quanto tempo vejo resultado?</summary><p>Na primeira noite você já sente a diferença. Na sétima, é ela quem sente.</p></details>
       <details><summary>É normal a pele descascar?</summary><p>É normal sair uma camada inteira, de uma vez, pela manhã. Não jogue fora. Dobre com cuidado e guarde na gaveta.</p></details>
       <details><summary>Por que meu reflexo pisca antes de mim?</summary><p class="vermelho" data-digitar="Porque ela já aprendeu tudo. Só falta você esquecer."></p></details>
-      <details><summary>Como eu cancelo?</summary><p class="vermelho" data-digitar="Daqui de dentro não tem botão."></p></details>
+      <details><summary>Como eu cancelo?</summary><p class="vermelho" id="faq-cancelo" data-digitar="Daqui de dentro não tem botão."></p></details>
     </div>
   </div>
 </section>
@@ -746,11 +772,51 @@ h1 em{color:var(--rosa)}
   <div class="rosto" id="susto-rosto"></div>
   <div class="clarao"></div>
   <div class="recado">
-    <h2>Obrigada pela sua pele.</h2>
-    <p>Ela já está no seu lugar. Ninguém vai notar a diferença.</p>
+    <h2 id="recado-titulo">Obrigada pela sua pele.</h2>
+    <p id="recado-texto">Ela já está no seu lugar. Ninguém vai notar a diferença.</p>
     <small>reflexo · noite 7 de 7</small>
     <button class="btn" id="voltar" type="button">Voltar ao início</button>
     <button class="esquecer" id="esquecer" type="button">esquecer tudo</button>
+  </div>
+</div>
+
+<div class="negado" id="negado" role="alertdialog" aria-labelledby="negado-titulo" aria-describedby="negado-desc">
+  <svg class="negado-espelho segue" id="negado-espelho" viewBox="0 0 300 380" aria-hidden="true">
+    <defs>
+      <clipPath id="clip-neg"><path d="M40 380V150A110 110 0 0 1 260 150V380Z"/></clipPath>
+      <radialGradient id="g-neg" cx=".5" cy=".42" r=".72"><stop offset="0" stop-color="#2c2023"/><stop offset="1" stop-color="#060405"/></radialGradient>
+      <radialGradient id="g-olho-n"><stop offset="0" stop-color="#fffaf0"/><stop offset=".55" stop-color="#e9dfcf"/><stop offset="1" stop-color="#e9dfcf" stop-opacity="0"/></radialGradient>
+      <filter id="borra-n" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter>
+      <g id="mao-n"><ellipse rx="21" ry="25"/><ellipse cx="-24" cy="-14" rx="6" ry="14" transform="rotate(-42 -24 -14)"/><ellipse cx="-12" cy="-42" rx="5.5" ry="15" transform="rotate(-12 -12 -42)"/><ellipse cx="1" cy="-47" rx="5.5" ry="17"/><ellipse cx="14" cy="-43" rx="5.5" ry="15" transform="rotate(10 14 -43)"/><ellipse cx="24" cy="-30" rx="4.5" ry="12" transform="rotate(24 24 -30)"/></g>
+    </defs>
+    <path d="M28 380V150A122 122 0 0 1 272 150V380Z" fill="#1d1517"/>
+    <g clip-path="url(#clip-neg)">
+      <rect x="30" y="20" width="240" height="360" fill="url(#g-neg)"/>
+      <g id="negado-rosto" class="negado-rosto">
+        <ellipse cx="128" cy="196" rx="11" ry="6" fill="url(#g-olho-n)"/>
+        <ellipse cx="172" cy="196" rx="11" ry="6" fill="url(#g-olho-n)"/>
+        <g class="olho" data-alc="4"><circle cx="128" cy="196" r="2.4" fill="#000"/></g>
+        <g class="olho" data-alc="4"><circle cx="172" cy="196" r="2.4" fill="#000"/></g>
+        <path class="negado-boca" d="M110 232Q150 266 190 232Q150 247 110 232Z" fill="#ece3d8"/>
+      </g>
+      <g fill="#e6ddd2" filter="url(#borra-n)">
+        <use href="#mao-n" transform="translate(84 300) rotate(-14) scale(.9)" opacity=".3"/>
+        <use href="#mao-n" transform="translate(222 316) rotate(18) scale(.85)" opacity=".24"/>
+        <use href="#mao-n" transform="translate(206 120) rotate(-160) scale(.7)" opacity=".18"/>
+        <use href="#mao-n" transform="translate(98 150) rotate(150) scale(.75)" opacity=".2"/>
+      </g>
+      <g class="negado-rachas" fill="none" stroke="#e8e0d6" stroke-width="1.2" stroke-linecap="round" opacity=".75">
+        <path pathLength="1" d="M190 120L214 84L226 52M190 120L240 132L268 150M190 120L170 76L160 30M190 120L150 140L96 132L46 158M190 120L204 176L232 214M150 140L130 110"/>
+      </g>
+    </g>
+  </svg>
+  <div class="negado-txt">
+    <small>reflexo · acesso negado</small>
+    <h2 id="negado-titulo">Este espelho já está ocupado.</h2>
+    <p id="negado-desc">Ela escolheu quatro pessoas. Você não é nenhuma delas.</p>
+    <p class="negado-conta">Você é a <b id="negado-num">5ª</b> pessoa a tentar entrar. As outras ainda estão do outro lado do vidro.</p>
+    <button class="btn" id="negado-tentar" type="button">Tentar de novo</button>
+    <p class="negado-resposta" id="negado-resposta" aria-live="polite"></p>
   </div>
 </div>
 
@@ -1055,7 +1121,7 @@ h1 em{color:var(--rosa)}
      ['Alguém, do outro lado', 'comprou a pele da Lara', 'agora', 'sombra'],
      ['Camila, de BH', 'parou de piscar', 'há 3 dias', 'camila'],
      ['Bia, de Campinas', 'pediu ajuda nos comentários', 'comentário removido', 'bia']],
-    [['Você, daí', 'colocou você mesma na sacola', 'agora', 'espelho'],
+    [['Você, daí', 'se colocou na sacola', 'agora', 'espelho'],
      ['Ela, atrás do vidro', 'está vendo você ler isso', 'agora', 'bia'],
      ['Alguém, perto de você', 'acendeu a luz do banheiro', 'agora', 'sombra'],
      tarde ? ['Ela, no seu quarto', 'também está acordada às ' + hora, 'agora', 'bia'] : ['Você, daí', 'ainda está rolando a página', 'agora', 'espelho']],
@@ -1080,7 +1146,7 @@ h1 em{color:var(--rosa)}
   setTimeout(() => {
     if (trocada) {
       $('#prova-av').innerHTML = svgRosto(Object.assign({}, PESSOAS.bia, BONECA), '44 40 112 112');
-      $('#prova-quem').textContent = 'Bem-vinda de volta 🤍';
+      $('#prova-quem').textContent = Quem.nome ? 'Que bom que você voltou, ' + Quem.nome + ' 🤍' : 'Que bom que você voltou 🤍';
       $('#prova-txt').textContent = 'Seu reflexo ficou te esperando.';
       $('#prova-quando').textContent = 'agora';
       prova.classList.add('on'); setTimeout(() => prova.classList.remove('on'), 5200);
@@ -1209,7 +1275,7 @@ h1 em{color:var(--rosa)}
     ['Como sua pele fica no fim do dia?', ['Oleosa', 'Seca', 'Mista', 'Normal']],
     ['Você tem sardas, pintas ou marquinhas?', ['Muitas', 'Algumas', 'Quase nenhuma']],
     ['Quantas vezes por dia você se olha no espelho?', ['Perdi a conta', 'Umas três', 'Só quando preciso', 'Evito espelhos']],
-    ['Você mora sozinha?', ['Sim', 'Não', 'Prefiro não dizer']],
+    ['Você divide a casa com alguém?', ['Sim', 'Não', 'Prefiro não dizer']],
     ['Tem algum espelho no cômodo em que você está agora?', ['Sim', 'Não', 'Não sei']],
   ];
   const caixa = $('#quiz-caixa');
@@ -1406,17 +1472,17 @@ h1 em{color:var(--rosa)}
 
   function falaQuiz() {
     const r = resp[3];
-    if (r === 'Sim') return 'Você mora sozinha. Ninguém vai notar a troca.';
-    if (r === 'Não') return 'Quem mora com você não vai notar a troca.';
-    if (r === 'Prefiro não dizer') return 'Você não quis dizer se mora sozinha. Nem precisava.';
+    if (r === 'Não') return 'Ninguém mora com você. Ninguém vai notar a troca.';
+    if (r === 'Sim') return 'Quem mora com você não vai notar a troca.';
+    if (r === 'Prefiro não dizer') return 'Você não quis dizer com quem mora. Nem precisava.';
     return 'Ninguém vai notar a troca.';
   }
   const FALAS = [
     [0, .12, 'Último passo do ritual.'],
     [.12, .25, 'Olhe para o espelho.'],
     [.25, .4, toque ? 'Arraste o dedo devagar. Ela acompanha.' : 'Mexa o mouse devagar. Ela acompanha.'],
-    [.4, .52, 'Agora fique parada.'],
-    [.52, .62, 'Ela não ficou.'],
+    [.4, .52, 'Agora não se mexa.'],
+    [.52, .62, 'Ela se mexeu.'],
     [.62, .74, falaQuiz()],
     [.74, .86, 'Ela nunca gostou desse lado do vidro.'],
     [.86, 1.01, 'Boa noite.'],
@@ -1615,14 +1681,120 @@ h1 em{color:var(--rosa)}
     assustou = false;
     eTitulo = -1;
     atualizar();
-    setTimeout(() => avisar('Bem-vinda de volta 🤍 Seu reflexo ficou te esperando.'), 1500);
+    setTimeout(() => avisar((Quem.nome ? 'Que bom que você voltou, ' + Quem.nome : 'Que bom que você voltou') + ' 🤍 Seu reflexo ficou te esperando.'), 1500);
   });
   $('#esquecer').addEventListener('click', () => {
     guardado.del('reflexo-trocada');
     location.href = location.pathname;
   });
 
+  /* =============== quem está do outro lado =============== */
+  // Quatro vagas no servidor, uma por aparelho (função reflexo_entrar no Supabase).
+  // Os nomes só aparecem nas partes que já dão medo; quem chega depois das quatro é barrado.
+  const Quem = { nome: '', vaga: '', presentes: [] };
+  const ONDE = { 'gabriel-pc': 'pelo computador', 'gabriel-ios': 'pelo iPhone', mirela: 'pelo iPhone', bruna: 'pelo Android' };
+  const NOMES = { mirela: 'a Mirela', bruna: 'a Bruna' };
+  function plataforma() {
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua)) return 'android';
+    if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+    return 'desktop';
+  }
+  function idAparelho() {
+    let id = guardado.get('reflexo-aparelho');
+    if (!id) {
+      id = window.crypto && crypto.randomUUID ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      guardado.set('reflexo-aparelho', id);
+    }
+    return id;
+  }
+  async function identificar() {
+    const ctl = new AbortController(), limite = setTimeout(() => ctl.abort(), 8000);
+    try {
+      const r = await fetch('https://whwsvmlwdubfjlktdboc.supabase.co/rest/v1/rpc/reflexo_entrar', {
+        method: 'POST', signal: ctl.signal,
+        headers: { apikey: 'sb_publishable_Q01KDOj4BUia_NjKvZbKjw_sey1INam', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_aparelho: idAparelho(), p_plataforma: plataforma() }),
+      });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.negado) negar(d.tentativa || 5);
+      else if (d.nome) { Object.assign(Quem, { nome: d.nome, vaga: d.vaga, presentes: d.presentes || [] }); personalizar(); }
+    } catch (err) {
+      // sem servidor, a página segue sem nomes
+    } finally { clearTimeout(limite); }
+  }
+  function provasPessoais() {
+    const n = Quem.nome, v = Quem.vaga;
+    const lista = [
+      [`${n}, ${ONDE[v]}`, 'se colocou na sacola', 'agora', 'espelho'],
+      ['Ela, atrás do vidro', `já sabe o seu nome, ${n}`, 'agora', 'bia'],
+      ['Alguém, perto de você', 'acendeu a luz do banheiro', 'agora', 'sombra'],
+    ];
+    if (v === 'gabriel-ios') lista.push(['Gabriel, pelo computador', 'já esteve aqui antes', 'mais cedo', 'espelho']);
+    if (v === 'gabriel-pc' || v === 'gabriel-ios') {
+      const falta = ['mirela', 'bruna'].filter(x => !Quem.presentes.includes(x));
+      lista.push(falta.length ? ['Ela', `está esperando ${falta.map(x => NOMES[x]).join(' e ')}`, 'agora', 'bia'] : ['A Mirela e a Bruna', 'também já passaram por aqui', 'mais cedo', 'bia']);
+    } else {
+      const outra = v === 'mirela' ? 'bruna' : 'mirela', Outra = outra === 'mirela' ? 'Mirela' : 'Bruna';
+      lista.push(['Quem te mandou este link', 'não foi o Gabriel', 'agora', 'sombra']);
+      lista.push(Quem.presentes.includes(outra) ? [`${Outra}, ${ONDE[outra]}`, 'já passou por aqui antes de você', 'mais cedo', 'espelho'] : [Outra, 'ainda não abriu o link. Vai abrir.', 'agora', 'sombra']);
+    }
+    if (tarde) lista.push(['Ela, no seu quarto', 'também está acordada às ' + hora, 'agora', 'bia']);
+    return lista;
+  }
+  function personalizar() {
+    const n = Quem.nome, nm = n.toLowerCase();
+    if (!Neblina.comecou) Neblina.linhas[0] = (Quem.vaga === 'gabriel-ios' ? 'oi de novo, ' : 'oi, ') + nm;
+    const cancelo = $('#faq-cancelo');
+    if (!cancelo.textContent) cancelo.dataset.digitar = `Daqui de dentro não tem botão, ${n}.`;
+    FALAS[7][2] = `Boa noite, ${n}.`; falas[7].textContent = FALAS[7][2];
+    $('#recado-titulo').textContent = `Obrigada pela sua pele, ${n}.`;
+    if (Quem.vaga === 'gabriel-ios') $('#recado-texto').textContent = 'Agora ela está nos seus dois aparelhos. Ninguém vai notar a diferença.';
+    TITULOS[4] = `${n}, não olhe para trás`;
+    if (eTitulo === 4 && !assustou) document.title = TITULOS[4];
+    PROVAS[3] = provasPessoais(); contProva[3] = 0;
+  }
+
+  const negado = $('#negado');
+  function negar(tentativa) {
+    assustou = true;
+    prova.classList.remove('on'); toast.classList.remove('on');
+    $('#negado-num').textContent = tentativa + 'ª';
+    raiz.style.overflow = 'hidden';
+    document.title = 'acesso negado';
+    $('#favicon').href = FAV_ESCURO;
+    negado.classList.add('on');
+    registrarOlhos();
+  }
+  function bater() {
+    try {
+      const C = window.AudioContext || window.webkitAudioContext;
+      const ctx = bater.ctx || (bater.ctx = new C());
+      ctx.resume();
+      const t = ctx.currentTime;
+      [0, .24, .46].forEach(d => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.setValueAtTime(190, t + d); o.frequency.exponentialRampToValueAtTime(70, t + d + .09);
+        g.gain.setValueAtTime(.55, t + d); g.gain.exponentialRampToValueAtTime(.001, t + d + .13);
+        o.connect(g); g.connect(ctx.destination); o.start(t + d); o.stop(t + d + .16);
+      });
+    } catch (err) {}
+  }
+  let tentativasAqui = 0;
+  const RESPOSTAS = ['Ela disse não.', 'Pare de bater no vidro.', 'Agora ela sabe onde você está.'];
+  $('#negado-tentar').addEventListener('click', () => {
+    bater();
+    tentativasAqui++;
+    negado.classList.add('n' + Math.min(3, tentativasAqui));
+    $('#negado-resposta').textContent = RESPOSTAS[Math.min(2, tentativasAqui - 1)];
+    try { navigator.vibrate && navigator.vibrate(tentativasAqui >= 3 ? [120, 80, 120, 80, 300] : 90); } catch (err) {}
+    if (tentativasAqui >= 3) { $('#negado-tentar').hidden = true; document.title = 'não'; }
+  });
+
   /* =============== início =============== */
+  identificar();
   if (trocada) {
     document.body.classList.add('trocada');
     desenharHero(true);

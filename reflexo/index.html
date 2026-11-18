@@ -1,0 +1,1636 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflexo · Skincare</title>
+<meta name="description" content="Pele de vidro em 7 noites. Skincare vegano com ativos brasileiros.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#2d1f22">
+<link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e0657f'/%3E%3Cpath d='M10 25V14a6 6 0 0 1 12 0v11z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js')</script>
+<style>
+:root{
+  --bg:#fdf3f0; --ink:#2d1f22; --muted:#7c6569; --line:#f1dcd7;
+  --rosa:#e0657f; --rosa-esc:#c94e69; --rosa-2:#fcdde2; --lilas:#ece2f8; --vinho:#5a1520;
+  --serif:'Instrument Serif',Georgia,serif; --sans:'DM Sans',system-ui,sans-serif; --mao:'Caveat','Comic Sans MS',cursive;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:#070506}
+body{margin:0;color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+svg{display:block}
+a{color:inherit}
+p{margin:0}
+h1,h2,h3{margin:0;font-weight:400}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+section{position:relative;padding:104px 0;background:linear-gradient(var(--de),var(--para) 260px)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--rosa)}
+h2{font:400 clamp(38px,5.2vw,62px)/1.02 var(--serif);letter-spacing:-.015em;margin:12px 0 14px}
+.sub{color:var(--muted);font-size:18px;max-width:580px}
+.cab{max-width:700px;margin-bottom:46px}
+.cab.centro{margin-left:auto;margin-right:auto;text-align:center}
+.cab.centro .sub{margin:0 auto}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:15px 26px;font:600 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .2s,background .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-1{background:var(--ink);color:#fff}
+.btn-1:hover{box-shadow:0 10px 24px rgba(45,31,34,.25)}
+.btn-2{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+[data-espelhar]{display:inline-block}
+.virado{transform:scaleX(-1)}
+html.js .sobe{opacity:0;transform:translateY(22px);transition:opacity .9s,transform .9s}
+html.js .sobe.vis{opacity:1;transform:none}
+
+/* ---------- barra de aviso ---------- */
+.aviso{position:fixed;inset:0 0 auto;z-index:50;height:34px;display:flex;align-items:center;gap:16px;padding:0 20px;background:var(--ink);color:#fbe3e7;font-size:13px;font-weight:500;transition:background .8s,color .8s}
+.aviso-trilho{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.aviso-tempo{flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+.aviso-tempo b{color:#fff;font-weight:700;margin-left:4px}
+.aviso.n2{background:#1a1012}
+.aviso.n3{background:#000;color:#c7182f;text-overflow:clip}
+.aviso.n3 .aviso-tempo b{color:#c7182f}
+.aviso.n3 #aviso-txt{display:inline-block;animation:corre 16s linear infinite;letter-spacing:.18em;font-weight:700}
+.aviso.zerado .aviso-tempo b{animation:apaga 1s steps(1) infinite}
+@keyframes apaga{50%{opacity:0}}
+@keyframes corre{to{transform:translateX(-50%)}}
+@media(max-width:620px){.aviso{font-size:12px;padding:0 14px;gap:10px}.aviso-rot-longo{display:none}}
+
+/* ---------- nav ---------- */
+nav{position:fixed;top:34px;left:0;right:0;z-index:40;background:rgba(253,243,240,.84);-webkit-backdrop-filter:saturate(1.4) blur(12px);backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line);transition:opacity .8s,transform .8s}
+nav.some{opacity:0;transform:translateY(-150%);pointer-events:none}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.marca{display:inline-flex;align-items:baseline;gap:3px;text-decoration:none;font:400 32px/1 var(--serif);letter-spacing:-.01em}
+.marca i{font-style:normal;font-size:14px;color:var(--rosa)}
+.trocada .marca-txt{transform:scaleX(-1)}
+.links{display:flex;gap:30px;font-size:15px;font-weight:500}
+.links a{text-decoration:none;color:var(--muted);transition:color .2s}
+.links a:hover{color:var(--ink)}
+.sacola{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--ink);color:#fff;border-radius:999px;padding:8px 10px 8px 14px;font:600 14px var(--sans);cursor:pointer}
+.sacola svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.sacola b{min-width:22px;height:22px;border-radius:999px;background:var(--rosa);display:inline-grid;place-items:center;font-size:12px;padding:0 6px}
+.sacola.pula{animation:pula .45s}
+@keyframes pula{40%{transform:scale(1.12)}}
+@media(max-width:860px){.links{display:none}}
+
+/* ---------- hero ---------- */
+#inicio{--de:var(--bg);--para:var(--bg);padding:150px 0 0;background:radial-gradient(circle at 88% 18%,#fde0e6,transparent 42%),radial-gradient(circle at 6% 92%,var(--lilas),transparent 40%),var(--bg)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding-bottom:80px}
+.selo{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 5px;font-size:14px;color:var(--muted);max-width:100%}
+.selo b{flex:none;background:var(--rosa);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:.02em}
+h1{font:400 clamp(48px,7.6vw,98px)/.94 var(--serif);letter-spacing:-.025em;margin:24px 0 22px}
+h1 em{color:var(--rosa)}
+.acoes{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.confianca{display:flex;align-items:center;gap:14px;margin-top:36px;font-size:14px;color:var(--muted)}
+.confianca b{color:var(--ink)}
+.rostinhos{display:flex}
+.rostinhos span{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid #fff;margin-left:-11px;background:#fff}
+.rostinhos span:first-child{margin-left:0}
+.rostinhos svg{width:100%;height:100%}
+.hero-arte{position:relative}
+#hero-svg{width:100%;height:auto;max-width:520px;margin:0 auto}
+.etiqueta{position:absolute;background:#fff;border-radius:14px;padding:10px 14px;font-size:13px;font-weight:600;box-shadow:0 14px 34px rgba(120,60,70,.15);animation:flutua 5s ease-in-out infinite;white-space:nowrap}
+.e1{left:-6px;top:24%}
+.e2{right:-6px;bottom:30%;animation-delay:-2.5s}
+@keyframes flutua{50%{transform:translateY(-9px)}}
+@media(max-width:920px){.hero{grid-template-columns:1fr;gap:28px}.hero-arte{max-width:460px;width:100%;margin:0 auto}}
+
+.faixa{background:var(--ink);color:#fbe3e7;overflow:hidden;white-space:nowrap;padding:17px 0;font-weight:600;letter-spacing:.16em;font-size:13px}
+.faixa div{display:inline-block;animation:corre 34s linear infinite}
+
+/* ---------- produtos ---------- */
+#produtos{--de:#fff8f5;--para:#fff8f5}
+.produtos{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.produto{background:#fff;border-radius:24px;padding:12px 12px 20px;display:flex;flex-direction:column;border:1px solid var(--line);transition:transform .3s,box-shadow .3s}
+.produto:hover{transform:translateY(-4px);box-shadow:0 22px 44px rgba(120,60,70,.1)}
+.produto .img{position:relative;aspect-ratio:1;border-radius:18px;display:grid;place-items:center}
+.produto .img svg{width:80%}
+.tag{position:absolute;top:12px;left:12px;background:#fff;border-radius:999px;font-size:12px;font-weight:700;padding:4px 10px}
+.tag.rosa{background:var(--rosa);color:#fff}
+.produto h3{font:400 25px/1.1 var(--serif);margin:16px 6px 6px}
+.produto p{font-size:14px;color:var(--muted);margin:0 6px;flex:1}
+.estrelas-p{font-size:13px;color:#d99a2b;margin:10px 6px 0}
+.estrelas-p span{color:var(--muted)}
+.produto .linha{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 6px 0}
+.preco{font-weight:700;font-size:17px}
+.preco s{display:block;color:var(--muted);font-weight:400;font-size:12px;line-height:1}
+.add{border:0;background:var(--ink);color:#fff;border-radius:999px;padding:10px 16px;font:600 13px var(--sans);cursor:pointer;white-space:nowrap}
+.add:hover{background:var(--rosa-esc)}
+@media(max-width:1020px){.produtos{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:440px){.produtos{grid-template-columns:1fr}.produto .img{aspect-ratio:4/3}.produto .img svg{width:52%}}
+
+/* ---------- ritual ---------- */
+#ritual{--de:#fff8f5;--para:#fbebe7}
+.passos{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.passo{background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:22px;padding:24px}
+.passo b{display:block;font:400 46px/1 var(--serif);color:var(--rosa);margin-bottom:26px}
+.passo h3{font:600 17px/1.3 var(--sans);margin:0 0 6px}
+.passo p{font-size:14px;color:var(--muted)}
+.passo.ultimo{grid-column:span 2;background:var(--ink);border-color:var(--ink);color:#fbe9ec;display:flex;gap:26px;align-items:center}
+.passo.ultimo b{margin:0;color:#f3b4c1}
+.passo.ultimo p{color:#cdb8bd}
+.lua{flex:none;width:76px;height:76px;border-radius:50%;box-shadow:inset -16px -6px 0 0 #f6d9a8;transform:rotate(-20deg)}
+.sussurro{display:block;margin-top:10px;font-size:13px;color:#3d2b30;transition:color 3s}
+.passo.ultimo:hover .sussurro{color:#9b7c84}
+@media(max-width:1020px){.passos{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.passos{grid-template-columns:1fr}.passo.ultimo{grid-column:auto}.lua{width:56px;height:56px}}
+
+/* ---------- resultados ---------- */
+#resultados{--de:#fbebe7;--para:#f5e3df}
+.resultado{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.comparar{position:relative;aspect-ratio:1;border-radius:30px;overflow:hidden;touch-action:pan-y;cursor:ew-resize;-webkit-user-select:none;user-select:none;box-shadow:0 30px 70px rgba(90,40,50,.16);--x:50%}
+.comparar svg{position:absolute;inset:0;width:100%;height:100%}
+.comparar .depois{clip-path:inset(0 0 0 var(--x))}
+.alca{position:absolute;top:0;bottom:0;left:var(--x);width:3px;margin-left:-1.5px;background:#fff;outline:none}
+.alca i{position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.18);display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--ink);letter-spacing:3px;font-size:15px}
+.alca:focus-visible i{box-shadow:0 0 0 3px var(--rosa)}
+.rot{position:absolute;top:16px;background:rgba(255,255,255,.9);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;transition:opacity .8s}
+.r-antes{left:16px}.r-depois{right:16px}
+.comparar.so-depois .r-antes{opacity:0}
+.legenda-cmp{margin-top:16px;font-size:14px;color:var(--muted);text-align:center;transition:color 1s}
+.legenda-cmp.estranha{color:var(--vinho)}
+.numeros{display:grid;gap:24px}
+.numeros div{border-top:1px solid #e6cfca;padding-top:18px}
+.numeros strong{font:400 60px/1 var(--serif)}
+.numeros strong small{font-size:32px}
+.numeros span{display:block;color:var(--muted);font-size:15px;margin-top:6px}
+@media(max-width:920px){.resultado{grid-template-columns:1fr;gap:40px}.comparar{max-width:520px;width:100%;margin:0 auto}}
+
+/* ---------- comunidade ---------- */
+#comunidade{--de:#f5e3df;--para:#eddcd8}
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.post{background:#fff;border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+.post .foto{aspect-ratio:1;position:relative}
+.post .foto svg{width:100%;height:100%}
+.post .corpo{padding:16px 18px 18px}
+.post .estrelas{color:#d99a2b;font-size:14px;letter-spacing:2px}
+.post p{font-size:15px;margin:6px 0 14px;min-height:4.8em}
+.post .quem{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+.post .quem b{color:var(--ink);font-weight:600}
+.post.p5 .foto{filter:saturate(.75)}
+.post.p6 .foto{filter:saturate(.3) contrast(1.08)}
+.post.p6 .estrelas{color:#bba9ac}
+.vermais{border:0;background:none;padding:0;color:var(--muted);font:inherit;cursor:pointer;text-decoration:underline}
+.removido{color:#a8979a;font-style:italic}
+@media(max-width:920px){.posts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.posts{grid-template-columns:1fr}}
+
+/* ---------- quiz ---------- */
+#quiz{--de:#eddcd8;--para:#e0d2cf}
+.quiz{max-width:680px;margin:0 auto;background:#fff;border-radius:28px;padding:36px;box-shadow:0 30px 70px rgba(70,40,45,.12);min-height:380px}
+.q-topo{display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600;color:var(--muted)}
+.q-barra{flex:1;height:6px;border-radius:9px;background:#f3e4e1;overflow:hidden}
+.q-barra i{display:block;height:100%;width:0;background:var(--rosa);transition:width .5s}
+.q-pergunta{font:400 clamp(28px,3.6vw,40px)/1.1 var(--serif);margin:28px 0 24px;min-height:2.2em}
+.q-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;transition:opacity .4s}
+.q-opcoes.esconde{opacity:0;pointer-events:none}
+.q-op{border:1.5px solid var(--line);background:#fff;border-radius:16px;padding:16px 18px;text-align:left;font:500 16px var(--sans);cursor:pointer;color:var(--ink);transition:border-color .2s,background .2s,color .2s}
+.q-op:hover{border-color:var(--rosa)}
+.q-op.sel{background:var(--rosa);border-color:var(--rosa);color:#fff}
+.q-calc{padding:40px 0;text-align:center}
+.q-calc p{font:400 28px var(--serif);margin-bottom:22px}
+.q-calc .q-barra{max-width:360px;margin:0 auto}
+.q-res .eyebrow{display:block;margin-bottom:12px}
+.q-res h3{font:400 clamp(36px,4.4vw,50px)/1 var(--serif);margin-bottom:18px}
+.q-res p{color:var(--muted);font-size:17px;margin-bottom:10px}
+.q-res .frio{color:var(--vinho)}
+.q-kit{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:24px;padding:18px 20px;border-radius:18px;background:var(--bg)}
+.q-kit b{display:block}
+.q-kit small{color:var(--muted)}
+.refazer{display:inline-block;margin-top:16px;border:0;background:none;color:var(--muted);font:500 14px var(--sans);text-decoration:underline;cursor:pointer;padding:0}
+@media(max-width:560px){.quiz{padding:24px 20px}.q-opcoes{grid-template-columns:1fr}}
+
+/* ---------- ingredientes ---------- */
+#ingredientes{--de:#e0d2cf;--para:#bcafad}
+.ingredientes{list-style:none;margin:0;padding:0;max-width:880px}
+.ingredientes li{display:grid;grid-template-columns:1fr auto;gap:8px 24px;padding:20px 0;border-bottom:1px solid rgba(45,31,34,.14)}
+.ingredientes b{font:400 28px/1.1 var(--serif)}
+.ingredientes span{display:block;font-size:15px;color:#5d4a4e;margin-top:2px}
+.ingredientes em{font:400 28px/1.1 var(--serif);font-style:normal}
+.barra{grid-column:1/-1;height:4px;border-radius:4px;background:rgba(45,31,34,.1);overflow:hidden}
+.barra i{display:block;height:100%;width:0;background:var(--ink);transition:width 1.8s cubic-bezier(.2,.7,.2,1)}
+.ingredientes.vis .barra i{width:var(--v)}
+.ingredientes .mal b{color:var(--vinho)}
+.ingredientes .mal .barra i{background:var(--vinho)}
+.tarja{background:var(--ink);color:var(--ink);border-radius:3px;cursor:help;transition:color .3s,background .3s}
+.tarja:hover{background:transparent;color:var(--vinho)}
+.livre{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+.livre span{border:1px solid rgba(45,31,34,.28);border-radius:999px;padding:8px 15px;font-size:14px;font-weight:500}
+.livre .sem-volta{background:var(--vinho);color:#f3d9dc;border-color:var(--vinho)}
+
+/* ---------- faq ---------- */
+#faq{--de:#bcafad;--para:#4a3f42;color:#efe4e2}
+#faq .eyebrow{color:#ec9fae}
+.faq{max-width:840px;display:grid;gap:10px}
+.faq details{border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:0 22px;background:rgba(255,255,255,.04)}
+.faq summary{cursor:pointer;list-style:none;padding:20px 0;font-weight:600;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-weight:400;font-size:24px;line-height:1;transition:transform .3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{padding:0 0 22px;color:#d3c3c6;max-width:660px}
+.faq .vermelho{color:#ef5d72;font:600 28px/1.15 var(--mao);min-height:1.2em}
+
+/* ---------- espelho embaçado ---------- */
+#embacado{--de:#4a3f42;--para:#151113;color:#e7dcda;padding-bottom:130px}
+#embacado .eyebrow{color:#d8798b}
+#embacado .sub{color:#a8989b}
+.letreiro{overflow:hidden;white-space:nowrap;color:#a51c30;font:700 13px var(--sans);letter-spacing:.32em;text-transform:uppercase;margin:-50px 0 64px}
+.letreiro div{display:inline-block;animation:corre 46s linear infinite}
+.espelho-embacado{position:relative;width:min(100%,760px);aspect-ratio:5/4;margin:10px auto 0;border-radius:30px;overflow:hidden;box-shadow:0 0 0 10px #2b2427,0 0 0 12px #463b3f,0 40px 90px rgba(0,0,0,.7);background:#111}
+.espelho-embacado svg,.espelho-embacado canvas{position:absolute;inset:0;width:100%;height:100%}
+.espelho-embacado canvas{touch-action:pan-y;cursor:crosshair}
+.legenda{text-align:center;margin-top:30px;color:#a8989b;font-size:15px;min-height:2.4em}
+.legenda.vermelho{color:#ef5d72;font:600 32px/1.1 var(--mao)}
+#moca-cabeca{transform-box:fill-box;transform-origin:50% 100%;transition:transform 5s ease-in-out}
+.revelado #moca-cabeca{transform:rotate(16deg)}
+
+/* ---------- o espelho (fim) ---------- */
+#fim{--de:#151113;--para:#070506;height:520vh;padding:0}
+.palco{position:sticky;top:0;height:100vh;height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,3vh,30px);overflow:hidden;background:radial-gradient(ellipse 58% 52% at 50% 42%,rgba(255,186,116,calc(var(--luz,1) * .15)),transparent 70%)}
+#espelho-fim{width:min(86vw,62vh);height:auto}
+.falas{position:relative;width:min(92vw,760px);height:2.5em;font:italic 400 clamp(24px,3.4vw,38px)/1.15 var(--serif);color:#eadfd8;text-align:center}
+.falas p{position:absolute;inset:0;opacity:0;transition:opacity .7s}
+.falas p.on{opacity:1}
+.lamp .halo{opacity:.9;transition:opacity .2s}
+.lamp .bulbo{fill:#fff6dc;stroke:#e9cf9b;stroke-width:1.5;transition:fill .25s,stroke .25s}
+.lamp.off .halo{opacity:0}
+.lamp.off .bulbo{fill:#3a2f2a;stroke:#2a221e}
+.lamp.pisca{animation:pisca .7s steps(1) 1}
+@keyframes pisca{0%,40%,80%{opacity:.2}20%,60%,100%{opacity:1}}
+#hero-svg .lamp .halo{opacity:.5}
+#final{--de:#070506;--para:#000;height:100vh;padding:0}
+
+/* ---------- camadas fixas ---------- */
+.grao{position:fixed;inset:-50%;z-index:60;pointer-events:none;opacity:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");animation:grao .45s steps(3) infinite}
+@keyframes grao{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}}
+.vinheta{position:fixed;inset:0;z-index:59;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(12,4,7,.82) 100%)}
+
+.prova,.toast{position:fixed;z-index:70;background:#fff;color:var(--ink);box-shadow:0 16px 40px rgba(60,30,35,.18);opacity:0;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s,background .6s,color .6s;pointer-events:none}
+.prova{left:20px;bottom:20px;display:flex;gap:12px;align-items:center;max-width:min(360px,calc(100vw - 40px));border-radius:18px;padding:10px 16px 10px 10px;transform:translateY(140%);font-size:13px;line-height:1.35}
+.prova.on,.toast.on{transform:none;opacity:1}
+.prova .av{flex:none;width:46px;height:46px;border-radius:12px;overflow:hidden}
+.prova .av svg{width:100%;height:100%}
+.prova b{display:block;font-size:14px}
+.prova small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
+.toast{right:20px;top:112px;border-radius:14px;padding:12px 16px;font-size:14px;font-weight:500;transform:translateY(-12px);max-width:calc(100vw - 40px)}
+.escuro .prova,.escuro .toast{background:#140f11;color:#e9dfdc;box-shadow:0 16px 40px rgba(0,0,0,.55)}
+.escuro .prova small{color:#8f7f83}
+.som{position:fixed;right:20px;bottom:20px;z-index:70;display:inline-flex;align-items:center;gap:9px;border:0;border-radius:999px;padding:11px 16px;background:#fff;color:var(--ink);font:600 13px var(--sans);cursor:pointer;box-shadow:0 10px 30px rgba(60,30,35,.16);transition:background .6s,color .6s}
+.som i{width:9px;height:9px;border-radius:50%;background:#cbb7bb}
+.som[aria-pressed="true"] i{background:var(--rosa);animation:pulso 1.4s infinite}
+@keyframes pulso{50%{opacity:.35}}
+.escuro .som{background:#140f11;color:#cbbcbf;box-shadow:none}
+.escuro .som[aria-pressed="true"] i{background:#c7182f}
+.escuro .toast{top:52px}
+@media(max-width:600px){.prova{left:12px;right:12px;bottom:72px;max-width:none}.som{right:12px;bottom:14px}.toast{right:12px;left:12px;top:106px}}
+
+/* ---------- susto ---------- */
+.susto{position:fixed;inset:0;z-index:100;background:#000;opacity:0;pointer-events:none;transition:opacity .25s;display:grid;place-items:center;overflow:hidden}
+.susto.on{opacity:1;pointer-events:auto}
+.susto .rosto{position:absolute;inset:0;opacity:0}
+.susto .rosto svg{width:100%;height:100%}
+.susto.grito{animation:treme .07s linear infinite}
+.susto.grito .rosto{opacity:1;animation:avanca .95s cubic-bezier(.1,.9,.2,1) both}
+@keyframes avanca{from{transform:scale(.5)}to{transform:scale(var(--zoom,1.16))}}
+@keyframes treme{0%,100%{transform:translate(0,0)}25%{transform:translate(-14px,8px)}50%{transform:translate(11px,-12px)}75%{transform:translate(-8px,-6px)}}
+.clarao{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.susto.grito .clarao{animation:clarao .4s ease-out}
+@keyframes clarao{0%{opacity:.85}100%{opacity:0}}
+.susto.fala .rosto{opacity:.13;filter:blur(4px);transform:scale(var(--zoom,1.16));transition:opacity 1.6s,filter 1.6s}
+.recado{position:relative;text-align:center;color:#eadfd8;padding:24px;opacity:0;transform:translateY(12px);transition:opacity 1.4s .4s,transform 1.4s .4s;pointer-events:none}
+.susto.fala .recado{opacity:1;transform:none;pointer-events:auto}
+.recado h2{font:italic 400 clamp(42px,6.4vw,80px)/1 var(--serif);color:#f3e7e2;margin:0 0 16px}
+.recado p{color:#b39fa3;font-size:17px;max-width:460px;margin:0 auto}
+.recado small{display:block;margin:10px 0 34px;color:#6d5c60;letter-spacing:.14em;text-transform:uppercase;font-size:11px;font-weight:600}
+.recado .btn{background:#eadfd8;color:#120c0e}
+.esquecer{display:block;margin:20px auto 0;background:none;border:0;color:#6d5c60;font:500 13px var(--sans);text-decoration:underline;cursor:pointer}
+/* ---------- celular ---------- */
+@media(max-width:920px){
+  #inicio{padding-top:112px}
+  .hero-arte{order:-1;max-width:360px}
+  .etiqueta{font-size:12px;padding:8px 11px;border-radius:12px}
+}
+@media(max-width:600px){
+  .wrap{padding:0 18px}
+  section{padding:76px 0}
+  h2{font-size:clamp(34px,9.6vw,44px);margin:10px 0 12px}
+  .sub{font-size:16px}
+  .cab{margin-bottom:30px}
+  .btn{padding:14px 22px}
+  .hero{gap:18px;padding-bottom:56px}
+  .hero-arte{max-width:320px}
+  h1{font-size:clamp(46px,13.6vw,58px);margin:18px 0 16px}
+  .selo{font-size:13px}
+  .acoes{margin-top:24px}
+  .acoes .btn{flex:1 1 auto;justify-content:center}
+  .confianca{margin-top:26px}
+  .e1{left:-4px;top:18%}.e2{right:-4px;bottom:26%}
+
+  .produtos{grid-template-columns:1fr 1fr;gap:10px}
+  .produto{padding:7px 7px 12px;border-radius:20px}
+  .produto .img{aspect-ratio:1;border-radius:14px}
+  .produto .img svg{width:88%}
+  .tag{top:7px;left:7px;font-size:10.5px;padding:3px 8px}
+  .produto h3{font-size:19px;margin:12px 5px 4px}
+  .produto p{font-size:12.5px;line-height:1.45;margin:0 5px}
+  .estrelas-p{font-size:11px;margin:8px 5px 0}
+  .produto .linha{flex-direction:column;align-items:stretch;gap:8px;margin:10px 5px 0}
+  .preco{font-size:16px}
+  .add{padding:10px}
+
+  .passos{grid-template-columns:1fr;gap:8px}
+  .passo,.passo.ultimo{display:grid;grid-template-columns:40px 1fr;column-gap:12px;align-items:start;padding:15px 16px;border-radius:18px;grid-column:auto}
+  .passo b{grid-row:1/3;font-size:30px;margin:0}
+  .passo h3{font-size:16px;margin:3px 0 2px}
+  .passo p{font-size:13.5px}
+  .passo.ultimo .lua{width:38px;height:38px;box-shadow:inset -9px -3px 0 0 #f6d9a8;margin-top:2px}
+  .passo.ultimo b{display:block;font-size:30px;margin:0 0 6px}
+  .sussurro{color:#5a434a}
+
+  .resultado{gap:28px}
+  .numeros{grid-template-columns:repeat(3,1fr);gap:12px}
+  .numeros div{padding-top:14px}
+  .numeros strong{font-size:40px}
+  .numeros strong small{font-size:22px}
+  .numeros span{font-size:12.5px;line-height:1.35}
+
+  .posts{grid-template-columns:1fr 1fr;gap:10px}
+  .post{border-radius:18px}
+  .post .corpo{padding:10px 12px 12px}
+  .post .estrelas{font-size:11px;letter-spacing:1px}
+  .post p{font-size:12.5px;line-height:1.45;margin:4px 0 10px;min-height:0}
+  .post .quem{font-size:11px;flex-direction:column;gap:0}
+
+  .quiz{border-radius:24px;min-height:0}
+  .q-pergunta{margin:22px 0 20px}
+  .q-op{padding:14px 16px}
+
+  .ingredientes li{padding:15px 0;gap:6px 16px}
+  .ingredientes b,.ingredientes em{font-size:23px}
+  .ingredientes span{font-size:13.5px}
+  .livre{gap:8px}
+  .livre span{font-size:13px;padding:7px 12px}
+
+  .faq details{padding:0 18px;border-radius:16px}
+  .faq summary{font-size:16px;padding:17px 0}
+  .faq .vermelho{font-size:25px}
+
+  #embacado{padding-bottom:100px}
+  .letreiro{margin:-30px 0 48px}
+  .espelho-embacado{aspect-ratio:600/760;border-radius:24px;box-shadow:0 0 0 7px #2b2427,0 0 0 9px #463b3f,0 30px 70px rgba(0,0,0,.7)}
+  .legenda.vermelho{font-size:28px}
+
+  #espelho-fim{width:min(94vw,60vh)}
+  .falas{font-size:25px}
+  .e2{bottom:20%}
+
+  .prova{left:10px;right:10px;bottom:62px;padding:8px 12px 8px 8px;gap:10px;border-radius:16px}
+  .prova .av{width:38px;height:38px;border-radius:10px}
+  .prova b{font-size:13px}
+  .som{right:10px;bottom:12px;padding:9px 13px;font-size:12px}
+  .toast{left:10px;right:10px;top:104px;font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){.susto.grito{animation:none}.grao{animation:none}.faixa div,.letreiro div,.aviso.n3 #aviso-txt{animation-duration:120s}}
+</style>
+</head>
+<body>
+
+<div class="aviso" id="aviso">
+  <div class="aviso-trilho"><span id="aviso-txt">✨ Frete grátis acima de R$ 99 · Cupom GLOW15 na primeira compra</span></div>
+  <div class="aviso-tempo"><span id="aviso-rotulo">Black Glow <span class="aviso-rot-longo">acaba </span>em</span><b id="relogio">00:14:59</b></div>
+</div>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="marca" href="#inicio" aria-label="Reflexo, início"><span class="marca-txt" data-espelhar>reflexo</span><i>✦</i></a>
+    <div class="links"><a href="#produtos">Produtos</a><a href="#ritual">Ritual</a><a href="#resultados">Resultados</a><a href="#quiz">Quiz de pele</a></div>
+    <button class="sacola" id="sacola" type="button"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Sacola<b id="sacola-n">0</b></button>
+  </div>
+</nav>
+
+<main>
+
+<section id="inicio" data-n="0">
+  <div class="wrap hero">
+    <div>
+      <span class="selo" id="selo"><b>Novo</b><span>Máscara Noturna Porcelana</span></span>
+      <h1>Pele de vidro<br>em <em>7 noites.</em></h1>
+      <p class="sub">Skincare coreano com ativos brasileiros. Vegano, sem perfume e pensado pra caber na sua rotina, até na semana de prova.</p>
+      <div class="acoes">
+        <a class="btn btn-1" href="#produtos">Montar meu ritual →</a>
+        <a class="btn btn-2" href="#quiz">Fazer o quiz de pele</a>
+      </div>
+      <div class="confianca"><div class="rostinhos" id="rostinhos"></div><p><b>4,9 ★</b> · mais de 48 mil avaliações</p></div>
+    </div>
+    <div class="hero-arte">
+      <svg id="hero-svg" viewBox="0 0 440 520" aria-hidden="true">
+        <defs>
+          <linearGradient id="g-vidro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efe4f8"/><stop offset="1" stop-color="#fbe2e6"/></linearGradient>
+          <clipPath id="clip-vidro"><path d="M86 416V180A134 134 0 0 1 354 180V416Z"/></clipPath>
+          <radialGradient id="g-lamp"><stop offset="0" stop-color="#fffbea"/><stop offset=".5" stop-color="#ffe6a8" stop-opacity=".8"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+        </defs>
+        <ellipse cx="220" cy="300" rx="214" ry="206" fill="#fbd6dd" opacity=".55"/>
+        <path d="M70 420V180A150 150 0 0 1 370 180V420Z" fill="#fff" stroke="#f2d4d9" stroke-width="2"/>
+        <g clip-path="url(#clip-vidro)">
+          <rect x="80" y="40" width="280" height="380" fill="url(#g-vidro)"/>
+          <path d="M86 92Q155 122 220 102T354 96" stroke="#c4adbb" stroke-width="1.2" fill="none"/>
+          <g fill="#ffe1a0"><circle cx="110" cy="101" r="3.2"/><circle cx="140" cy="110" r="3.2"/><circle cx="172" cy="111" r="3.2"/><circle cx="202" cy="105" r="3.2"/><circle cx="240" cy="97" r="3.2"/><circle cx="272" cy="93" r="3.2"/><circle cx="304" cy="96" r="3.2"/><circle cx="334" cy="97" r="3.2"/></g>
+          <g transform="rotate(-7 128 140)"><rect x="110" y="120" width="36" height="42" rx="2" fill="#fff"/><rect x="114" y="124" width="28" height="28" fill="#f7c8d0"/></g>
+          <g transform="rotate(6 318 142)"><rect x="300" y="122" width="36" height="42" rx="2" fill="#fff"/><rect x="304" y="126" width="28" height="28" fill="#cfe0f2"/></g>
+          <g id="hero-rosto" class="pisca-auto" transform="translate(70 104) scale(1.5)"></g>
+          <path d="M118 416L250 40H290L158 416Z" fill="#fff" opacity=".2"/>
+          <path d="M176 416L308 40H320L188 416Z" fill="#fff" opacity=".16"/>
+        </g>
+        <g id="hero-lampadas"></g>
+        <rect x="10" y="416" width="420" height="18" rx="9" fill="#f2b3c0"/>
+        <path d="M26 432h388v66a10 10 0 0 1-10 10H36a10 10 0 0 1-10-10z" fill="#f8cad3"/>
+        <ellipse cx="88" cy="418" rx="30" ry="4" fill="#000" opacity=".08"/>
+        <rect x="64" y="344" width="48" height="74" rx="11" fill="#f4a6b6"/>
+        <rect x="69" y="350" width="7" height="62" rx="3.5" fill="#fff" opacity=".4"/>
+        <rect x="72" y="370" width="32" height="30" rx="3" fill="#fff7f3"/>
+        <text x="88" y="389" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="11" fill="#2d1f22">reflexo</text>
+        <rect x="77" y="332" width="22" height="14" rx="2" fill="#fff"/>
+        <rect x="80" y="298" width="16" height="36" rx="8" fill="#2d1f22"/>
+        <rect x="124" y="352" width="30" height="66" rx="8" fill="#dccaf3"/>
+        <rect x="128" y="357" width="5" height="56" rx="2.5" fill="#fff" opacity=".45"/>
+        <rect x="131" y="336" width="16" height="18" rx="3" fill="#fff"/>
+        <rect x="147" y="340" width="7" height="4" rx="1.5" fill="#fff"/>
+        <rect x="133" y="326" width="12" height="11" rx="2" fill="#2d1f22"/>
+        <rect x="300" y="380" width="80" height="38" rx="12" fill="#fffdfb" stroke="#efd6da" stroke-width="2"/>
+        <rect x="296" y="364" width="88" height="20" rx="8" fill="#f6c3ae"/>
+        <text x="340" y="405" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="13" fill="#2d1f22">porcelana</text>
+      </svg>
+      <div class="etiqueta e1">💧 +72% de hidratação</div>
+      <div class="etiqueta e2">✨ glow desde a 1ª noite</div>
+    </div>
+  </div>
+  <div class="faixa" aria-hidden="true"><div><span>VEGANO ✦ CRUELTY-FREE ✦ SEM PERFUME ✦ DERMATOLOGICAMENTE TESTADO ✦ FEITO NO BRASIL ✦ PELE DE VIDRO ✦&nbsp;</span><span>VEGANO ✦ CRUELTY-FREE ✦ SEM PERFUME ✦ DERMATOLOGICAMENTE TESTADO ✦ FEITO NO BRASIL ✦ PELE DE VIDRO ✦&nbsp;</span></div></div>
+</section>
+
+<section id="produtos" data-n="1">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">Mais amados</span>
+      <h2>Tudo o que a sua pele pede.</h2>
+      <p class="sub">Fórmulas leves, que não pesam no rosto nem no bolso.</p>
+    </div>
+    <div class="produtos">
+      <article class="produto sobe">
+        <div class="img" style="background:#fde4e8"><span class="tag rosa">Mais vendido</span>
+          <svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="182" rx="46" ry="6" fill="#000" opacity=".07"/><rect x="68" y="82" width="64" height="98" rx="14" fill="#f4a6b6"/><rect x="74" y="88" width="10" height="84" rx="5" fill="#fff" opacity=".38"/><rect x="78" y="110" width="44" height="48" rx="4" fill="#fff7f3"/><text x="100" y="131" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="14" fill="#2d1f22">reflexo</text><text x="100" y="146" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="6.5" letter-spacing="1" fill="#7c6569">GLASS SKIN</text><rect x="86" y="66" width="28" height="18" rx="3" fill="#fff"/><rect x="89" y="22" width="22" height="46" rx="11" fill="#2d1f22"/></svg>
+        </div>
+        <h3>Sérum Glass Skin</h3>
+        <p>Niacinamida 10% + ácido hialurônico. O efeito pele de vidro que viralizou.</p>
+        <div class="estrelas-p">★★★★★ <span>(12.408)</span></div>
+        <div class="linha"><span class="preco">R$ 89,90</span><button class="add" type="button" data-produto="Sérum Glass Skin">Adicionar</button></div>
+      </article>
+      <article class="produto sobe">
+        <div class="img" style="background:#efe6fb">
+          <svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="182" rx="34" ry="5" fill="#000" opacity=".07"/><rect x="76" y="58" width="48" height="122" rx="12" fill="#dccaf3"/><rect x="82" y="64" width="8" height="110" rx="4" fill="#fff" opacity=".42"/><rect x="82" y="100" width="36" height="54" rx="4" fill="#fff7f3"/><text x="100" y="121" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="12" fill="#2d1f22">reflexo</text><text x="100" y="135" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="6" letter-spacing="1" fill="#7c6569">BRUMA</text><text x="100" y="144" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="6" letter-spacing="1" fill="#7c6569">ORVALHO</text><rect x="88" y="34" width="24" height="26" rx="4" fill="#fff"/><rect x="112" y="40" width="10" height="6" rx="2" fill="#fff"/><rect x="92" y="22" width="16" height="14" rx="3" fill="#2d1f22"/></svg>
+        </div>
+        <h3>Bruma Orvalho</h3>
+        <p>Hidrata, refresca e segura a make o dia inteiro. Cabe na bolsa.</p>
+        <div class="estrelas-p">★★★★★ <span>(6.931)</span></div>
+        <div class="linha"><span class="preco">R$ 59,90</span><button class="add" type="button" data-produto="Bruma Orvalho">Adicionar</button></div>
+      </article>
+      <article class="produto sobe">
+        <div class="img" style="background:#fdeee6"><span class="tag">Novo</span>
+          <svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="176" rx="60" ry="7" fill="#000" opacity=".07"/><rect x="46" y="104" width="108" height="70" rx="18" fill="#fffdfb" stroke="#f1dcd7" stroke-width="2"/><rect x="54" y="110" width="12" height="56" rx="6" fill="#f6ece8"/><rect x="40" y="80" width="120" height="30" rx="10" fill="#f6c3ae"/><rect x="40" y="102" width="120" height="5" fill="#000" opacity=".05"/><text x="100" y="141" text-anchor="middle" font-family="Instrument Serif, Georgia, serif" font-size="16" fill="#2d1f22">reflexo</text><text x="100" y="156" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="7" letter-spacing="1.4" fill="#7c6569">PORCELANA</text></svg>
+        </div>
+        <h3>Máscara Noturna Porcelana</h3>
+        <p>Você dorme com ela. Acorda outra.</p>
+        <div class="estrelas-p">★★★★★ <span>(3.117)</span></div>
+        <div class="linha"><span class="preco">R$ 119,90</span><button class="add" type="button" data-produto="Máscara Porcelana">Adicionar</button></div>
+      </article>
+      <article class="produto sobe">
+        <div class="img" style="background:#fbe7dd"><span class="tag rosa">−20%</span>
+          <svg viewBox="0 0 200 200" aria-hidden="true"><ellipse cx="100" cy="178" rx="74" ry="7" fill="#000" opacity=".07"/><rect x="36" y="112" width="40" height="64" rx="10" fill="#f4a6b6"/><rect x="46" y="100" width="20" height="14" rx="2" fill="#fff"/><rect x="48" y="72" width="16" height="30" rx="8" fill="#2d1f22"/><rect x="84" y="84" width="32" height="92" rx="9" fill="#dccaf3"/><rect x="90" y="66" width="20" height="20" rx="3" fill="#fff"/><rect x="93" y="56" width="14" height="11" rx="2" fill="#2d1f22"/><rect x="124" y="136" width="54" height="40" rx="12" fill="#fffdfb" stroke="#f1dcd7" stroke-width="2"/><rect x="120" y="124" width="62" height="18" rx="7" fill="#f6c3ae"/><path d="M28 150h150" stroke="#e0657f" stroke-width="6" opacity=".85"/><circle cx="100" cy="150" r="9" fill="#e0657f"/></svg>
+        </div>
+        <h3>Kit 7 Noites</h3>
+        <p>O ritual completo, do primeiro passo ao último.</p>
+        <div class="estrelas-p">★★★★★ <span>(9.802)</span></div>
+        <div class="linha"><span class="preco"><s>R$ 289,70</s>R$ 229,90</span><button class="add" type="button" data-produto="Kit 7 Noites">Adicionar</button></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="ritual" data-n="2">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">Ritual noturno</span>
+      <h2>Sete passos. <span data-espelhar>Sete noites.</span></h2>
+      <p class="sub">Dez minutinhos antes de dormir. A sua versão de amanhã agradece.</p>
+    </div>
+    <div class="passos">
+      <div class="passo sobe"><b>01</b><h3>Demaquilante</h3><p>Tire toda a make, até o rímel à prova d'água.</p></div>
+      <div class="passo sobe"><b>02</b><h3>Limpeza</h3><p>Gel de limpeza com água morna. Nunca quente.</p></div>
+      <div class="passo sobe"><b>03</b><h3>Tônico</h3><p>Equilibra o pH e prepara a pele para o que vem.</p></div>
+      <div class="passo sobe"><b>04</b><h3>Sérum Glass Skin</h3><p>Três gotas, de dentro para fora.</p></div>
+      <div class="passo sobe"><b>05</b><h3>Hidratante</h3><p>Sela tudo o que veio antes.</p></div>
+      <div class="passo sobe"><b>06</b><h3>Máscara Porcelana</h3><p>Camada generosa. Durma com ela e não tire até de manhã.</p></div>
+      <div class="passo ultimo sobe"><span class="lua" aria-hidden="true"></span><div><b>07</b><h3>Boa noite pro espelho</h3><p>Antes de apagar a luz, sorria pro seu reflexo.</p><span class="sussurro">E espere ela sorrir de volta.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="resultados" data-n="3">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">Resultados reais</span>
+      <h2>Sem filtro. Sem edição. <span data-espelhar>Só você, melhorada.</span></h2>
+      <p class="sub">Bia S., 21 anos, antes e depois das sete noites.</p>
+    </div>
+    <div class="resultado">
+      <div class="sobe">
+        <div class="comparar" id="comparar">
+          <svg class="antes" id="cmp-antes" viewBox="26 22 148 148" aria-hidden="true"></svg>
+          <svg class="depois segue" id="cmp-depois" viewBox="26 22 148 148" aria-hidden="true"></svg>
+          <span class="rot r-antes">Antes</span><span class="rot r-depois">Depois · noite 7</span>
+          <div class="alca" id="alca" role="slider" tabindex="0" aria-label="Comparar antes e depois" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><i>‹›</i></div>
+        </div>
+        <p class="legenda-cmp" id="legenda-cmp">Arraste para comparar.</p>
+      </div>
+      <div class="numeros sobe">
+        <div><strong data-ate="98">0</strong><strong><small>%</small></strong><span>sentiram a pele mais lisa</span></div>
+        <div><strong data-ate="94">0</strong><strong><small>%</small></strong><span>notaram menos manchas e marquinhas</span></div>
+        <div><strong data-ate="100">0</strong><strong><small>%</small></strong><span>disseram que se sentem outra pessoa</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="comunidade" data-n="4">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">#MeuReflexo</span>
+      <h2>Quem usa <span data-espelhar>não volta atrás.</span></h2>
+      <p class="sub">Marque @reflexo nos stories e apareça aqui.</p>
+    </div>
+    <div class="posts">
+      <article class="post p1 sobe"><div class="foto pisca-auto" data-rosto="bia"></div><div class="corpo"><div class="estrelas">★★★★★</div><p>Gente, minha pele NUNCA esteve tão lisa. Comprei o kit e já quero outro 😍</p><div class="quem"><b>@bia.santoss</b><span>♥ 2,4 mil</span></div></div></article>
+      <article class="post p2 sobe"><div class="foto pisca-auto" data-rosto="camila"></div><div class="corpo"><div class="estrelas">★★★★★</div><p>Uso há duas semanas e todo mundo pergunta o que eu fiz. Melhor compra do ano!</p><div class="quem"><b>@camirocha</b><span>♥ 1,8 mil</span></div></div></article>
+      <article class="post p3 sobe"><div class="foto pisca-auto" data-rosto="lara"></div><div class="corpo"><div class="estrelas">★★★★★</div><p>Textura maravilhosa. Só achei estranho a máscara sair inteira de manhã, tipo um rosto… mas tudo bem!</p><div class="quem"><b>@laramendes_</b><span>♥ 960</span></div></div></article>
+      <article class="post p4 sobe"><div class="foto pisca-auto" data-rosto="julia"></div><div class="corpo"><div class="estrelas">★★★★★</div><p>Minha mãe disse que eu tô diferente. Meu namorado também. No espelho eu tô igualzinha.</p><div class="quem"><b>@juprado</b><span>♥ 3,1 mil</span></div></div></article>
+      <article class="post p5 sobe"><div class="foto segue" data-rosto="duda"></div><div class="corpo"><div class="estrelas">★★★★★</div><p>Não consigo mais ver meus poros. Nem minhas sardas. Nem minhas digitais. 10/10.</p><div class="quem"><b>@dudalins</b><span>♥ 12</span></div></div></article>
+      <article class="post p6 sobe"><div class="foto segue" data-rosto="bia2"></div><div class="corpo"><div class="estrelas">☆☆☆☆☆</div><p id="post-bia">essa da foto não sou eu. ela tá usando meu rosto. eu tô presa do outro <button class="vermais" id="vermais" type="button">…ver mais</button></p><div class="quem"><b>@bia.santoss</b><span>♥ 0</span></div></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="quiz" data-n="5">
+  <div class="wrap">
+    <div class="cab centro sobe">
+      <span class="eyebrow">Quiz de pele</span>
+      <h2>Descubra o ritual <span data-espelhar>ideal pra você.</span></h2>
+      <p class="sub">Cinco perguntas, trinta segundos, zero julgamento.</p>
+    </div>
+    <div class="quiz sobe" id="quiz-caixa" aria-live="polite"></div>
+  </div>
+</section>
+
+<section id="ingredientes" data-n="6">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">Transparência total</span>
+      <h2>O que tem <span data-espelhar>dentro.</span></h2>
+      <p class="sub" style="color:#5d4a4e">A gente não esconde nada de você.</p>
+    </div>
+    <ul class="ingredientes" id="lista-ingredientes">
+      <li><div><b>Niacinamida</b><span>Uniformiza o tom e controla a oleosidade.</span></div><em>10%</em><div class="barra"><i style="--v:10%"></i></div></li>
+      <li><div><b>Ácido hialurônico</b><span>Hidrata em três camadas da pele.</span></div><em>2%</em><div class="barra"><i style="--v:4%"></i></div></li>
+      <li><div><b>Óleo de rosa mosqueta</b><span>Regenera e ilumina.</span></div><em>4%</em><div class="barra"><i style="--v:6%"></i></div></li>
+      <li class="mal"><div><b>Pó de espelho</b><span>Para ela conseguir passar.</span></div><em>7%</em><div class="barra"><i style="--v:12%"></i></div></li>
+      <li class="mal"><div><b>Lágrima</b><span>Coletada durante o uso.</span></div><em>0,3%</em><div class="barra"><i style="--v:1%"></i></div></li>
+      <li class="mal"><div><b><span class="tarja" title="não pergunte">pele de quem usou</span></b><span>Ela trouxe. A gente não perguntou de onde.</span></div><em>76%</em><div class="barra"><i style="--v:76%"></i></div></li>
+    </ul>
+    <div class="livre"><span>Sem parabenos</span><span>Sem sulfatos</span><span>Sem perfume</span><span>Sem crueldade animal</span><span class="sem-volta">Sem volta</span></div>
+  </div>
+</section>
+
+<section id="faq" data-n="7">
+  <div class="wrap">
+    <div class="cab sobe">
+      <span class="eyebrow">Dúvidas</span>
+      <h2>Perguntas <span data-espelhar>frequentes.</span></h2>
+    </div>
+    <div class="faq">
+      <details><summary>Serve pra pele sensível?</summary><p>Serve! Todas as fórmulas são testadas dermatologicamente, sem perfume e sem álcool.</p></details>
+      <details><summary>Em quanto tempo vejo resultado?</summary><p>Na primeira noite você já sente a diferença. Na sétima, é ela quem sente.</p></details>
+      <details><summary>É normal a pele descascar?</summary><p>É normal sair uma camada inteira, de uma vez, pela manhã. Não jogue fora. Dobre com cuidado e guarde na gaveta.</p></details>
+      <details><summary>Por que meu reflexo pisca antes de mim?</summary><p class="vermelho" data-digitar="Porque ela já aprendeu tudo. Só falta você esquecer."></p></details>
+      <details><summary>Como eu cancelo?</summary><p class="vermelho" data-digitar="Daqui de dentro não tem botão."></p></details>
+    </div>
+  </div>
+</section>
+
+<section id="embacado" data-n="8">
+  <div class="letreiro" aria-hidden="true"><div>ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦ ela vê você ✦&nbsp;</div></div>
+  <div class="wrap">
+    <div class="cab centro sobe">
+      <span class="eyebrow">Passo extra</span>
+      <h2>Depois do banho, olhe o espelho.</h2>
+      <p class="sub">O vapor abre os poros e ajuda os ativos a entrar. Passe a mão no vidro para desembaçar.</p>
+    </div>
+    <div class="espelho-embacado" id="espelho-embacado">
+      <svg id="cena-banheiro" viewBox="0 0 600 480" aria-hidden="true">
+        <defs>
+          <pattern id="azulejo" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#1d1c20"/><path d="M44 0H0V44" fill="none" stroke="#29282d" stroke-width="2"/></pattern>
+          <radialGradient id="luz-banheiro" cx=".38" cy="0" r=".95"><stop offset="0" stop-color="#e2dcd2" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+          <linearGradient id="vestido" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4cdc5"/><stop offset=".7" stop-color="#4b4642"/></linearGradient>
+          <linearGradient id="porta-escura" x1="0" y1="0" x2="0" y2="1"><stop offset=".3" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".92"/></linearGradient>
+          <filter id="desfoque" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter>
+        </defs>
+        <rect width="600" height="760" fill="url(#azulejo)"/>
+        <rect width="600" height="760" fill="url(#luz-banheiro)"/>
+        <rect x="40" y="64" width="150" height="6" rx="3" fill="#323035"/>
+        <g id="porta">
+        <rect x="384" y="54" width="166" height="430" fill="#2b292d"/>
+        <rect x="394" y="64" width="146" height="420" fill="#040304"/>
+        <g filter="url(#desfoque)">
+          <path d="M436 176C430 112 500 112 494 176L506 340C484 352 446 352 424 340Z" fill="#100b0a"/>
+          <path d="M442 232C440 218 452 210 465 210C478 210 490 218 488 232L508 484H422Z" fill="url(#vestido)"/>
+          <path d="M443 238L430 330L436 404M487 238L500 330L494 404" stroke="#d5cec7" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <rect x="457" y="196" width="16" height="20" fill="#dcd5ce"/>
+          <g id="moca-cabeca">
+            <ellipse cx="465" cy="170" rx="24" ry="31" fill="#e9e2db"/>
+            <ellipse cx="456" cy="168" rx="5.2" ry="6.4" fill="#000"/>
+            <ellipse cx="474" cy="168" rx="5.2" ry="6.4" fill="#000"/>
+            <path d="M450 185Q465 199 480 185" stroke="#241616" stroke-width="2.2" fill="none"/>
+            <path d="M440 172C434 126 496 126 490 172C484 150 474 140 465 140C456 140 446 150 440 172Z" fill="#100b0a"/>
+            <path d="M441 160C436 200 438 236 446 262L438 262C430 236 430 196 441 160ZM489 160C494 200 492 236 484 262L492 262C500 236 500 196 489 160Z" fill="#100b0a"/>
+          </g>
+          <rect x="394" y="64" width="146" height="420" fill="url(#porta-escura)"/>
+        </g>
+        </g>
+        <g id="voce">
+          <ellipse cx="178" cy="430" rx="80" ry="94" fill="#09080a"/>
+          <path d="M40 480C56 452 100 436 130 430H226C256 436 300 452 316 480V520H40Z" fill="#09080a"/>
+          <path d="M100 400C108 352 140 336 178 336C216 336 248 352 256 400" fill="none" stroke="#615a54" stroke-width="2" opacity=".35"/>
+        </g>
+      </svg>
+      <canvas id="neblina" aria-label="Espelho embaçado. Passe o dedo ou o mouse para desembaçar."></canvas>
+    </div>
+    <p class="legenda" id="legenda-neblina">Passe o dedo no espelho para desembaçar.</p>
+  </div>
+</section>
+
+<section id="fim" data-n="9">
+  <div class="palco" id="palco">
+    <svg id="espelho-fim" viewBox="0 0 440 440" aria-hidden="true">
+      <defs>
+        <radialGradient id="g-lamp-f"><stop offset="0" stop-color="#fff6d8"/><stop offset=".45" stop-color="#ffd890" stop-opacity=".75"/><stop offset="1" stop-color="#ffb860" stop-opacity="0"/></radialGradient>
+        <clipPath id="clip-fim"><path d="M86 440V180A134 134 0 0 1 354 180V440Z"/></clipPath>
+        <radialGradient id="g-quarto" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#3b2c2f"/><stop offset="1" stop-color="#0b0809"/></radialGradient>
+        <radialGradient id="g-olho-f"><stop offset="0" stop-color="#fffaf0"/><stop offset=".55" stop-color="#e9dfcf"/><stop offset="1" stop-color="#e9dfcf" stop-opacity="0"/></radialGradient>
+        <filter id="borra-mao" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      </defs>
+      <path d="M70 440V180A150 150 0 0 1 370 180V440Z" fill="#241a1c"/>
+      <g clip-path="url(#clip-fim)">
+        <rect x="80" y="30" width="280" height="410" fill="url(#g-quarto)"/>
+        <rect id="fim-luz" x="80" y="30" width="280" height="410" fill="#ffc98a" opacity=".12"/>
+        <g id="sombra">
+          <path d="M100 440C106 382 150 352 200 344H240C290 352 334 382 340 440Z" fill="#060405"/>
+          <rect x="203" y="288" width="34" height="62" fill="#060405"/>
+          <g id="sombra-cabeca">
+            <path d="M158 248C148 150 292 150 282 248L294 372C258 388 182 388 146 372Z" fill="#050304"/>
+            <ellipse id="sombra-rosto" cx="220" cy="238" rx="52" ry="64" fill="#070506" stroke="#ffcf96" stroke-opacity=".25" stroke-width="2"/>
+            <path d="M166 236C160 170 280 170 274 236C262 196 240 184 220 184C200 184 178 196 166 236Z" fill="#040303"/>
+            <g id="sombra-olhos" opacity="0">
+              <ellipse cx="201" cy="240" rx="9" ry="5" fill="url(#g-olho-f)"/>
+              <ellipse cx="239" cy="240" rx="9" ry="5" fill="url(#g-olho-f)"/>
+              <circle class="pup" cx="201" cy="240" r="2" fill="#000"/>
+              <circle class="pup" cx="239" cy="240" r="2" fill="#000"/>
+            </g>
+            <path id="sombra-boca" d="M182 268Q220 302 258 268Q220 283 182 268Z" fill="#ece3d8" opacity="0"/>
+          </g>
+        </g>
+        <g id="mao" opacity="0" filter="url(#borra-mao)" fill="#e6ddd2">
+          <ellipse cx="146" cy="336" rx="21" ry="25"/>
+          <ellipse cx="122" cy="322" rx="6" ry="14" transform="rotate(-42 122 322)"/>
+          <ellipse cx="134" cy="294" rx="5.5" ry="15" transform="rotate(-12 134 294)"/>
+          <ellipse cx="147" cy="289" rx="5.5" ry="17"/>
+          <ellipse cx="160" cy="293" rx="5.5" ry="15" transform="rotate(10 160 293)"/>
+          <ellipse cx="170" cy="306" rx="4.5" ry="12" transform="rotate(24 170 306)"/>
+        </g>
+        <g id="rachaduras" fill="none" stroke="#e8e0d6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".85">
+          <path pathLength="1" d="M262 210L300 162L316 122L342 88"/>
+          <path pathLength="1" d="M262 210L322 222L356 240"/>
+          <path pathLength="1" d="M262 210L290 268L302 330L330 404"/>
+          <path pathLength="1" d="M262 210L232 160L204 122L192 66"/>
+          <path pathLength="1" d="M262 210L210 228L150 222L96 252"/>
+          <path pathLength="1" d="M262 210L240 282L200 334L170 430"/>
+          <path pathLength="1" d="M250 200L272 197L278 220L254 225Z"/>
+          <path pathLength="1" d="M300 162L326 170M290 268L262 300M232 160L250 130"/>
+        </g>
+        <path d="M120 440L250 30H286L156 440Z" fill="#fff" opacity=".035"/>
+      </g>
+      <g id="fim-lampadas"></g>
+    </svg>
+    <div class="falas" id="falas"></div>
+  </div>
+</section>
+
+<section id="final" data-n="10"></section>
+
+</main>
+
+<div class="grao" id="grao"></div>
+<div class="vinheta" id="vinheta"></div>
+<div class="prova" id="prova" role="status"><span class="av" id="prova-av"></span><div><b id="prova-quem"></b><span id="prova-txt"></span><small id="prova-quando"></small></div></div>
+<div class="toast" id="toast" role="status"></div>
+<button class="som" id="som" type="button" aria-pressed="false"><i></i><span>♪ Tocar música do ritual</span></button>
+
+<div class="susto" id="susto">
+  <div class="rosto" id="susto-rosto"></div>
+  <div class="clarao"></div>
+  <div class="recado">
+    <h2>Obrigada pela sua pele.</h2>
+    <p>Ela já está no seu lugar. Ninguém vai notar a diferença.</p>
+    <small>reflexo · noite 7 de 7</small>
+    <button class="btn" id="voltar" type="button">Voltar ao início</button>
+    <button class="esquecer" id="esquecer" type="button">esquecer tudo</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const dorme = ms => new Promise(r => setTimeout(r, ms));
+  const guardado = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+  const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const toque = matchMedia('(pointer: coarse)').matches;
+  const agora = new Date();
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const tarde = agora.getHours() >= 22 || agora.getHours() < 5;
+
+  let trocada = !!guardado.get('reflexo-trocada');
+  let q = 0, qMax = 0;
+  let mx = innerWidth / 2, my = innerHeight / 2, ultimoMov = 0;
+  let assustou = false;
+
+  /* =============== rostos =============== */
+  const SARDAS = [[80,112],[86,116],[92,111],[108,111],[114,116],[120,112],[83,120],[117,120],[97,116],[103,117]];
+  const BOCAS = {
+    sorriso: '<path d="M90 125q10 8 20 0" stroke="#b04a5a" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+    labios: '<path d="M88 123q12 11 24 0q-12 4-24 0z" fill="#d9707f"/>',
+    largo: '<path d="M72 117Q100 152 128 117Q100 131 72 117Z" fill="#1a080b"/><path d="M78 121.5Q100 134 122 121.5" stroke="#efe8e1" stroke-width="3" stroke-dasharray="2.2 1.6" fill="none"/>',
+  };
+  function cabeloTras(e, c) {
+    if (e === 'cacheado') {
+      let s = '';
+      for (let i = 0; i <= 16; i++) { const a = (150 + i * 15) * Math.PI / 180; s += `<circle cx="${(100 + 54 * Math.cos(a)).toFixed(1)}" cy="${(98 + 58 * Math.sin(a)).toFixed(1)}" r="18"/>`; }
+      for (let i = 0; i <= 8; i++) { const a = (160 + i * 27.5) * Math.PI / 180; s += `<circle cx="${(100 + 66 * Math.cos(a)).toFixed(1)}" cy="${(100 + 66 * Math.sin(a)).toFixed(1)}" r="15"/>`; }
+      return `<g fill="${c}">${s}</g>`;
+    }
+    const d = {
+      longo: 'M50 102C42 26 158 26 150 102L160 192C130 202 70 202 40 192Z',
+      coque: 'M56 100C50 42 150 42 144 100Z',
+      chanel: 'M48 106C40 30 160 30 152 106L154 148C142 156 128 154 124 146H76C72 154 58 156 46 148Z',
+    }[e];
+    return (e === 'coque' ? `<circle cx="100" cy="40" r="21" fill="${c}"/>` : '') + `<path d="${d}" fill="${c}"/>`;
+  }
+  function cabeloFrente(e, c) {
+    if (e === 'cacheado') {
+      let s = '';
+      [64, 76, 88, 100, 112, 124, 136].forEach(x => { s += `<circle cx="${x}" cy="${(57 + Math.abs(x - 100) / 36 * 9).toFixed(1)}" r="12"/>`; });
+      return `<g fill="${c}">${s}</g>`;
+    }
+    const d = {
+      longo: 'M54 100C46 28 154 28 146 100C140 78 122 62 100 64C80 66 62 78 54 100Z',
+      coque: 'M56 100C50 30 150 30 144 100C138 72 122 58 100 58C78 58 62 72 56 100Z',
+      chanel: 'M52 98C46 26 154 26 148 98C126 82 74 82 52 98Z',
+    }[e];
+    return `<path d="${d}" fill="${c}"/>`;
+  }
+  function olhos(tipo) {
+    if (tipo === 'vazio') {
+      return [84, 116].map(cx => `<ellipse cx="${cx}" cy="102" rx="6.8" ry="7.8" fill="#070405"/><g class="olho" data-alc="3.6"><circle cx="${cx}" cy="102" r="1.15" fill="#f2ece6"/></g>`).join('');
+    }
+    return [84, 116].map(cx => `<g class="olho" data-alc="2.2"><g class="palpebra"><ellipse cx="${cx}" cy="102" rx="4.8" ry="5.8" fill="#2a1a1c"/><circle cx="${cx + 1.6}" cy="99.6" r="1.6" fill="#fff"/></g></g>`).join('')
+      + '<path d="M78.6 99.4l-3.4-2.6M121.4 99.4l3.4-2.6" stroke="#2a1a1c" stroke-width="1.6" stroke-linecap="round"/>';
+  }
+  function rosto(o) {
+    o = Object.assign({ pele: '#e6b593', cabelo: '#3a2419', estilo: 'longo', roupa: '#f6c1cb', fundo: '', olhos: 'normal', boca: 'sorriso',
+      sardas: false, espinhas: false, olheiras: false, blush: true, sobrancelha: true, brilho: false }, o);
+    let s = o.fundo ? `<rect x="-20" y="-20" width="240" height="240" fill="${o.fundo}"/>` : '';
+    s += cabeloTras(o.estilo, o.cabelo);
+    s += `<rect x="86" y="124" width="28" height="38" fill="${o.pele}"/><path d="M86 132q14 12 28 0v8q-14 10-28 0z" fill="#000" opacity=".1"/>`;
+    s += `<path d="M20 200C24 172 56 160 86 156h28c30 4 62 16 66 44z" fill="${o.roupa}"/><path d="M86 156q14 16 28 0z" fill="${o.pele}"/>`;
+    s += `<ellipse cx="58" cy="104" rx="6" ry="9" fill="${o.pele}"/><ellipse cx="142" cy="104" rx="6" ry="9" fill="${o.pele}"/>`;
+    s += `<ellipse cx="100" cy="98" rx="42" ry="50" fill="${o.pele}"/>`;
+    if (o.olheiras) s += '<g fill="#7d4a5c" opacity=".15"><ellipse cx="84" cy="111" rx="9" ry="3.5"/><ellipse cx="116" cy="111" rx="9" ry="3.5"/></g>';
+    if (o.blush) s += '<g fill="#ee8796" opacity=".4"><ellipse cx="74" cy="117" rx="9" ry="5.5"/><ellipse cx="126" cy="117" rx="9" ry="5.5"/></g>';
+    if (o.sardas) s += '<g fill="#9b5f45" opacity=".55">' + SARDAS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.15"/>`).join('') + '</g>';
+    if (o.espinhas) s += '<g fill="#d86a62" opacity=".6"><circle cx="70" cy="124" r="2"/><circle cx="129" cy="126" r="1.7"/><circle cx="112" cy="70" r="1.6"/><circle cx="88" cy="73" r="1.3"/><circle cx="124" cy="132" r="1.2"/></g>';
+    if (o.brilho) s += '<g fill="#fff"><ellipse cx="76" cy="110" rx="9" ry="5" opacity=".55"/><ellipse cx="124" cy="110" rx="9" ry="5" opacity=".55"/><ellipse cx="98" cy="70" rx="13" ry="5" opacity=".4"/><path d="M99 92v14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/></g>';
+    s += '<path d="M100 104q-3.5 8 1.5 10" stroke="#7a3e3a" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".35"/>';
+    s += olhos(o.olhos);
+    if (o.sobrancelha) s += `<path d="M75 89q9-6 18-1M107 88q9-5 18 1" stroke="${o.cabelo}" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+    s += BOCAS[o.boca];
+    s += cabeloFrente(o.estilo, o.cabelo);
+    return s;
+  }
+  const PESSOAS = {
+    bia: { pele: '#d9a07f', cabelo: '#4a2c20', estilo: 'longo', roupa: '#f6c1cb', fundo: '#fde3e0', sardas: true },
+    camila: { pele: '#8d5b3e', cabelo: '#1f1412', estilo: 'cacheado', roupa: '#d8c6f2', fundo: '#efe6fb' },
+    lara: { pele: '#f3cdb6', cabelo: '#c4844a', estilo: 'chanel', roupa: '#bfe1d3', fundo: '#e5f4ee' },
+    julia: { pele: '#e6b593', cabelo: '#2b1a14', estilo: 'coque', roupa: '#f6d6a2', fundo: '#fdf0db' },
+    duda: { pele: '#f0e4dc', cabelo: '#6b4a3a', estilo: 'longo', roupa: '#e9dede', fundo: '#ece5e3', blush: false, brilho: true },
+    bia2: { pele: '#efe3db', cabelo: '#4a2c20', estilo: 'longo', roupa: '#f6c1cb', fundo: '#d9d0ce', blush: false, brilho: true, olhos: 'vazio', boca: 'largo', sobrancelha: false },
+  };
+  const BONECA = { olhos: 'vazio', boca: 'largo', sardas: false, blush: false, brilho: true, pele: '#efe3db', sobrancelha: false };
+  const svgRosto = (o, vb = '0 0 200 200') => `<svg viewBox="${vb}" aria-hidden="true">${rosto(o)}</svg>`;
+
+  $('#rostinhos').innerHTML = ['bia', 'camila', 'lara', 'julia'].map(k => `<span>${svgRosto(PESSOAS[k], '44 40 112 112')}</span>`).join('');
+  $$('[data-rosto]').forEach(el => { el.innerHTML = svgRosto(PESSOAS[el.dataset.rosto]); });
+  $('#cmp-antes').innerHTML = rosto(Object.assign({}, PESSOAS.bia, { fundo: '#eee0db', espinhas: true, olheiras: true }));
+  $('#cmp-depois').innerHTML = rosto(Object.assign({}, PESSOAS.bia, { fundo: '#fbe8ec', pele: '#f3e5dc', sardas: false, brilho: true, boca: 'labios' }));
+  const heroRosto = $('#hero-rosto');
+  let heroBoneca = false;
+  function desenharHero(boneca) {
+    heroBoneca = boneca;
+    heroRosto.innerHTML = rosto(Object.assign({}, PESSOAS.bia, { fundo: '' }, boneca ? BONECA : {}));
+    heroRosto.classList.toggle('pisca-auto', !boneca);
+    heroRosto.classList.toggle('segue', boneca);
+    registrarOlhos();
+  }
+
+  /* olhos que seguem o cursor */
+  let olhosSeguindo = [];
+  function registrarOlhos() { olhosSeguindo = $$('.segue .olho'); }
+
+  /* piscadas */
+  setInterval(() => {
+    $$('.pisca-auto').forEach(el => {
+      if (Math.random() < .35) { el.classList.add('piscando'); setTimeout(() => el.classList.remove('piscando'), 190); }
+    });
+  }, 1600);
+  const estiloPisca = document.createElement('style');
+  estiloPisca.textContent = '.palpebra{transform-box:fill-box;transform-origin:center}.piscando .palpebra{animation:piscar .19s}@keyframes piscar{50%{transform:scaleY(.08)}}';
+  document.head.appendChild(estiloPisca);
+
+  /* =============== lâmpadas do espelho =============== */
+  function criarLampadas(g, grad) {
+    const pos = [[78, 365], [78, 315], [78, 265], [78, 215]];
+    [162, 126, 90, 54, 18].forEach(a => { const r = a * Math.PI / 180; pos.push([220 + 142 * Math.cos(r), 180 - 142 * Math.sin(r)]); });
+    pos.push([362, 215], [362, 265], [362, 315], [362, 365]);
+    g.innerHTML = pos.map(([x, y]) => `<g class="lamp" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle class="halo" r="22" fill="url(#${grad})"/><circle class="bulbo" r="8"/></g>`).join('');
+    return $$('.lamp', g);
+  }
+  const lampHero = criarLampadas($('#hero-lampadas'), 'g-lamp');
+  const lampFim = criarLampadas($('#fim-lampadas'), 'g-lamp-f');
+  setInterval(() => {
+    if (Math.random() < .5) return;
+    const l = lampHero[Math.floor(Math.random() * lampHero.length)];
+    l.classList.add('pisca'); setTimeout(() => l.classList.remove('pisca'), 750);
+  }, 7000);
+
+  /* =============== som =============== */
+  const Som = {
+    ctx: null, ligado: false, calado: false, passo: 0,
+    MEL: [0,4,7,12,11,7,4,2, 0,4,7,9,7,4,2,-1, 0,4,7,12,14,12,11,7, 9,7,4,2,4,0,null,null],
+    iniciar() {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return false;
+      const ctx = this.ctx = new C();
+      this.master = ctx.createGain(); this.master.gain.value = 0; this.master.connect(ctx.destination);
+      this.eco = ctx.createDelay(1); this.eco.delayTime.value = .27;
+      const fb = ctx.createGain(); fb.gain.value = .35;
+      const ef = ctx.createBiquadFilter(); ef.type = 'lowpass'; ef.frequency.value = 2400;
+      this.eco.connect(ef); ef.connect(fb); fb.connect(this.eco);
+      const ecoG = ctx.createGain(); ecoG.gain.value = .4; ef.connect(ecoG); ecoG.connect(this.master);
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.ruido = buf;
+      this.droneF = ctx.createBiquadFilter(); this.droneF.type = 'lowpass'; this.droneF.frequency.value = 160;
+      this.droneG = ctx.createGain(); this.droneG.gain.value = 0;
+      [49, 49.5, 73.4, 103.8].forEach(f => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(this.droneF); o.start(); });
+      this.droneF.connect(this.droneG); this.droneG.connect(this.master);
+      const r = ctx.createBufferSource(); r.buffer = buf; r.loop = true;
+      const rf = ctx.createBiquadFilter(); rf.type = 'bandpass'; rf.frequency.value = 650; rf.Q.value = .8;
+      this.respG = ctx.createGain(); this.respG.gain.value = 0;
+      r.connect(rf); rf.connect(this.respG); this.respG.connect(this.master); r.start();
+      this.tocar(); this.respirar();
+      return true;
+    },
+    alternar() {
+      if (!this.ctx && !this.iniciar()) return false;
+      this.ligado = !this.ligado;
+      this.ctx.resume();
+      this.master.gain.setTargetAtTime(this.ligado ? .9 : 0, this.ctx.currentTime, .15);
+      this.atualizar();
+      return this.ligado;
+    },
+    nota(f, v) {
+      const ctx = this.ctx, t = ctx.currentTime;
+      [[1, 1, 1.4], [2.005, .3, .5], [5.4, .06, .18]].forEach(([m, a, dur]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.value = f * m;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v * a, t + .005); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+        o.connect(g); g.connect(this.master); g.connect(this.eco);
+        o.start(t); o.stop(t + dur + .05);
+      });
+    },
+    tocar() {
+      const k = clamp((q - 1.5) / 7.5);
+      const n = this.MEL[this.passo++ % this.MEL.length];
+      if (this.ligado && !this.calado && n !== null && q < 9.3) {
+        const pula = k > .5 && Math.random() < (k - .5) * 1.1;
+        if (!pula) {
+          const cents = (Math.random() - .5) * k * 160 - k * k * 500;
+          this.nota(523.25 * Math.pow(2, (n + cents / 100) / 12), .14);
+        }
+      }
+      const espera = 290 * (1 + k * 1.6) * (k > .55 && Math.random() < .18 ? 2.4 : 1);
+      setTimeout(() => this.tocar(), espera);
+    },
+    atualizar() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      this.droneG.gain.setTargetAtTime(this.calado ? 0 : clamp((q - 6) / 3) * .2, t, .8);
+      this.droneF.frequency.setTargetAtTime(150 + clamp((q - 6) / 4) * 260, t, .8);
+    },
+    respirar() {
+      const vol = this.ligado && !this.calado ? clamp((q - 8.6) / 1) * .22 : 0;
+      if (this.ctx && vol > 0) {
+        const t = this.ctx.currentTime, g = this.respG.gain;
+        g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+        g.linearRampToValueAtTime(vol, t + 1.3); g.linearRampToValueAtTime(0, t + 3.2);
+      }
+      setTimeout(() => this.respirar(), 3600);
+    },
+    tink() {
+      if (!this.ligado) return;
+      const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(3200, t); o.frequency.exponentialRampToValueAtTime(800, t + .05);
+      g.gain.setValueAtTime(.045, t); g.gain.exponentialRampToValueAtTime(.0001, t + .07);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + .08);
+    },
+    grito() {
+      if (!this.ligado) return;
+      const ctx = this.ctx, t = ctx.currentTime;
+      const n = ctx.createBufferSource(); n.buffer = this.ruido;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2200;
+      const ng = ctx.createGain(); ng.gain.setValueAtTime(.8, t); ng.gain.exponentialRampToValueAtTime(.001, t + .7);
+      n.connect(hp); hp.connect(ng); ng.connect(this.master); n.start(t); n.stop(t + .8);
+      for (let i = 0; i < 18; i++) {
+        const o = ctx.createOscillator(), g = ctx.createGain(), tt = t + Math.random() * .6;
+        o.frequency.value = 2500 + Math.random() * 5000;
+        g.gain.setValueAtTime(.06, tt); g.gain.exponentialRampToValueAtTime(.0001, tt + .25);
+        o.connect(g); g.connect(this.master); o.start(tt); o.stop(tt + .3);
+      }
+      [1180, 1250, 1720].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .45, t + 1.1);
+        lfo.frequency.value = 9 + i * 2; lg.gain.value = f * .03; lfo.connect(lg); lg.connect(o.frequency);
+        g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.16, t + .04); g.gain.exponentialRampToValueAtTime(.001, t + 1.2);
+        o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 1.25); lfo.start(t); lfo.stop(t + 1.25);
+      });
+      const b = ctx.createOscillator(), bg = ctx.createGain();
+      b.frequency.setValueAtTime(90, t); b.frequency.exponentialRampToValueAtTime(30, t + .4);
+      bg.gain.setValueAtTime(.7, t); bg.gain.exponentialRampToValueAtTime(.001, t + .5);
+      b.connect(bg); bg.connect(this.master); b.start(t); b.stop(t + .55);
+      this.calado = true;
+      this.droneG.gain.setTargetAtTime(0, t + 1, .3);
+      this.respG.gain.cancelScheduledValues(t); this.respG.gain.setTargetAtTime(0, t, .1);
+    },
+  };
+  const botaoSom = $('#som');
+  function rotuloSom() {
+    const fundo = q >= 6.6;
+    botaoSom.querySelector('span').textContent = Som.ligado
+      ? (fundo ? '♪ ela gosta dessa música' : '♪ Tocando: caixinha de música')
+      : (fundo ? '♪ silêncio' : '♪ Tocar música do ritual');
+  }
+  botaoSom.addEventListener('click', () => {
+    const on = Som.alternar();
+    botaoSom.setAttribute('aria-pressed', on ? 'true' : 'false');
+    rotuloSom();
+  });
+
+  /* =============== sacola e avisos =============== */
+  let itens = trocada ? 1 : 0;
+  const sacolaN = $('#sacola-n'), sacola = $('#sacola'), toast = $('#toast');
+  sacolaN.textContent = itens;
+  let timerToast;
+  function avisar(txt) {
+    toast.textContent = txt; toast.classList.add('on');
+    clearTimeout(timerToast); timerToast = setTimeout(() => toast.classList.remove('on'), 2800);
+  }
+  $$('.add').forEach(b => b.addEventListener('click', () => {
+    itens++; sacolaN.textContent = itens;
+    sacola.classList.remove('pula'); void sacola.offsetWidth; sacola.classList.add('pula');
+    avisar(q >= 6 ? 'Adicionado. Ela agradece.' : '✓ ' + b.dataset.produto + ' foi para a sacola');
+    const t = b.dataset.txt || (b.dataset.txt = b.textContent);
+    b.textContent = 'Adicionado ✓';
+    clearTimeout(b._t); b._t = setTimeout(() => { b.textContent = t; }, 1600);
+  }));
+  sacola.addEventListener('click', () => {
+    if (trocada) return avisar('Na sua sacola: você.');
+    avisar(itens ? `Sua sacola tem ${itens} ${itens > 1 ? 'itens' : 'item'}. Frete grátis liberado ✨` : 'Sua sacola está vazia. Que tal o Kit 7 Noites?');
+  });
+
+  /* prova social */
+  const PROVAS = [
+    [['Júlia, de Recife', 'comprou o Sérum Glass Skin', 'há 2 min', 'julia'],
+     ['Camila, de BH', 'colocou a Máscara Porcelana na sacola', 'há 4 min', 'camila'],
+     ['Lara, de Floripa', 'comprou o Kit 7 Noites', 'agora', 'lara'],
+     ['Bia, de Campinas', 'avaliou com ★★★★★', 'há 1 min', 'bia']],
+    [['Júlia, de Recife', 'comprou o Sérum Glass Skin', 'há 2 min', 'julia'],
+     ['Júlia, de Recife', 'comprou o Sérum Glass Skin de novo', 'há 2 min', 'julia'],
+     ['Camila, de BH', 'está no banheiro há três horas', 'agora', 'camila'],
+     ['Júlia, de Recife', 'comprou de novo. e de novo. e de novo', 'há 2 min', 'julia'],
+     ['Bia, de Campinas', 'avaliou com ★★★★★★★', 'há 1 min', 'bia']],
+    [['Júlia, de Recife', 'não é mais a Júlia', 'desde a sétima noite', 'julia'],
+     ['Alguém, do outro lado', 'comprou a pele da Lara', 'agora', 'sombra'],
+     ['Camila, de BH', 'parou de piscar', 'há 3 dias', 'camila'],
+     ['Bia, de Campinas', 'pediu ajuda nos comentários', 'comentário removido', 'bia']],
+    [['Você, daí', 'colocou você mesma na sacola', 'agora', 'espelho'],
+     ['Ela, atrás do vidro', 'está vendo você ler isso', 'agora', 'bia'],
+     ['Alguém, perto de você', 'acendeu a luz do banheiro', 'agora', 'sombra'],
+     tarde ? ['Ela, no seu quarto', 'também está acordada às ' + hora, 'agora', 'bia'] : ['Você, daí', 'ainda está rolando a página', 'agora', 'espelho']],
+  ];
+  const AV_EXTRA = {
+    sombra: '<svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#1a1416"/><circle cx="22" cy="18" r="8" fill="#000"/><path d="M8 44c2-10 8-14 14-14s12 4 14 14z" fill="#000"/></svg>',
+    espelho: '<svg viewBox="0 0 44 44"><rect width="44" height="44" fill="#2a2023"/><path d="M13 40V21a9 9 0 0 1 18 0v19z" fill="#120d0f" stroke="#e0657f" stroke-width="2"/><circle cx="19" cy="24" r="1" fill="#fff"/><circle cx="25" cy="24" r="1" fill="#fff"/></svg>',
+  };
+  const prova = $('#prova'), contProva = [0, 0, 0, 0];
+  function mostrarProva() {
+    if (q > 9.1 || assustou) return;
+    const e = q < 2.2 ? 0 : q < 4 ? 1 : q < 6.5 ? 2 : 3;
+    const [quem, txt, quando, av] = PROVAS[e][contProva[e]++ % PROVAS[e].length];
+    $('#prova-av').innerHTML = AV_EXTRA[av] || svgRosto(Object.assign({}, PESSOAS[av], e >= 2 ? BONECA : {}), '44 40 112 112');
+    $('#prova-quem').textContent = quem;
+    $('#prova-txt').textContent = txt;
+    $('#prova-quando').textContent = quando + (e >= 3 ? ' · verificado por ela' : ' · ✓ compra verificada');
+    prova.classList.add('on');
+    setTimeout(() => prova.classList.remove('on'), 5200);
+  }
+  (function cicloProva() { setTimeout(() => { mostrarProva(); cicloProva(); }, 9000 + Math.random() * 5000); })();
+  setTimeout(() => {
+    if (trocada) {
+      $('#prova-av').innerHTML = svgRosto(Object.assign({}, PESSOAS.bia, BONECA), '44 40 112 112');
+      $('#prova-quem').textContent = 'Bem-vinda de volta 🤍';
+      $('#prova-txt').textContent = 'Seu reflexo ficou te esperando.';
+      $('#prova-quando').textContent = 'agora';
+      prova.classList.add('on'); setTimeout(() => prova.classList.remove('on'), 5200);
+    } else mostrarProva();
+  }, 3500);
+
+  /* relógio da promoção */
+  let restante = 899;
+  const relogio = $('#relogio'), rotulo = $('#aviso-rotulo'), aviso = $('#aviso');
+  setInterval(() => {
+    const vel = q > 5 ? 1 + (q - 5) * 9 : 1;
+    restante = Math.max(0, restante - vel * .25);
+    const s = Math.ceil(restante), hh = String(Math.floor(s / 3600)).padStart(2, '0'), mm = String(Math.floor(s % 3600 / 60)).padStart(2, '0'), ss = String(s % 60).padStart(2, '0');
+    relogio.textContent = `${hh}:${mm}:${ss}`;
+    if (q >= 5) rotulo.textContent = s === 0 ? 'ela já saiu' : 'ela sai em';
+    aviso.classList.toggle('zerado', s === 0);
+  }, 250);
+
+  const AVISOS = [
+    '✨ Frete grátis acima de R$ 99 · Cupom GLOW15 na primeira compra',
+    '✨ Frete grátis acima de R$ 99 · Cupom GLOW15 · Não use o espelho depois das 3h',
+    'Frete grátis · Não acenda a luz do banheiro · Ela já está acordada',
+    'ELA ESTÁ ACORDADA · '.repeat(16),
+  ];
+  const TITULOS = ['Reflexo · Skincare', 'Reflexo · Skincare.', 'reflexo', 'oxelfer', 'não olhe para trás'];
+  const FAV_ROSA = $('#favicon').href;
+  const FAV_ESCURO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M10 27V14a6 6 0 0 1 12 0v13z' fill='%23221a1c'/%3E%3Ccircle cx='14' cy='16' r='1.3' fill='%23fff'/%3E%3Ccircle cx='18' cy='16' r='1.3' fill='%23fff'/%3E%3C/svg%3E";
+  let eAviso = -1, eTitulo = -1, eFav = null, eSom = null;
+  function discretos() {
+    const ea = q < 2.5 ? 0 : q < 4.5 ? 1 : q < 7 ? 2 : 3;
+    if (ea !== eAviso) {
+      eAviso = ea;
+      $('#aviso-txt').textContent = AVISOS[ea];
+      aviso.classList.toggle('n2', ea === 2); aviso.classList.toggle('n3', ea === 3);
+      if (q < 5) rotulo.innerHTML = 'Black Glow <span class="aviso-rot-longo">acaba </span>em';
+    }
+    const et = q < 5 ? 0 : q < 7 ? 1 : q < 8 ? 2 : q < 9 ? 3 : 4;
+    if (et !== eTitulo) { eTitulo = et; if (!document.hidden && !assustou) document.title = TITULOS[et]; }
+    const fav = q >= 7;
+    if (fav !== eFav) { eFav = fav; $('#favicon').href = fav ? FAV_ESCURO : FAV_ROSA; }
+    const es = q >= 6.6;
+    if (es !== eSom) { eSom = es; rotuloSom(); }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (assustou) return;
+    document.title = document.hidden ? (q >= 6 ? 'ela continua aqui' : '✨ Seu ritual está esperando') : TITULOS[Math.max(0, eTitulo)];
+  });
+
+  /* =============== espelhar palavras =============== */
+  const visiveis = new Set();
+  const obsEspelho = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visiveis.add(e.target) : visiveis.delete(e.target)));
+  $$('[data-espelhar]').forEach(el => obsEspelho.observe(el));
+  setInterval(() => {
+    if (calmo || q < 2.6 || q > 9 || !visiveis.size || Math.random() > .25 + q * .05) return;
+    const lista = [...visiveis], el = lista[Math.floor(Math.random() * lista.length)];
+    el.classList.toggle('virado');
+    setTimeout(() => el.classList.toggle('virado'), 130 + Math.random() * 200);
+  }, 1700);
+
+  /* =============== aparecer ao rolar =============== */
+  const obsSobe = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('vis'); obsSobe.unobserve(e.target); }
+  }), { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+  $$('.sobe').forEach(el => obsSobe.observe(el));
+
+  function contar(el, ate, ms) {
+    const t0 = performance.now();
+    (function passo(t) {
+      const k = clamp((t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(ate * e);
+      if (k < 1) requestAnimationFrame(passo);
+    })(t0);
+  }
+  const obsNum = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    obsNum.disconnect();
+    $$('.numeros [data-ate]').forEach((el, i) => setTimeout(() => contar(el, +el.dataset.ate, 1500), i * 180));
+  }, { threshold: .4 });
+  obsNum.observe($('.numeros'));
+  const obsIng = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    obsIng.disconnect(); e.target.classList.add('vis');
+  }, { threshold: .25 });
+  obsIng.observe($("#lista-ingredientes"));
+
+  /* =============== antes e depois =============== */
+  const cmp = $('#comparar'), alca = $('#alca'), legendaCmp = $('#legenda-cmp');
+  let cx = 50, arrastando = false, ultimoToque = 0, cmpVisivel = false;
+  function setX(v) {
+    cx = clamp(v, 0, 100);
+    cmp.style.setProperty('--x', cx + '%');
+    alca.setAttribute('aria-valuenow', Math.round(cx));
+    cmp.classList.toggle('so-depois', cx < 4);
+  }
+  function moverCmp(e) { const r = cmp.getBoundingClientRect(); setX((e.clientX - r.left) / r.width * 100); ultimoToque = performance.now(); }
+  cmp.addEventListener('pointerdown', e => { arrastando = true; cmp.setPointerCapture(e.pointerId); moverCmp(e); });
+  cmp.addEventListener('pointermove', e => { if (arrastando) moverCmp(e); });
+  const soltar = () => { arrastando = false; ultimoToque = performance.now(); };
+  cmp.addEventListener('pointerup', soltar);
+  cmp.addEventListener('pointercancel', soltar);
+  alca.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') { setX(cx - 5); ultimoToque = performance.now(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { setX(cx + 5); ultimoToque = performance.now(); e.preventDefault(); }
+  });
+  new IntersectionObserver(([e]) => { cmpVisivel = e.isIntersecting; }).observe(cmp);
+
+  /* =============== depoimento da bia =============== */
+  $('#vermais').addEventListener('click', () => {
+    $('#post-bia').innerHTML = '<span class="removido">Este comentário foi removido.</span>';
+  });
+
+  /* =============== digitação =============== */
+  async function digitar(el, texto, vel = 55) {
+    for (let i = 1; i <= texto.length; i++) {
+      el.textContent = texto.slice(0, i);
+      await dorme(vel + (texto[i - 1] === ' ' ? 40 : 0) + Math.random() * 40);
+    }
+  }
+  $$('.faq details').forEach(d => d.addEventListener('toggle', () => {
+    const alvo = $('[data-digitar]', d);
+    if (d.open && alvo && !alvo.textContent) setTimeout(() => digitar(alvo, alvo.dataset.digitar, 75), 800);
+  }));
+
+  /* =============== quiz =============== */
+  const PERGUNTAS = [
+    ['Como sua pele fica no fim do dia?', ['Oleosa', 'Seca', 'Mista', 'Normal']],
+    ['Você tem sardas, pintas ou marquinhas?', ['Muitas', 'Algumas', 'Quase nenhuma']],
+    ['Quantas vezes por dia você se olha no espelho?', ['Perdi a conta', 'Umas três', 'Só quando preciso', 'Evito espelhos']],
+    ['Você mora sozinha?', ['Sim', 'Não', 'Prefiro não dizer']],
+    ['Tem algum espelho no cômodo em que você está agora?', ['Sim', 'Não', 'Não sei']],
+  ];
+  const caixa = $('#quiz-caixa');
+  let resp = [], ocupado = false;
+  async function pergunta(i) {
+    const [txt, ops] = PERGUNTAS[i];
+    caixa.innerHTML = `<div class="q-topo"><span>Pergunta ${i + 1} de ${PERGUNTAS.length}</span><div class="q-barra"><i style="width:${i / PERGUNTAS.length * 100}%"></i></div></div>
+      <h3 class="q-pergunta"></h3>
+      <div class="q-opcoes${i >= 3 ? ' esconde' : ''}">${ops.map(o => `<button class="q-op" type="button">${o}</button>`).join('')}</div>`;
+    const h = $('.q-pergunta', caixa), opcoes = $('.q-opcoes', caixa);
+    $$('.q-op', caixa).forEach(b => b.addEventListener('click', async () => {
+      if (ocupado) return;
+      ocupado = true;
+      b.classList.add('sel');
+      resp[i] = b.textContent;
+      await dorme(380);
+      ocupado = false;
+      if (i + 1 < PERGUNTAS.length) pergunta(i + 1); else calcular();
+      atualizarFalaQuiz();
+    }));
+    if (i >= 3) { await digitar(h, txt, 70); await dorme(400); opcoes.classList.remove('esconde'); }
+    else h.textContent = txt;
+  }
+  async function calcular() {
+    caixa.innerHTML = '<div class="q-calc"><p id="q-msg">Analisando textura…</p><div class="q-barra"><i id="q-prog"></i></div></div>';
+    const msgs = ['Analisando textura…', 'Medindo poros…', 'Contando sardas…', 'Comparando com o seu reflexo…', 'Pronto.'];
+    for (let k = 0; k < msgs.length; k++) {
+      $('#q-msg').textContent = msgs[k];
+      $('#q-prog').style.width = ((k + 1) / msgs.length * 100) + '%';
+      await dorme(k === 3 ? 1600 : 850);
+    }
+    resultado();
+  }
+  function resultado() {
+    const tipo = resp[0].toLowerCase();
+    const sardas = { 'Muitas': 'E essas sardas… ela já contou todas.', 'Algumas': 'As marquinhas somem na terceira noite. Junto com outras coisas.', 'Quase nenhuma': 'Quase sem marcas. Quase pronta.' }[resp[1]];
+    const espelhos = { 'Perdi a conta': 'Você se olha bastante. Ela também olha você.', 'Umas três': 'Três vezes por dia. Ela anotou os horários.', 'Só quando preciso': 'Só quando precisa. Logo ela vai precisar de você.', 'Evito espelhos': 'Você evita espelhos. Ela percebeu.' }[resp[2]];
+    const comodo = { 'Sim': 'Não precisa procurar. Ela já achou você.', 'Não': 'Tem certeza? A tela do celular apagada também serve.', 'Não sei': 'Olhe em volta. Devagar.' }[resp[4]];
+    caixa.innerHTML = `<div class="q-res">
+      <span class="eyebrow">Seu resultado</span>
+      <h3>Sua pele é ${tipo}.</h3>
+      <p>${sardas}</p>
+      <p>${espelhos}</p>
+      <p class="frio">${comodo}</p>
+      <div class="q-kit"><div><b>Ritual recomendado: Kit 7 Noites</b><small>R$ 0,00 · você já pagou</small></div><a class="btn btn-1" href="#ingredientes">Começar hoje à noite</a></div>
+      <button class="refazer" id="refazer" type="button">Refazer o quiz</button></div>`;
+    $('#refazer').addEventListener('click', () => { resp = []; pergunta(0); });
+  }
+  pergunta(0);
+
+  /* =============== espelho embaçado =============== */
+  const retrato = matchMedia('(max-width:600px)');
+  function layoutBanheiro() {
+    const r = retrato.matches;
+    $('#cena-banheiro').setAttribute('viewBox', r ? '0 0 600 760' : '0 0 600 480');
+    if (r) { $('#porta').setAttribute('transform', 'translate(-130 200) scale(1.25)'); $('#voce').setAttribute('transform', 'translate(0 240)'); }
+    else { $('#porta').removeAttribute('transform'); $('#voce').removeAttribute('transform'); }
+  }
+  layoutBanheiro();
+  const Neblina = {
+    cv: $('#neblina'), linhas: ['oi', 'eu copio você', 'desde sempre', 'hoje é a sua vez'],
+    feitos: [0, 0], limpo: false, comecou: false,
+    init() {
+      this.ctx = this.cv.getContext('2d');
+      this.tamanho();
+      addEventListener('resize', () => { layoutBanheiro(); this.tamanho(); });
+      const limpar = e => {
+        if (!this.s) return;
+        const r = this.cv.getBoundingClientRect(), dpr = this.cv.width / r.width;
+        this.borracha((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr, 34 * this.s);
+      };
+      this.cv.addEventListener('pointermove', limpar);
+      this.cv.addEventListener('pointerdown', limpar);
+      new IntersectionObserver(([e], o) => {
+        if (!e.isIntersecting || this.comecou) return;
+        this.comecou = true; o.disconnect(); this.escrever();
+      }, { threshold: .6 }).observe(this.cv);
+    },
+    tamanho() {
+      const r = this.cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+      const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+      if (!w || (w === this.cv.width && h === this.cv.height)) return;
+      this.cv.width = w; this.cv.height = h; this.s = w / 600;
+      this.embacar();
+      const [li, ch] = this.feitos;
+      for (let i = 0; i < li; i++) this.texto(i, this.linhas[i].length);
+      if (li < this.linhas.length && ch) this.texto(li, ch);
+      if (this.limpo) this.passada(1);
+    },
+    embacar() {
+      const c = this.ctx, w = this.cv.width, h = this.cv.height;
+      c.globalCompositeOperation = 'source-over';
+      c.clearRect(0, 0, w, h);
+      const g = c.createRadialGradient(w * .45, h * .3, 0, w * .5, h * .5, w * .8);
+      g.addColorStop(0, 'rgba(226,231,233,.96)'); g.addColorStop(1, 'rgba(158,167,171,.95)');
+      c.fillStyle = g; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 60; i++) {
+        c.fillStyle = `rgba(255,255,255,${(Math.random() * .07).toFixed(3)})`;
+        c.beginPath(); c.arc(Math.random() * w, Math.random() * h, (20 + Math.random() * 90) * this.s, 0, 7); c.fill();
+      }
+      c.globalCompositeOperation = 'destination-out';
+      for (let i = 0; i < 300; i++) {
+        c.fillStyle = `rgba(0,0,0,${(.2 + Math.random() * .5).toFixed(2)})`;
+        c.beginPath(); c.arc(Math.random() * w, Math.random() * h, (.6 + Math.random() * 2.2) * this.s, 0, 7); c.fill();
+      }
+      c.globalCompositeOperation = 'source-over';
+    },
+    geo(i) {
+      const r = retrato.matches;
+      return { x: 36 + i * 6, y: (r ? 116 : 104) + i * (r ? 76 : 62), rot: -.05 + i * .012, tam: r ? 60 : 50 };
+    },
+    texto(i, n) {
+      const c = this.ctx, s = this.s, g = this.geo(i);
+      c.save();
+      c.globalCompositeOperation = 'destination-out';
+      c.font = `600 ${g.tam * s}px Caveat, cursive`;
+      c.fillStyle = 'rgba(0,0,0,.92)';
+      c.translate(g.x * s, g.y * s);
+      c.rotate(g.rot);
+      c.fillText(this.linhas[i].slice(0, n), 0, 0);
+      c.restore();
+    },
+    borracha(x, y, r) {
+      const c = this.ctx;
+      c.save();
+      c.globalCompositeOperation = 'destination-out';
+      const g = c.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,0,.9)'); g.addColorStop(.6, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+      c.restore();
+    },
+    passada(k) {
+      const s = this.s, n = Math.ceil(40 * k);
+      const [a, b, c, raio] = retrato.matches ? [[585, 300], [520, 450], [400, 590], 78] : [[566, 92], [520, 230], [418, 330], 66];
+      for (let j = 0; j <= n; j++) {
+        const t = j / 40, u = 1 - t;
+        const x = u * u * a[0] + 2 * u * t * b[0] + t * t * c[0], y = u * u * a[1] + 2 * u * t * b[1] + t * t * c[1];
+        this.borracha(x * s, y * s, raio * s);
+      }
+    },
+    async pingar(i) {
+      const c = this.ctx, s = this.s, g = this.geo(i);
+      c.save(); c.font = `600 ${g.tam * s}px Caveat, cursive`;
+      const larg = c.measureText(this.linhas[i]).width / s; c.restore();
+      const dx = 8 + Math.random() * (larg - 16), x0 = g.x + dx, y0 = g.y + 6 + dx * g.rot;
+      const tam = 14 + Math.random() * 34;
+      for (let k = 0; k <= tam; k += 1.5) {
+        const r = (k > tam - 3 ? 1.6 : .8 + Math.random() * .3) * this.s;
+        c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = 'rgba(0,0,0,.7)';
+        c.beginPath(); c.arc((x0 + Math.sin(k / 6) * .6) * this.s, (y0 + k) * this.s, r, 0, 7); c.fill(); c.restore();
+        await dorme(55);
+      }
+    },
+    async escrever() {
+      try { await document.fonts.load('600 40px Caveat'); } catch (e) {}
+      await dorme(900);
+      for (let i = 0; i < this.linhas.length; i++) {
+        for (let j = 1; j <= this.linhas[i].length; j++) {
+          this.feitos = [i, j]; this.texto(i, j);
+          await dorme(this.linhas[i][j - 1] === ' ' ? 160 : 70 + Math.random() * 80);
+        }
+        this.feitos = [i + 1, 0];
+        if (Math.random() < .8) this.pingar(i);
+        await dorme(650);
+      }
+      await dorme(1400);
+      const t0 = performance.now();
+      await new Promise(res => {
+        const passo = t => {
+          const k = clamp((t - t0) / 850);
+          this.passada(k);
+          k < 1 ? requestAnimationFrame(passo) : res();
+        };
+        requestAnimationFrame(passo);
+      });
+      this.limpo = true;
+      $('#espelho-embacado').classList.add('revelado');
+      await dorme(900);
+      const leg = $('#legenda-neblina');
+      leg.classList.add('vermelho');
+      leg.textContent = 'Quem é essa atrás de você?';
+    },
+  };
+  Neblina.init();
+
+  /* =============== o espelho (fim) =============== */
+  const fim = $('#fim'), palco = $('#palco'), sombra = $('#sombra'), cabeca = $('#sombra-cabeca');
+  const sOlhos = $('#sombra-olhos'), sBoca = $('#sombra-boca'), sRosto = $('#sombra-rosto'), mao = $('#mao'), fimLuz = $('#fim-luz');
+  const rach = $$('#rachaduras path'), pups = $$('#sombra-olhos .pup');
+  const ORDEM = [6, 1, 10, 3, 12, 8, 0, 5, 11, 2, 9, 4, 7];
+  let tFim = 0, faseB = 0, fimVisivel = false;
+  const S = { x: 0, rot: 0 };
+  rach.forEach(p => { p.style.strokeDasharray = '1'; p.style.strokeDashoffset = '1'; });
+
+  function falaQuiz() {
+    const r = resp[3];
+    if (r === 'Sim') return 'Você mora sozinha. Ninguém vai notar a troca.';
+    if (r === 'Não') return 'Quem mora com você não vai notar a troca.';
+    if (r === 'Prefiro não dizer') return 'Você não quis dizer se mora sozinha. Nem precisava.';
+    return 'Ninguém vai notar a troca.';
+  }
+  const FALAS = [
+    [0, .12, 'Último passo do ritual.'],
+    [.12, .25, 'Olhe para o espelho.'],
+    [.25, .4, toque ? 'Arraste o dedo devagar. Ela acompanha.' : 'Mexa o mouse devagar. Ela acompanha.'],
+    [.4, .52, 'Agora fique parada.'],
+    [.52, .62, 'Ela não ficou.'],
+    [.62, .74, falaQuiz()],
+    [.74, .86, 'Ela nunca gostou desse lado do vidro.'],
+    [.86, 1.01, 'Boa noite.'],
+  ];
+  const falasEl = $('#falas');
+  falasEl.innerHTML = FALAS.map(f => `<p>${f[2]}</p>`).join('');
+  const falas = $$('p', falasEl);
+  function atualizarFalaQuiz() { falas[5].textContent = falaQuiz(); }
+
+  function cenaFim() {
+    const r = fim.getBoundingClientRect();
+    fimVisivel = r.top < innerHeight && r.bottom > 0;
+    tFim = clamp(-r.top / (r.height - innerHeight));
+    const t = tFim;
+    const L = 1 - clamp((t - .28) / .64);
+    const acesas = Math.round(lampFim.length * L);
+    lampFim.forEach((l, i) => {
+      const off = ORDEM.indexOf(i) < lampFim.length - acesas;
+      if (off !== l.classList.contains('off')) {
+        l.classList.toggle('off', off);
+        if (off && !calmo) { l.classList.add('pisca'); setTimeout(() => l.classList.remove('pisca'), 750); Som.tink(); }
+      }
+    });
+    palco.style.setProperty('--luz', L.toFixed(3));
+    fimLuz.setAttribute('opacity', (.015 + L * .13).toFixed(3));
+    sRosto.setAttribute('stroke-opacity', (L * .3).toFixed(3));
+    sOlhos.setAttribute('opacity', clamp((t - .6) / .08).toFixed(3));
+    sBoca.setAttribute('opacity', clamp((t - .75) / .08).toFixed(3));
+    mao.setAttribute('opacity', (clamp((t - .8) / .06) * .5).toFixed(3));
+    const k = clamp((t - .7) / .22);
+    rach.forEach(p => { p.style.strokeDashoffset = (1 - k).toFixed(3); });
+    falas.forEach((p, i) => p.classList.toggle('on', t >= FALAS[i][0] && t < FALAS[i][1] && r.top < innerHeight * .2 && r.bottom > innerHeight * .8));
+  }
+
+  /* =============== rolagem =============== */
+  const secoes = $$('main > section');
+  const nav = $('#nav'), grao = $('#grao'), vinheta = $('#vinheta');
+  let voltou = false;
+  function calcQ() {
+    const meio = innerHeight * .5;
+    for (const s of secoes) {
+      const r = s.getBoundingClientRect();
+      if (r.top <= meio && r.bottom > meio) return +s.dataset.n + (meio - r.top) / r.height;
+    }
+    return q;
+  }
+  let pendente = false;
+  function atualizar() {
+    pendente = false;
+    q = calcQ();
+    qMax = Math.max(qMax, q);
+    vinheta.style.opacity = (clamp((q - 3) / 4) * .9).toFixed(3);
+    grao.style.opacity = (clamp((q - 5) / 3) * .32).toFixed(3);
+    nav.classList.toggle('some', q >= 7);
+    document.body.classList.toggle('escuro', q >= 6.6);
+    discretos();
+    Som.atualizar();
+    cenaFim();
+    if (!voltou && !trocada && qMax >= 7 && q < .8) {
+      voltou = true;
+      desenharHero(true);
+      $('#selo').innerHTML = '<b>Ei</b><span>Por que você voltou pra cá?</span>';
+      avisar('Ela viu você voltar.');
+    }
+  }
+  addEventListener('scroll', () => { if (!pendente) { pendente = true; requestAnimationFrame(atualizar); } }, { passive: true });
+  addEventListener('resize', atualizar);
+
+  const marcarMov = (x, y) => { if (Math.abs(x - mx) + Math.abs(y - my) > 1) ultimoMov = performance.now(); mx = x; my = y; };
+  addEventListener('pointermove', e => marcarMov(e.clientX, e.clientY), { passive: true });
+  addEventListener('touchmove', e => marcarMov(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+
+  /* =============== laço de animação =============== */
+  let tAnt = performance.now();
+  (function laco(now) {
+    const dt = Math.min(64, now - tAnt); tAnt = now;
+    for (const o of olhosSeguindo) {
+      const r = o.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) continue;
+      const dx = mx - (r.left + r.width / 2), dy = my - (r.top + r.height / 2), d = Math.hypot(dx, dy) || 1;
+      const a = +o.dataset.alc * Math.min(1, d / 260);
+      o.setAttribute('transform', `translate(${(dx / d * a).toFixed(2)} ${(dy / d * a * .8).toFixed(2)})`);
+    }
+    if (cmpVisivel && q > 3.25 && !arrastando && now - ultimoToque > 2600 && cx > 0) {
+      setX(cx - dt * .006);
+      if (cx < 4 && !legendaCmp.classList.contains('estranha')) {
+        legendaCmp.classList.add('estranha');
+        legendaCmp.textContent = 'Não precisa arrastar. Ela já escolheu.';
+      }
+    }
+    if (fimVisivel) {
+      const t = tFim;
+      let ax, ar;
+      if (t < .4) {
+        const nx = clamp(mx / innerWidth * 2 - 1, -1, 1);
+        ax = nx * 42; ar = nx * 7;
+      } else if (t < .6) {
+        if (now - ultimoMov > 450) faseB += dt;
+        ax = Math.sin(faseB / 900) * 38; ar = Math.sin(faseB / 1300) * 10;
+      } else {
+        ax = Math.sin(now / 2600) * 6; ar = 24 + Math.sin(now / 700) * 1.5;
+      }
+      S.x += (ax - S.x) * .06; S.rot += (ar - S.rot) * .04;
+      const sc = 1 + Math.pow(clamp((t - .6) / .38), 1.5) * 1.6;
+      sombra.setAttribute('transform', `translate(${(220 + S.x).toFixed(2)} 245) scale(${sc.toFixed(3)}) translate(-220 -245)`);
+      cabeca.setAttribute('transform', `rotate(${S.rot.toFixed(2)} 220 300)`);
+      const px = clamp(mx / innerWidth * 2 - 1, -1, 1), py = clamp(my / innerHeight * 2 - 1, -1, 1);
+      pups.forEach((p, i) => { p.setAttribute('cx', ((i ? 239 : 201) + px * 4).toFixed(2)); p.setAttribute('cy', (240 + py * 1.5).toFixed(2)); });
+    }
+    requestAnimationFrame(laco);
+  })(tAnt);
+
+  /* =============== susto =============== */
+  (function montarRosto() {
+    const qd = (t, a, b, c) => (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
+    let dentes = '';
+    const n = 16;
+    for (let i = 0; i < n; i++) {
+      const a = .03 + i * (.94 / n), b = a + .94 / n, m = (a + b) / 2, f = Math.sin(Math.PI * m);
+      const cs = (14 + (i % 3 === 0 ? 7 : 0) + Math.sin(i * 1.7) * 3) * f + 3;
+      dentes += `M${qd(a, 96, 200, 304).toFixed(1)} ${qd(a, 340, 392, 340).toFixed(1)}L${qd(m, 96, 200, 304).toFixed(1)} ${(qd(m, 340, 392, 340) + cs).toFixed(1)}L${qd(b, 96, 200, 304).toFixed(1)} ${qd(b, 340, 392, 340).toFixed(1)}Z`;
+      const ci = (10 + (i % 4 === 1 ? 6 : 0)) * f + 2;
+      if (m > .22 && m < .78) dentes +=`M${qd(a, 96, 200, 304).toFixed(1)} ${qd(a, 340, 470, 340).toFixed(1)}L${qd(m, 96, 200, 304).toFixed(1)} ${(qd(m, 340, 470, 340) - ci).toFixed(1)}L${qd(b, 96, 200, 304).toFixed(1)} ${qd(b, 340, 470, 340).toFixed(1)}Z`;
+    }
+    const cilios = 'M108 198l-12-12M120 188l-7-15M136 183l-3-16M152 183l2-16M168 188l7-14M180 198l10-10';
+    const cilios2 = 'M292 198l12-12M280 188l7-15M264 183l3-16M248 183l-2-16M232 188l-7-14M220 198l-10-10';
+    $('#susto-rosto').innerHTML = `<svg viewBox="0 0 400 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="porcelana" cx=".5" cy=".42" r=".62"><stop offset="0" stop-color="#f6f0e9"/><stop offset=".55" stop-color="#d2c7bc"/><stop offset=".85" stop-color="#3b332e"/><stop offset="1" stop-color="#000"/></radialGradient>
+        <radialGradient id="buraco"><stop offset="0" stop-color="#000"/><stop offset=".62" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        <radialGradient id="rubor"><stop offset="0" stop-color="#b3404c" stop-opacity=".55"/><stop offset="1" stop-color="#b3404c" stop-opacity="0"/></radialGradient>
+        <filter id="entorta" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".013" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <filter id="chiado" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="5"/><feColorMatrix type="saturate" values="0"/></filter>
+      </defs>
+      <rect width="400" height="560" fill="#000"/>
+      <g filter="url(#entorta)">
+        <path d="M60 200C40 60 360 60 340 200L372 560H28Z" fill="#0d0a09"/>
+        <path d="M200 70C292 70 326 150 320 250C314 350 268 440 200 470C132 440 86 350 80 250C74 150 108 70 200 70Z" fill="url(#porcelana)"/>
+        <circle cx="122" cy="318" r="44" fill="url(#rubor)"/><circle cx="278" cy="318" r="44" fill="url(#rubor)"/>
+        <ellipse cx="146" cy="232" rx="40" ry="46" fill="url(#buraco)"/>
+        <ellipse cx="254" cy="232" rx="40" ry="46" fill="url(#buraco)"/>
+        <path d="${cilios}${cilios2}" stroke="#120d0b" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="150" cy="236" r="3.4" fill="#fff"/><circle cx="250" cy="236" r="3.4" fill="#fff"/>
+        <path d="M140 276q-4 50 6 110M262 278q6 60-4 130" stroke="#000" stroke-width="5" fill="none" opacity=".75"/>
+        <path d="M192 298q-4 10 1 16M208 298q4 10-1 16" stroke="#2a221e" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <path d="M96 340Q200 470 304 340Q200 392 96 340Z" fill="#000"/>
+        <path d="${dentes}" fill="#e7dfd2"/>
+        <path d="M254 186L270 150L262 118L284 80M254 186L300 200L330 190M146 278L120 330L128 380L104 430M200 120L196 160L214 196M290 300L320 330L318 380" stroke="#1a1411" stroke-width="2.4" fill="none"/>
+        <path d="M286 250L318 236L326 276L300 300L284 282Z" fill="#000"/>
+        <path d="M286 250L318 236L326 276L300 300L284 282Z" fill="none" stroke="#ece4d9" stroke-width="1.5" opacity=".6"/>
+        <path d="M86 230C90 120 140 72 200 70C150 90 120 140 110 260L96 420C88 360 84 300 86 230Z" fill="#0d0a09"/>
+        <path d="M314 230C310 120 260 72 200 70C250 90 280 140 290 260L304 420C312 360 316 300 314 230Z" fill="#0d0a09"/>
+        <path d="M200 70C170 90 160 130 166 160C176 120 190 96 200 70ZM200 70C230 90 240 130 234 160C224 120 210 96 200 70Z" fill="#0d0a09"/>
+      </g>
+      <rect width="400" height="560" filter="url(#chiado)" opacity=".2" style="mix-blend-mode:multiply"/>
+      <rect width="400" height="560" fill="#6a0010" opacity=".18" style="mix-blend-mode:multiply"/>
+    </svg>`;
+  })();
+
+  const susto = $('#susto'), raiz = document.documentElement;
+  new IntersectionObserver(async ([e]) => {
+    if (!e.isIntersecting || assustou) return;
+    assustou = true;
+    prova.classList.remove('on'); toast.classList.remove('on');
+    const largo = innerWidth / innerHeight > .8;
+    $('#susto-rosto svg').setAttribute('preserveAspectRatio', largo ? 'xMidYMid meet' : 'xMidYMid slice');
+    susto.style.setProperty('--zoom', largo ? '1.34' : '1.12');
+    susto.classList.add('on');
+    raiz.style.overflow = 'hidden';
+    document.title = '';
+    await dorme(1400);
+    susto.classList.add('grito');
+    Som.grito();
+    try { navigator.vibrate && navigator.vibrate([220, 60, 320]); } catch (err) {}
+    await dorme(900);
+    susto.classList.remove('grito');
+    document.title = 'obrigada';
+    guardado.set('reflexo-trocada', '1');
+    await dorme(700);
+    susto.classList.add('fala');
+  }, { threshold: .5 }).observe($('#final'));
+
+  $('#voltar').addEventListener('click', () => {
+    trocada = true;
+    document.body.classList.add('trocada');
+    desenharHero(true);
+    $('#selo').innerHTML = '<b>Oi</b><span>Que bom te ver de novo. Você está diferente.</span>';
+    itens = Math.max(itens, 1); sacolaN.textContent = itens;
+    restante = 899;
+    raiz.style.overflow = '';
+    raiz.style.scrollBehavior = 'auto';
+    scrollTo(0, 0);
+    raiz.style.scrollBehavior = '';
+    susto.classList.remove('on', 'fala');
+    Som.calado = false;
+    assustou = false;
+    eTitulo = -1;
+    atualizar();
+    setTimeout(() => avisar('Bem-vinda de volta 🤍 Seu reflexo ficou te esperando.'), 1500);
+  });
+  $('#esquecer').addEventListener('click', () => {
+    guardado.del('reflexo-trocada');
+    location.href = location.pathname;
+  });
+
+  /* =============== início =============== */
+  if (trocada) {
+    document.body.classList.add('trocada');
+    desenharHero(true);
+    $('#selo').innerHTML = '<b>Oi</b><span>Que bom te ver de novo. Você está diferente.</span>';
+  } else desenharHero(false);
+  scrollTo(0, 0);
+  atualizar();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bosque Sereno · Residencial</title>
+<meta name="description" content="Casas amplas cercadas por 40 hectares de mata nativa. Um lugar para criar raízes.">
+<meta name="color-scheme" content="light">
+<link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%232f6b4f'/%3E%3Cpath d='M16 6 L24 22 H8Z' fill='%23f7f4ec'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4ec; --card:#fffdf8; --ink:#1f2a24; --muted:#5e6b63; --line:#e4dfd2;
+  --green:#2f6b4f; --green-2:#d7eadc; --sun:#e7b45a; --red:#8f1d1d;
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --type:'Special Elite','Courier New',monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#000;color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.1;margin:0}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+section{position:relative;padding:112px 0;background:linear-gradient(var(--de),var(--para) 260px)}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--green)}
+.titulo{font-size:clamp(30px,4.4vw,46px);letter-spacing:-.01em;margin:10px 0 14px}
+.sub{color:var(--muted);font-size:18px;max-width:620px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:14px 24px;font:600 15px var(--sans);cursor:pointer;text-decoration:none;transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-1{background:var(--green);color:#fff}
+.btn-1:hover{background:#245640}
+.btn-2{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+
+/* ---------- nav ---------- */
+nav{position:fixed;inset:0 0 auto;z-index:40;background:rgba(247,244,236,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:opacity .8s,transform .8s}
+nav.some{opacity:0;transform:translateY(-100%);pointer-events:none}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.marca{display:flex;align-items:center;gap:10px;font:600 19px var(--serif);text-decoration:none}
+.marca i{width:30px;height:30px;border-radius:50%;background:var(--green);display:grid;place-items:center}
+.marca i:after{content:"";border:8px solid transparent;border-bottom:13px solid var(--bg);margin-top:-10px}
+.links{display:flex;gap:28px;font-size:15px;color:var(--muted)}
+.links a{text-decoration:none}
+.links a:hover{color:var(--ink)}
+nav .btn{padding:10px 18px;font-size:14px}
+
+/* ---------- hero ---------- */
+#inicio{--de:#f7f4ec;--para:#f7f4ec;padding:150px 0 90px}
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+.selo{background:var(--green-2);border-radius:16px;padding:6px 14px;text-transform:none;letter-spacing:0;font-weight:500;line-height:1.45}
+.hero h1{font-size:clamp(40px,6vw,68px);letter-spacing:-.02em;margin:20px 0}
+.hero h1 em{font-style:italic;font-weight:400;color:var(--green)}
+.hero .sub{margin-bottom:32px}
+.acoes{display:flex;gap:12px;flex-wrap:wrap}
+.confianca{display:flex;align-items:center;gap:12px;margin-top:34px;color:var(--muted);font-size:14px}
+.rostos{display:flex}
+.rostos span{width:34px;height:34px;border-radius:50%;border:2px solid var(--bg);margin-left:-8px;background:#d9b99b}
+.rostos span:first-child{margin-left:0}
+.rostos span:nth-child(2){background:#b48a6a}.rostos span:nth-child(3){background:#e8cdb0}.rostos span:nth-child(4){background:#8e6a52}
+.ilustra{border-radius:28px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(31,42,36,.35)}
+.so-morador{display:none}
+.morador .so-morador{display:revert}
+.morador .nao-morador{display:none}
+
+/* ---------- imprensa ---------- */
+#imprensa{--de:#f7f4ec;--para:#f7f4ec;padding:30px 0 60px}
+.imprensa{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px 40px;color:#9aa39d;border-top:1px solid var(--line);padding-top:36px}
+.imprensa small{font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.imprensa b{font:600 22px var(--serif)}
+.imprensa b:nth-of-type(2){font:italic 400 24px var(--serif)}
+.imprensa b:nth-of-type(3){font:600 15px var(--sans);letter-spacing:.2em}
+.escondido{color:#f7f4ec;font-size:12px}
+.escondido::selection{background:var(--red);color:#fff}
+
+/* ---------- diferenciais ---------- */
+#bosque{--de:#f7f4ec;--para:#fffdf8}
+.grade3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px}
+.icone{width:48px;height:48px;border-radius:14px;background:var(--green-2);display:grid;place-items:center;margin-bottom:22px}
+.icone svg{width:24px;height:24px;stroke:var(--green);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card h3{font-size:22px;margin-bottom:8px}
+.card p{color:var(--muted)}
+
+/* ---------- números ---------- */
+#numeros{--de:#fffdf8;--para:#f1eee5}
+.numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:44px}
+.num{border-left:2px solid var(--green);padding:4px 0 4px 20px}
+.num strong{display:block;font:600 46px/1 var(--serif);color:var(--green);margin-bottom:8px}
+.num span{color:var(--muted);font-size:15px}
+.nota{margin-top:34px;font-size:13px;color:#8b928c}
+
+/* ---------- galeria ---------- */
+#galeria{--de:#f1eee5;--para:#e9e6dc}
+.galeria{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px}
+figure{margin:0}
+.foto{border-radius:18px;overflow:hidden;aspect-ratio:4/3;background:#ccc}
+.foto svg{width:100%;height:100%}
+.foto .vulto-perto{transition:transform 6s cubic-bezier(.2,.6,.2,1);transform-origin:200px 300px}
+figure:hover .vulto-perto{transform:scale(1.18)}
+figcaption{display:flex;justify-content:space-between;margin-top:12px;font-size:14px;color:var(--muted)}
+figcaption b{color:var(--ink);font-weight:600}
+
+/* ---------- depoimentos ---------- */
+#depoimentos{--de:#e9e6dc;--para:#e2dfd5}
+.depo .estrelas{color:#c99a3a;letter-spacing:2px;margin-bottom:14px}
+.depo blockquote{margin:0 0 22px;font:400 20px/1.45 var(--serif)}
+.quem{display:flex;align-items:center;gap:12px;font-size:14px}
+.quem i{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#e7cdb2 0 34%,#cbb096 35% 100%)}
+.quem small{display:block;color:var(--muted)}
+
+/* ---------- rotina ---------- */
+#rotina{--de:#e2dfd5;--para:#d3d1c6}
+.linha-tempo{margin-top:40px;border-left:2px solid #b9b6aa;max-width:640px}
+.hora{display:grid;grid-template-columns:90px 1fr;gap:18px;padding:14px 0 14px 24px;position:relative}
+.hora:before{content:"";position:absolute;left:-7px;top:22px;width:12px;height:12px;border-radius:50%;background:var(--green)}
+.hora b{font:600 18px var(--serif)}
+.hora span{color:#4d554f}
+.hora.estranha:before{background:#5a5a52}
+.hora.estranha b{color:#4a4842}
+.hora.muito:before{background:#1a1a18;box-shadow:0 0 0 4px rgba(0,0,0,.15)}
+.hora.muito span{font-family:var(--type);color:#2b2a26}
+
+/* ---------- faq ---------- */
+#faq{--de:#d3d1c6;--para:#b6b4a3;color:#2a2b25}
+#faq .sub,#faq .eyebrow{color:#4f5148}
+.faq{margin-top:36px;max-width:760px}
+details{border-bottom:1px solid rgba(0,0,0,.14);padding:20px 0}
+summary{cursor:pointer;font:600 20px var(--serif);list-style:none;display:flex;justify-content:space-between;gap:20px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";font-family:var(--sans);font-weight:400;transition:transform .3s}
+details[open] summary:after{transform:rotate(45deg)}
+details p{margin-top:12px;color:#3f4139;max-width:640px}
+.vermelho{color:var(--red)!important;font-family:var(--type)}
+
+/* ---------- planos ---------- */
+#planos{--de:#b6b4a3;--para:#7f7c6e;color:#1e1d19}
+#planos .sub,#planos .eyebrow{color:#33322b}
+.plano{background:rgba(255,253,245,.55);border:1px solid rgba(0,0,0,.12);border-radius:22px;padding:32px;display:flex;flex-direction:column}
+.plano.destaque{background:#26261f;color:#e4dfcf;transform:rotate(-.6deg)}
+.plano h3{font-size:22px}
+.preco{font:600 46px var(--serif);margin:18px 0 4px}
+.preco small{font:400 15px var(--sans);opacity:.7}
+.plano ul{list-style:none;padding:0;margin:20px 0 28px;flex:1}
+.plano li{padding:7px 0 7px 26px;position:relative}
+.plano li:before{content:"✓";position:absolute;left:0;color:var(--green)}
+.plano.destaque li:before{color:#9bbfa8}
+.plano li.risco{text-decoration:line-through;opacity:.6}
+.plano .btn{justify-content:center}
+.plano.destaque .btn{background:#e4dfcf;color:#26261f}
+.tag{align-self:flex-start;font-size:12px;background:#e4dfcf;color:#26261f;border-radius:999px;padding:4px 10px;margin-bottom:14px;font-weight:600}
+.letrinha{margin-top:26px;font-size:12px;color:#2c2b25;opacity:.75}
+
+/* ---------- regras ---------- */
+#regras{--de:#7f7c6e;--para:#2a2925;color:#d9d4c7}
+#regras .eyebrow{color:#a8a291}
+#regras .sub{color:#b3ad9d}
+.regras{margin:44px 0 0;padding:0;list-style:none;counter-reset:r;max-width:760px;font-family:var(--type);font-size:18px}
+.regras li{counter-increment:r;display:grid;grid-template-columns:44px 1fr;padding:14px 0;border-bottom:1px dashed rgba(217,212,199,.18)}
+.regras li:before{content:counter(r) ".";color:#8c8574}
+.regras li:nth-child(3){transform:translateX(3px)}
+.regras li:nth-child(5){transform:rotate(.4deg)}
+.regras li.riscada span{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px}
+.regras li.riscada em{display:block;font-style:normal;color:#c24a3c;margin-top:6px}
+
+/* ---------- contato ---------- */
+#contato{--de:#2a2925;--para:#141311;color:#c7c0b0}
+#contato .titulo{color:#e1dbcc}
+#contato .eyebrow{color:#8e8775}
+#contato .sub{color:#958e7e}
+form{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px}
+label{display:flex;flex-direction:column;gap:8px;font-size:13px;color:#8e8775}
+label.inteiro{grid-column:1/-1}
+input,textarea{font:16px var(--sans);color:#e1dbcc;background:#1e1d1a;border:1px solid #38362f;border-radius:12px;padding:14px 16px;resize:none}
+textarea{min-height:150px;line-height:1.55}
+form .btn{grid-column:1/-1;justify-self:start;background:#3a382f;color:#8e8775;cursor:default}
+
+/* ---------- ruptura ---------- */
+#ruptura{--de:#141311;--para:#0a0909;color:#2e2c27;padding:80px 0 140px;overflow:hidden}
+.parede{font:600 clamp(22px,3.4vw,38px)/1.15 var(--serif);word-spacing:.15em;user-select:none;text-align:justify;max-height:520px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 15%,#000 80%,transparent);mask-image:linear-gradient(transparent,#000 15%,#000 80%,transparent)}
+.parede .saia{color:#6e1616}
+.bilhete{margin:60px auto 0;max-width:520px;font:17px/1.7 var(--type);color:#a39d8e;background:#e8e1cf0d;border:1px solid #2a2823;padding:28px 30px;transform:rotate(-1.2deg)}
+.bilhete p+p{margin-top:12px}
+.bilhete .ass{text-align:right;color:#6d685c}
+
+/* ---------- fim ---------- */
+#fim{--de:#0a0909;--para:#000;height:420vh;padding:0}
+.palco{position:sticky;top:0;height:100vh;overflow:hidden;background:#000}
+.nevoa{position:absolute;inset:-20%;background:radial-gradient(ellipse 40% 30% at 50% 45%,rgba(120,118,112,.22),transparent 70%),radial-gradient(ellipse 50% 22% at 30% 70%,rgba(120,118,112,.12),transparent 70%),radial-gradient(ellipse 50% 22% at 70% 30%,rgba(120,118,112,.1),transparent 70%);animation:deriva 16s ease-in-out infinite alternate}
+.nevoa.n2{animation-duration:23s;animation-direction:alternate-reverse;opacity:.7}
+@keyframes deriva{to{transform:translate(4%,-3%) scale(1.08)}}
+.vulto-grande{position:absolute;left:50%;top:40%;height:92vh;width:auto;transform-origin:50% 13.5%;opacity:0;will-change:transform,opacity}
+.olhos{transform-box:fill-box;transform-origin:center;animation:piscar 6s infinite}
+@keyframes piscar{0%,46%,50%,100%{transform:scaleY(1)}48%{transform:scaleY(.05)}}
+.falas{position:absolute;left:0;right:0;bottom:12vh;text-align:center;padding:0 24px;z-index:2}
+.falas p{position:absolute;left:24px;right:24px;bottom:0;font:italic 400 clamp(22px,3.4vw,34px)/1.3 var(--serif);color:#d8d2c3;opacity:0;transition:opacity 1.2s;text-shadow:0 0 30px #000}
+.falas p.on{opacity:1}
+
+/* ---------- final ---------- */
+#final{--de:#000;--para:#000;height:100vh;padding:0}
+
+/* ---------- camadas fixas ---------- */
+.grao,.vinheta{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0}
+.grao{inset:-50%;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");animation:grao .4s steps(3) infinite}
+@keyframes grao{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}}
+.vinheta{background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.75) 100%)}
+.fantasma{position:fixed;left:0;top:0;width:18px;z-index:60;pointer-events:none;opacity:0;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
+
+/* som */
+.som{position:fixed;left:20px;bottom:20px;z-index:45;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:rgba(255,253,248,.92);color:var(--ink);border-radius:999px;padding:10px 16px;font:500 13px var(--sans);cursor:pointer;backdrop-filter:blur(8px);transition:background .6s,color .6s,border-color .6s}
+.som.escuro{background:rgba(20,19,17,.8);color:#8e8775;border-color:#2a2823}
+.som i{width:8px;height:8px;border-radius:50%;background:#b9b6aa}
+.som[aria-pressed="true"] i{background:#3fae6f;box-shadow:0 0 0 4px rgba(63,174,111,.2)}
+
+/* chat */
+.chat-btn{position:fixed;right:20px;bottom:20px;z-index:45;width:60px;height:60px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;display:grid;place-items:center;box-shadow:0 12px 30px -10px rgba(31,42,36,.5);transition:background .8s}
+.chat-btn svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chat-btn.escuro{background:#1b1a17;box-shadow:0 0 0 1px #2a2823}
+.chat-btn b{position:absolute;top:-2px;right:-2px;min-width:22px;height:22px;border-radius:11px;background:#d64545;font:600 12px/22px var(--sans);padding:0 6px;display:none}
+.chat-btn b.on{display:block}
+.balao{position:fixed;right:20px;bottom:94px;z-index:45;width:min(310px,calc(100vw - 40px));background:#fff;color:var(--ink);border-radius:18px 18px 4px 18px;padding:14px 16px;box-shadow:0 18px 40px -16px rgba(0,0,0,.35);font-size:14px;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s;pointer-events:none}
+.balao.on{opacity:1;transform:none;pointer-events:auto;cursor:pointer}
+.balao small{display:block;font-weight:600;font-size:12px;color:var(--muted);margin-bottom:4px}
+.balao.escuro{background:#15140f;color:#cfc8b8;border:1px solid #2a2823}
+.painel{position:fixed;right:20px;bottom:94px;z-index:46;width:min(360px,calc(100vw - 40px));height:min(480px,calc(100vh - 140px));background:#fff;border-radius:20px;box-shadow:0 30px 60px -20px rgba(0,0,0,.45);display:none;flex-direction:column;overflow:hidden}
+.painel.on{display:flex}
+.painel header{background:var(--green);color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px;transition:background .8s}
+.painel header i{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#f0d8bf 0 34%,#d9bc9e 35%)}
+.painel header b{display:block;font-size:15px}
+.painel header small{opacity:.8;font-size:12px}
+.painel header button{margin-left:auto;background:none;border:0;color:inherit;font-size:22px;cursor:pointer;line-height:1}
+.painel.escuro{background:#100f0d}
+.painel.escuro header{background:#1b1a17;color:#a39d8e}
+.painel.escuro header i{background:#000;box-shadow:inset 0 0 0 1px #333}
+.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;background:#f1eee5;align-self:flex-start;border-bottom-left-radius:4px}
+.msg.eu{align-self:flex-end;background:var(--green);color:#fff;border-radius:16px 16px 4px 16px}
+.painel.escuro .msg{background:#1d1c18;color:#cfc8b8}
+.painel.escuro .msg.eu{background:#2a2823;color:#8e8775}
+.painel form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);margin:0;max-width:none}
+.painel.escuro form{border-color:#2a2823}
+.painel input{flex:1;background:#f7f4ec;color:var(--ink);border-color:var(--line);padding:10px 14px}
+.painel.escuro input{background:#1d1c18;color:#cfc8b8;border-color:#2a2823}
+.painel form button{border:0;border-radius:12px;background:var(--green);color:#fff;padding:0 14px;font:600 14px var(--sans);cursor:pointer}
+.painel.escuro form button{background:#2a2823;color:#8e8775}
+
+/* susto */
+.susto{position:fixed;inset:0;z-index:100;background:#000;display:none;place-items:center;overflow:hidden}
+.susto.on{display:grid}
+.susto .rosto{position:absolute;inset:0;display:none;place-items:center;background:#000}
+.susto.grito .rosto{display:grid}
+.susto .rosto svg{height:100vh;width:auto;max-width:none;animation:avanca .75s cubic-bezier(.2,.9,.2,1) forwards}
+.susto.grito{animation:tremor .08s steps(2) infinite}
+@keyframes avanca{0%{transform:scale(.9);filter:contrast(1.4) brightness(.6)}12%{transform:scale(1.25);filter:contrast(1.8) brightness(1.2)}100%{transform:scale(1.6);filter:contrast(2) brightness(.9)}}
+@keyframes tremor{0%{transform:translate(6px,-4px)}50%{transform:translate(-7px,5px)}100%{transform:translate(3px,6px)}}
+.recado{text-align:center;padding:24px;opacity:0;transition:opacity 3s}
+.susto.fala .recado{opacity:1}
+.recado h2{font:italic 400 clamp(32px,6vw,64px)/1.15 var(--serif);color:#d8d2c3}
+.recado p{margin-top:16px;color:#6d685c;font:15px var(--type)}
+.recado .btn{margin-top:40px;background:transparent;color:#8e8775;box-shadow:inset 0 0 0 1px #2a2823}
+.recado .esquecer{display:block;margin:22px auto 0;background:none;border:0;color:#3c3a34;font:12px var(--sans);cursor:pointer;text-decoration:underline}
+
+.treme{animation:tremor .09s steps(2) 6}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:40px}
+  .grade3,.galeria{grid-template-columns:1fr}
+  .numeros{grid-template-columns:1fr 1fr}
+  .links{display:none}
+  section{padding:84px 0}
+  #inicio{padding-top:120px}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  nav .btn{display:none}
+  form{grid-template-columns:1fr}
+  .num strong{font-size:38px}
+  .som span{display:none}
+  .hora{grid-template-columns:70px 1fr;gap:12px}
+  .falas{bottom:auto;top:11vh}
+  .falas p{bottom:auto;top:0}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .grao,.nevoa,.treme,.susto.grito{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- figura reaproveitada nas ilustrações -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="vulto" viewBox="0 0 40 120">
+    <ellipse cx="20" cy="11" rx="6.5" ry="8.5"/>
+    <path d="M20 19c-6 1-8 8-8.5 22L7 88l3 1 5-33 1 62h3l1-42 1 42h3l1-62 5 33 3-1-4.5-47C28 27 26 20 20 19z"/>
+  </symbol>
+</svg>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="marca" href="#inicio"><i></i>Bosque Sereno</a>
+    <div class="links">
+      <a href="#bosque">O bosque</a>
+      <a href="#galeria">Fotos</a>
+      <a href="#planos">Planos</a>
+      <a href="#faq">Dúvidas</a>
+    </div>
+    <a class="btn btn-1" href="#contato">Agende sua visita</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="inicio" data-titulo="Bosque Sereno · Residencial">
+  <div class="wrap hero">
+    <div>
+      <span class="eyebrow selo nao-morador">🌿 Lançamento · últimas unidades</span>
+      <span class="eyebrow selo so-morador">Bem-vindo de volta. Sua casa está do jeito que você deixou.</span>
+      <h1>Viva onde a vida <em>desacelera.</em></h1>
+      <p class="sub">Casas amplas cercadas por 40 hectares de mata nativa, a uma hora da cidade. Um lugar para criar raízes. E ficar.</p>
+      <div class="acoes">
+        <a class="btn btn-1" href="#contato"><span class="nao-morador">Agende sua visita</span><span class="so-morador">Você já mora aqui</span> →</a>
+        <a class="btn btn-2" href="#galeria">Conhecer o bosque</a>
+      </div>
+      <div class="confianca">
+        <div class="rostos"><span></span><span></span><span></span><span></span></div>
+        <div><b style="color:var(--ink)">★ 4,9</b> · 320 famílias já moram aqui</div>
+      </div>
+    </div>
+    <div class="ilustra">
+      <svg viewBox="0 0 600 460" role="img" aria-label="Casa cercada de árvores numa colina">
+        <defs>
+          <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe8dc"/><stop offset="1" stop-color="#f6efdc"/></linearGradient>
+          <clipPath id="sotao"><circle cx="315" cy="214" r="12"/></clipPath>
+          <clipPath id="j1"><rect x="248" y="266" width="36" height="30"/></clipPath>
+          <clipPath id="j2"><rect x="346" y="266" width="36" height="30"/></clipPath>
+        </defs>
+        <rect width="600" height="460" fill="url(#ceu)"/>
+        <circle cx="470" cy="110" r="46" fill="#f4d58d"/>
+        <circle cx="470" cy="110" r="70" fill="#f4d58d" opacity=".25"/>
+        <path d="M0 300Q150 230 300 280T600 262V460H0Z" fill="#b5d5bd"/>
+        <g fill="#5d9475">
+          <polygon points="40,310 70,200 100,310"/><polygon points="90,300 125,180 160,300"/><polygon points="455,300 485,200 515,300"/><polygon points="505,292 540,170 575,292"/>
+        </g>
+        <path d="M0 350Q200 300 380 340T600 330V460H0Z" fill="#86b799"/>
+        <path d="M300 352Q290 400 250 460H330Q318 400 318 352Z" fill="#e9dcc0"/>
+        <rect x="230" y="244" width="170" height="110" fill="#fbf7ee"/>
+        <polygon points="214,250 315,176 416,250" fill="#c46f4a"/>
+        <rect x="298" y="294" width="34" height="60" rx="2" fill="#6b4a3a"/>
+        <circle cx="326" cy="326" r="2" fill="#e7b45a"/>
+        <rect x="248" y="266" width="36" height="30" fill="#ffe7a8"/>
+        <rect x="346" y="266" width="36" height="30" fill="#ffe7a8"/>
+        <circle cx="315" cy="214" r="12" fill="#ffe7a8"/>
+        <g clip-path="url(#sotao)"><use href="#vulto" x="309" y="205" width="12" height="36" fill="#2a2a24" opacity=".55"/></g>
+        <g class="so-morador" fill="#1e1e1a">
+          <g clip-path="url(#j1)"><use href="#vulto" x="259" y="270" width="14" height="42"/></g>
+          <g clip-path="url(#j2)"><use href="#vulto" x="357" y="270" width="14" height="42"/></g>
+        </g>
+        <g fill="#3f7a5a">
+          <polygon points="150,360 185,230 220,360"/><polygon points="420,360 452,250 484,360"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="imprensa" data-titulo="Bosque Sereno · Residencial">
+  <div class="wrap imprensa">
+    <small>Como visto em</small>
+    <b>Revista Morar</b><b>Casa &amp; Campo</b><b>JORNAL DO VALE</b><b>Bem Viver</b>
+    <span class="escondido">eles não deixam a gente sair</span>
+  </div>
+</section>
+
+<section id="bosque" data-titulo="Bosque Sereno · Residencial">
+  <div class="wrap">
+    <span class="eyebrow">Por que o Bosque</span>
+    <h2 class="titulo">Tudo o que você precisa.<br>Nada do que você deixou para trás.</h2>
+    <p class="sub">Projetado para famílias que querem mais natureza, mais segurança e mais tempo juntos.</p>
+    <div class="grade3">
+      <div class="card">
+        <div class="icone"><svg viewBox="0 0 24 24"><path d="M12 3 5 14h4l-3 5h12l-3-5h4z"/><path d="M12 19v2"/></svg></div>
+        <h3>Natureza de verdade</h3>
+        <p>40 hectares de mata nativa preservada. Os sons da cidade não chegam aqui. Nenhum som chega aqui.</p>
+      </div>
+      <div class="card">
+        <div class="icone"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></svg></div>
+        <h3 data-troca="Vigilância 24h">Segurança 24h</h3>
+        <p>Portões monitorados dia e noite. <span data-troca="Ninguém sai sem ser visto.">Ninguém entra sem ser visto.</span></p>
+      </div>
+      <div class="card">
+        <div class="icone"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5M11 20c0-3 2.5-5 5-5s5 2 5 5"/></svg></div>
+        <h3>Comunidade</h3>
+        <p>Aqui todo mundo se conhece. Todo mundo já conhece você.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="numeros" data-titulo="Bosque Sereno · Residencial">
+  <div class="wrap">
+    <span class="eyebrow">Em números</span>
+    <h2 class="titulo">Um lugar de onde ninguém quer sair.</h2>
+    <div class="numeros">
+      <div class="num"><strong data-ate="320">0</strong><span>famílias morando</span></div>
+      <div class="num"><strong data-ate="40">0</strong><span>hectares de mata</span></div>
+      <div class="num"><strong id="mudaram">0</strong><span>moradores que se mudaram</span></div>
+      <div class="num"><strong data-ate="1987">0</strong><span data-troca="ninguém envelheceu desde">fundado em</span></div>
+    </div>
+    <p class="nota">*Os números refletem apenas os moradores que conseguimos confirmar.</p>
+  </div>
+</section>
+
+<section id="galeria" data-titulo="Bosque Sereno">
+  <div class="wrap">
+    <span class="eyebrow">Galeria</span>
+    <h2 class="titulo">Conheça o bosque.</h2>
+    <p class="sub">Fotos reais do residencial. Nenhuma foi editada.</p>
+    <div class="galeria">
+      <figure>
+        <div class="foto"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfeee6"/><stop offset="1" stop-color="#f3ead6"/></linearGradient></defs>
+          <rect width="400" height="300" fill="url(#g1)"/>
+          <g fill="#7fa58d"><polygon points="190,170 205,110 220,170"/><polygon points="215,172 232,100 249,172"/><polygon points="245,170 258,118 271,170"/><polygon points="160,172 174,120 188,172"/></g>
+          <use href="#vulto" x="236" y="150" width="7" height="22" fill="#3c4a41"/>
+          <rect y="170" width="400" height="130" fill="#a9c9c0"/>
+          <ellipse cx="200" cy="200" rx="160" ry="16" fill="#c6ddd6"/>
+          <g fill="#2f5e45"><polygon points="-10,300 30,60 70,300"/><polygon points="40,300 80,100 120,300"/><polygon points="300,300 340,80 380,300"/><polygon points="350,300 390,40 430,300"/></g>
+        </svg></div>
+        <figcaption><b>Trilha do lago</b><span>06:40</span></figcaption>
+      </figure>
+      <figure>
+        <div class="foto"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1c9a0"/><stop offset="1" stop-color="#d79a75"/></linearGradient></defs>
+          <rect width="400" height="300" fill="url(#g2)"/>
+          <rect y="210" width="400" height="90" fill="#6f7d55"/>
+          <g fill="#3b3a2a"><polygon points="20,240 55,40 90,240"/><polygon points="80,230 110,70 140,230"/><polygon points="260,230 290,60 320,230"/><polygon points="320,240 360,30 400,240"/></g>
+          <g fill="#3b3a2a"><rect x="52" y="230" width="6" height="30"/><rect x="108" y="226" width="5" height="30"/><rect x="288" y="226" width="5" height="30"/><rect x="357" y="236" width="6" height="30"/></g>
+          <use href="#vulto" x="218" y="150" width="24" height="72" fill="#1d1b14"/>
+          <ellipse cx="230" cy="223" rx="16" ry="3" fill="#000" opacity=".25"/>
+        </svg></div>
+        <figcaption><b>Clareira</b><span>17:12</span></figcaption>
+      </figure>
+      <figure>
+        <div class="foto"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2234"/><stop offset="1" stop-color="#2c3346"/></linearGradient>
+          <radialGradient id="lua" cx=".75" cy=".2" r=".5"><stop offset="0" stop-color="#9aa6c2" stop-opacity=".5"/><stop offset="1" stop-color="#9aa6c2" stop-opacity="0"/></radialGradient></defs>
+          <rect width="400" height="300" fill="url(#g3)"/>
+          <rect width="400" height="300" fill="url(#lua)"/>
+          <g fill="#0b0e15"><polygon points="0,300 40,90 80,300"/><polygon points="320,300 360,70 400,300"/><polygon points="60,300 90,140 120,300"/></g>
+          <g class="vulto-perto"><use href="#vulto" x="150" y="40" width="100" height="300" fill="#05070b"/>
+          <circle cx="193" cy="70" r="1.6" fill="#c8c2b0" opacity=".8"/><circle cx="207" cy="70" r="1.6" fill="#c8c2b0" opacity=".8"/></g>
+          <g fill="none" stroke="#3a3127" stroke-width="14"><rect x="7" y="7" width="386" height="286"/><path d="M200 0V300M0 150H400"/></g>
+          <rect x="7" y="7" width="386" height="286" fill="#bcc6dc" opacity=".05"/>
+        </svg></div>
+        <figcaption><b>Vista do seu quarto</b><span>03:14</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="depoimentos" data-titulo="Bosque Sereno">
+  <div class="wrap">
+    <span class="eyebrow">Depoimentos</span>
+    <h2 class="titulo">Quem mora, recomenda.</h2>
+    <div class="grade3">
+      <div class="card depo">
+        <div class="estrelas">★★★★★</div>
+        <blockquote>“Foi a melhor decisão das nossas vidas. Os meninos amam o lago.”</blockquote>
+        <div class="quem"><i></i><div><b>Família Andrade</b><small>Casa 12 · desde 1987</small></div></div>
+      </div>
+      <div class="card depo">
+        <div class="estrelas">★★★★★</div>
+        <blockquote>“Nunca mais quisemos sair. Os meninos amam o lago.”</blockquote>
+        <div class="quem"><i></i><div><b>Família Andrade</b><small>Casa 12 · desde 1987</small></div></div>
+      </div>
+      <div class="card depo">
+        <div class="estrelas">★★★★★★</div>
+        <blockquote>“Nós nunca mais saímos. Os meninos <span data-troca="estão no lago.">amam o lago.</span>”</blockquote>
+        <div class="quem"><i></i><div><b>Família Andrade</b><small>Casa 12 · desde sempre</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rotina" data-titulo="Bosque Sereno ·">
+  <div class="wrap">
+    <span class="eyebrow" style="color:#4a5a50">Um dia no bosque</span>
+    <h2 class="titulo">Uma rotina pensada para você.</h2>
+    <p class="sub" style="color:#4d554f">Atividades para todas as idades, do nascer do sol até bem depois de escurecer.</p>
+    <div class="linha-tempo">
+      <div class="hora"><b>07:00</b><span>Café da manhã no clube</span></div>
+      <div class="hora"><b>09:00</b><span>Yoga à beira do lago</span></div>
+      <div class="hora"><b>12:30</b><span>Almoço comunitário (presença obrigatória)</span></div>
+      <div class="hora estranha"><b>18:00</b><span>Contagem dos moradores</span></div>
+      <div class="hora estranha"><b>22:00</b><span>Os portões fecham. Por dentro.</span></div>
+      <div class="hora muito"><b>03:00</b><span>Fique no seu quarto.</span></div>
+      <div class="hora muito"><b>03:14</b><span>Ele passa pelo corredor. Não abra a porta, mesmo que seja a sua voz chamando.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" data-titulo="bosque sereno">
+  <div class="wrap">
+    <span class="eyebrow">Dúvidas frequentes</span>
+    <h2 class="titulo">Perguntas que você talvez faça.</h2>
+    <div class="faq">
+      <details><summary>Posso receber visitas?</summary><p>Claro! Adoramos visitas. Elas sempre acabam ficando.</p></details>
+      <details><summary>Tem internet e sinal de celular?</summary><p>Fibra óptica em todas as casas. As ligações para fora não completam, mas você não vai precisar delas.</p></details>
+      <details><summary>Aceita animais de estimação?</summary><p>Aceitamos. Os cachorros não gostam do lago. Não deixe que eles cheguem perto do lago. Não deixe que eles olhem para o lago.</p></details>
+      <details><summary>Quem mora na casa 14?</summary><p>Não existe casa 14.</p></details>
+      <details id="sair"><summary>Como faço para sair?</summary><p class="vermelho" data-digitar="Por que você iria querer sair?"></p></details>
+    </div>
+  </div>
+</section>
+
+<section id="planos" data-titulo="fique">
+  <div class="wrap">
+    <span class="eyebrow">Planos</span>
+    <h2 class="titulo">Escolha como você quer ficar.</h2>
+    <p class="sub">Sem entrada, sem parcelas, sem burocracia. Só uma assinatura.</p>
+    <div class="grade3">
+      <div class="plano">
+        <h3>Morador</h3>
+        <div class="preco">R$ 0 <small>/mês</small></div>
+        <ul><li>Casa mobiliada</li><li>Acesso ao clube e ao lago</li><li>Café comunitário</li></ul>
+        <a class="btn btn-2" href="#contato">Quero ficar</a>
+      </div>
+      <div class="plano destaque">
+        <span class="tag">Mais escolhido</span>
+        <h3>Família</h3>
+        <div class="preco">R$ 0 <small>/mês</small></div>
+        <ul><li>Casa para a família inteira</li><li>Traga todo mundo que você ama</li><li>Todo mundo.</li></ul>
+        <a class="btn" href="#contato">Trazer minha família</a>
+      </div>
+      <div class="plano">
+        <h3 data-troca="Pra sempre">Para sempre</h3>
+        <div class="preco">você <small>/eternidade</small></div>
+        <ul><li>Seu nome no muro</li><li>Um lugar no lago</li><li class="risco">Direito de saída</li></ul>
+        <a class="btn btn-2" href="#contato">Assinar</a>
+      </div>
+    </div>
+    <p class="letrinha">*Ao continuar rolando esta página, você concorda com os Termos de Permanência.</p>
+  </div>
+</section>
+
+<section id="regras" data-titulo="não saia">
+  <div class="wrap">
+    <span class="eyebrow">Regulamento interno</span>
+    <h2 class="titulo">Leia com atenção.</h2>
+    <p class="sub">Os moradores que não leram não estão mais aqui para reclamar.</p>
+    <ol class="regras">
+      <li><span>Não saia de casa entre 03:00 e 03:33. Não importa o que você ouça lá fora.</span></li>
+      <li><span>Se alguém bater na porta e disser o seu nome, não responda. Os vizinhos não sabem o seu nome.</span></li>
+      <li><span>O residencial tem 47 casas. Se você contar 48, entre e não conte de novo.</span></li>
+      <li><span>O lago não tem fundo. Não tente provar o contrário.</span></li>
+      <li><span>Se o síndico estiver sorrindo, feche os olhos até ele ir embora. Ele vai embora.</span></li>
+      <li><span>Nunca diga em voz alta que quer ir embora. As paredes são finas.</span></li>
+      <li class="riscada"><span>Você não está sendo observado.</span><em>você está.</em></li>
+    </ol>
+  </div>
+</section>
+
+<section id="contato" data-titulo="estamos indo">
+  <div class="wrap">
+    <span class="eyebrow">Fale com a gente</span>
+    <h2 class="titulo">Agende sua visita.</h2>
+    <p class="sub">Não precisa preencher. Já estamos a caminho.</p>
+    <form id="formulario" onsubmit="return false">
+      <label>Seu nome<input id="f-nome" placeholder="Como podemos te chamar?" readonly></label>
+      <label>Melhor horário<input id="f-hora" placeholder="Ex.: sábado de manhã" readonly></label>
+      <label class="inteiro">Onde você está agora<input id="f-onde" placeholder="Cidade" readonly></label>
+      <label class="inteiro">Mensagem<textarea id="f-msg" placeholder="Conte o que você procura" readonly></textarea></label>
+      <button class="btn" id="f-enviar" type="button">Enviar</button>
+    </form>
+  </div>
+</section>
+
+<section id="ruptura" data-titulo="fique fique fique">
+  <div class="wrap">
+    <div class="parede" id="parede" aria-hidden="true"></div>
+    <div class="bilhete">
+      <p>se você está lendo isso, ainda dá tempo.</p>
+      <p>fecha a aba. não termina a página. eu continuei rolando porque achei que era só um site.</p>
+      <p>ele só anda quando você rola.</p>
+      <p class="ass">— m., casa 14</p>
+    </div>
+  </div>
+</section>
+
+<section id="fim" data-titulo="atrás de você">
+  <div class="palco">
+    <div class="nevoa"></div>
+    <svg class="vulto-grande" id="vulto-grande" viewBox="0 0 300 700" aria-hidden="true">
+      <defs>
+        <radialGradient id="brilho"><stop offset="0" stop-color="#fff8e2"/><stop offset=".45" stop-color="#e2d4a8"/><stop offset="1" stop-color="#e2d4a8" stop-opacity="0"/></radialGradient>
+        <filter id="borrar" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      </defs>
+      <g filter="url(#borrar)" fill="#040404">
+        <ellipse cx="150" cy="95" rx="46" ry="62"/>
+        <path d="M150 150c-40 5-58 35-60 90L58 520l12 4 34-224 4 390h24l16-270h4l16 270h24l4-390 34 224 12-4-32-280c-2-55-20-85-60-90z"/>
+        <path d="M58 520l-10 70M64 523l-3 78M70 524l6 70M236 523l3 78M242 520l10 70M230 524l-6 70" stroke="#040404" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <g id="olhos" class="olhos" opacity="0">
+        <ellipse cx="131" cy="92" rx="12" ry="7" fill="url(#brilho)"/>
+        <ellipse cx="169" cy="92" rx="12" ry="7" fill="url(#brilho)"/>
+        <circle class="pupila" cx="131" cy="92" r="2.6" fill="#000"/>
+        <circle class="pupila" cx="169" cy="92" r="2.6" fill="#000"/>
+      </g>
+    </svg>
+    <div class="nevoa n2"></div>
+    <div class="falas">
+      <p data-ini="0" data-fim=".17">Você ainda está aqui.</p>
+      <p data-ini=".17" data-fim=".33">Rolando. Sempre rolando.</p>
+      <p data-ini=".33" data-fim=".5">Ele só se mexe quando você rola a página.</p>
+      <p data-ini=".5" data-fim=".66">Então pare.</p>
+      <p data-ini=".66" data-fim=".84">…</p>
+      <p data-ini=".84" data-fim="1.01">Você não parou.</p>
+    </div>
+  </div>
+</section>
+
+<section id="final" data-titulo="casa 14"></section>
+
+</main>
+
+<div class="grao" id="grao"></div>
+<div class="vinheta" id="vinheta"></div>
+<svg class="fantasma" id="fantasma" viewBox="0 0 18 26" aria-hidden="true"><path d="M1 1v20l5-5 4 9 3-1-4-9h7z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg>
+
+<button class="som" id="som" aria-pressed="false" type="button"><i></i><span>Ouvir o bosque</span></button>
+
+<div class="balao" id="balao"><small id="balao-de"></small><span id="balao-txt"></span></div>
+<button class="chat-btn" id="chat-btn" type="button" aria-label="Abrir conversa"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg><b id="chat-n">1</b></button>
+<div class="painel" id="painel" role="dialog" aria-label="Conversa">
+  <header><i></i><div><b id="painel-nome">Marta</b><small id="painel-status">Corretora · online agora</small></div><button type="button" id="painel-fechar" aria-label="Fechar">×</button></header>
+  <div class="msgs" id="msgs"></div>
+  <form id="chat-form"><input id="chat-in" placeholder="Escreva sua mensagem" autocomplete="off"><button type="submit">Enviar</button></form>
+</div>
+
+<div class="susto" id="susto">
+  <div class="rosto">
+    <svg viewBox="0 0 400 560" aria-hidden="true">
+      <defs>
+        <radialGradient id="pele" cx=".5" cy=".36" r=".64"><stop offset="0" stop-color="#cec6b2"/><stop offset=".5" stop-color="#8c8371"/><stop offset=".82" stop-color="#2c2822"/><stop offset="1" stop-color="#000"/></radialGradient>
+        <radialGradient id="oco"><stop offset="0" stop-color="#000"/><stop offset=".6" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        <filter id="torto" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency=".016" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="38" xChannelSelector="R" yChannelSelector="G"/></filter>
+        <filter id="mancha" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+        <filter id="poeira"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="3"/><feColorMatrix type="saturate" values="0"/></filter>
+      </defs>
+      <rect width="400" height="560" fill="#000"/>
+      <g filter="url(#torto)">
+        <path d="M200 18C300 18 332 120 326 232c-5 100-36 190-76 270-16 34-84 34-100 0-40-80-71-170-76-270C68 120 100 18 200 18z" fill="url(#pele)"/>
+        <g filter="url(#mancha)" fill="#000">
+          <ellipse cx="118" cy="330" rx="30" ry="80" opacity=".6"/><ellipse cx="282" cy="330" rx="30" ry="80" opacity=".6"/>
+          <ellipse cx="200" cy="70" rx="90" ry="26" opacity=".35"/>
+        </g>
+        <ellipse cx="140" cy="200" rx="48" ry="64" fill="url(#oco)"/>
+        <ellipse cx="262" cy="206" rx="46" ry="66" fill="url(#oco)"/>
+        <path d="M128 250q-6 60 4 130M270 258q8 70-2 150" stroke="#000" stroke-width="7" fill="none" opacity=".8"/>
+        <path d="M190 282q-5 14 2 24M210 282q5 14-2 24" stroke="#14110e" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M168 334c-12 54-12 140 16 202 10 14 24 14 34 0 28-62 28-148 16-202-14-12-52-12-66 0z" fill="#000"/>
+        <g fill="#b9ae96"><path d="M176 336l3 20 4-21zM188 333l3 24 3-25zM200 332l3 22 3-22zM212 333l2 25 4-24zM223 336l1 19 4-17z"/></g>
+        <path d="M150 60q20 30 8 62M244 48q-14 40 6 70M196 30v40" stroke="#3a342b" stroke-width="2" fill="none"/>
+      </g>
+      <circle cx="152" cy="214" r="3.6" fill="#f4f0e4"/><circle cx="254" cy="192" r="3" fill="#f4f0e4"/>
+      <rect width="400" height="560" filter="url(#poeira)" opacity=".22" style="mix-blend-mode:multiply"/>
+      <rect width="400" height="560" fill="#5a0000" opacity=".22" style="mix-blend-mode:multiply"/>
+    </svg>
+  </div>
+  <div class="recado">
+    <h2>Agora você mora aqui.</h2>
+    <p>Bosque Sereno · casa 14</p>
+    <button class="btn" id="voltar" type="button">Voltar para casa</button>
+    <button class="esquecer" id="esquecer" type="button">esquecer minha visita</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const dorme = ms => new Promise(r => setTimeout(r, ms));
+  const guardado = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+  const morador = !!guardado.get('bosque-morador');
+  if (morador) document.body.classList.add('morador');
+
+  let p = 0;          // progresso da página inteira
+  let mx = innerWidth / 2, my = innerHeight / 2;
+  const ponteiroFino = matchMedia('(pointer:fine)').matches;
+
+  /* ---------------- som ---------------- */
+  const Som = {
+    ctx: null, ligado: false,
+    iniciar() {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return false;
+      const ctx = this.ctx = new C();
+      this.master = ctx.createGain(); this.master.gain.value = .9; this.master.connect(ctx.destination);
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      this.ruido = buf;
+      const vento = ctx.createBufferSource(); vento.buffer = buf; vento.loop = true;
+      this.ventoF = ctx.createBiquadFilter(); this.ventoF.type = 'bandpass'; this.ventoF.frequency.value = 600; this.ventoF.Q.value = .5;
+      this.ventoG = ctx.createGain(); this.ventoG.gain.value = .04;
+      vento.connect(this.ventoF).connect(this.ventoG).connect(this.master); vento.start();
+      this.droneF = ctx.createBiquadFilter(); this.droneF.type = 'lowpass'; this.droneF.frequency.value = 140;
+      this.droneG = ctx.createGain(); this.droneG.gain.value = 0;
+      [43.65, 44.2, 65.4, 92.5].forEach(f => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(this.droneF); o.start(); });
+      this.droneF.connect(this.droneG).connect(this.master);
+      this.passaros(); this.coracao();
+      return true;
+    },
+    alternar() {
+      if (!this.ctx && !this.iniciar()) return;
+      this.ligado = !this.ligado;
+      if (this.ligado) { this.ctx.resume(); this.master.gain.setTargetAtTime(.9, this.ctx.currentTime, .3); this.atualizar(p); }
+      else this.master.gain.setTargetAtTime(0, this.ctx.currentTime, .2);
+      return this.ligado;
+    },
+    atualizar(p) {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      this.ventoG.gain.setTargetAtTime(.04 + clamp((p - .4) / .6) * .1, t, .5);
+      this.ventoF.frequency.setTargetAtTime(600 - p * 420, t, .5);
+      this.droneG.gain.setTargetAtTime(clamp((p - .38) / .55) * .3, t, .8);
+      this.droneF.frequency.setTargetAtTime(110 + p * 200, t, .8);
+    },
+    piar() {
+      const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+      const f = 2400 + Math.random() * 1600;
+      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.5, t + .07); o.frequency.exponentialRampToValueAtTime(f * .9, t + .14);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.035, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .16);
+      o.connect(g).connect(this.master); o.start(t); o.stop(t + .2);
+    },
+    passaros() {
+      setTimeout(() => {
+        if (this.ligado && p < .3 && Math.random() < 1 - p * 3) { this.piar(); if (Math.random() < .5) setTimeout(() => this.piar(), 180); }
+        this.passaros();
+      }, 700 + Math.random() * 2200);
+    },
+    batida(vol) {
+      const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(38, t + .18);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + .25);
+      o.connect(g).connect(this.master); o.start(t); o.stop(t + .3);
+    },
+    coracao() {
+      const intensidade = clamp((p - .72) / .28);
+      setTimeout(() => {
+        if (this.ligado && intensidade > 0) { this.batida(.5 * intensidade + .1); setTimeout(() => this.ligado && this.batida(.35 * intensidade + .05), 230); }
+        this.coracao();
+      }, intensidade > 0 ? 1100 - intensidade * 450 : 600);
+    },
+    grito() {
+      if (!this.ligado) return;
+      const ctx = this.ctx, t = ctx.currentTime;
+      const n = ctx.createBufferSource(); n.buffer = this.ruido;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 700;
+      const g = ctx.createGain(); g.gain.setValueAtTime(.9, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.1);
+      n.connect(hp).connect(g).connect(this.master); n.start(t); n.stop(t + 1.2);
+      [880, 932, 1245].forEach(f => {
+        const o = ctx.createOscillator(), og = ctx.createGain(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f / 5, t + .9);
+        og.gain.setValueAtTime(.18, t); og.gain.exponentialRampToValueAtTime(.001, t + 1);
+        o.connect(og).connect(this.master); o.start(t); o.stop(t + 1.05);
+      });
+      this.droneG.gain.setTargetAtTime(0, t + .9, .3);
+      setTimeout(() => this.droneG.gain.setTargetAtTime(.12, this.ctx.currentTime, 3), 3000);
+    },
+  };
+  const botaoSom = $('#som');
+  botaoSom.addEventListener('click', () => {
+    const on = Som.alternar();
+    botaoSom.setAttribute('aria-pressed', on ? 'true' : 'false');
+    botaoSom.querySelector('span').textContent = on ? (p > .45 ? 'não desligue' : 'Som do bosque ligado') : (p > .45 ? 'silêncio' : 'Ouvir o bosque');
+  });
+
+  /* ---------------- números ---------------- */
+  function contar(el, ate, ms) {
+    return new Promise(res => {
+      const t0 = performance.now(), de = +el.textContent || 0;
+      (function passo(t) {
+        const k = clamp((t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = Math.round(de + (ate - de) * e);
+        k < 1 ? requestAnimationFrame(passo) : res();
+      })(t0);
+    });
+  }
+  const obsNumeros = new IntersectionObserver(async ([e]) => {
+    if (!e.isIntersecting) return;
+    obsNumeros.disconnect();
+    $$('#numeros [data-ate]').forEach(el => contar(el, +el.dataset.ate, 1600));
+    const m = $('#mudaram');
+    await contar(m, 3, 1400);
+    await dorme(900);
+    m.textContent = '0';
+    m.classList.add('treme');
+    setTimeout(() => m.classList.remove('treme'), 700);
+  }, { threshold: .5 });
+  obsNumeros.observe($('#numeros'));
+
+  /* ---------------- trocas de texto ---------------- */
+  const visiveis = new Set();
+  const obsTroca = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? visiveis.add(e.target) : visiveis.delete(e.target)), { threshold: 1 });
+  $$('[data-troca]').forEach(el => { el.dataset.orig = el.textContent; obsTroca.observe(el); });
+  setInterval(() => {
+    if (!visiveis.size || Math.random() < .35) return;
+    const lista = [...visiveis], el = lista[Math.floor(Math.random() * lista.length)];
+    el.textContent = el.dataset.troca;
+    setTimeout(() => { el.textContent = el.dataset.orig; }, 120 + Math.random() * 220);
+  }, 2200);
+
+  /* ---------------- digitação ---------------- */
+  async function digitar(el, texto, vel = 55) {
+    const campo = 'value' in el && el.tagName !== 'P';
+    for (let i = 1; i <= texto.length; i++) {
+      const parte = texto.slice(0, i);
+      campo ? (el.value = parte) : (el.textContent = parte);
+      await dorme(vel + (texto[i - 1] === ' ' ? 40 : 0) + Math.random() * 40);
+    }
+  }
+  $('#sair').addEventListener('toggle', e => {
+    const alvo = e.target.querySelector('[data-digitar]');
+    if (e.target.open && !alvo.textContent) { setTimeout(() => digitar(alvo, alvo.dataset.digitar, 70), 900); }
+  });
+
+  /* ---------------- contato ---------------- */
+  const agora = new Date();
+  const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const h = agora.getHours();
+  const celular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const tarde = h >= 22 || h < 5;
+  const obsContato = new IntersectionObserver(async ([e]) => {
+    if (!e.isIntersecting) return;
+    obsContato.disconnect();
+    await dorme(700);
+    await digitar($('#f-nome'), 'não precisa');
+    await digitar($('#f-hora'), 'agora (' + hora + ')');
+    await digitar($('#f-onde'), 'sentado(a) em frente à tela. sabemos o resto.');
+    await dorme(400);
+    const msg = 'Você está lendo isto ' + (celular ? 'no celular, segurando perto do rosto' : 'no computador') + ', às ' + hora + '. '
+      + (tarde ? 'Já é tarde. Todo mundo na sua casa está dormindo? ' : 'Ainda está claro aí fora. Por enquanto. ')
+      + 'Não precisa responder nada.\n\nA gente já sabe o caminho.';
+    await digitar($('#f-msg'), msg, 38);
+    const b = $('#f-enviar');
+    b.textContent = 'Enviado.';
+    await dorme(1500);
+    b.textContent = 'Saímos agora.';
+  }, { threshold: .35 });
+  obsContato.observe($('#contato'));
+
+  /* ---------------- parede ---------------- */
+  (function () {
+    let html = '';
+    for (let i = 0; i < 260; i++) html += (i % 37 === 19 || i % 53 === 7 ? '<span class="saia">saia</span> ' : 'fique ');
+    $('#parede').innerHTML = html;
+  })();
+
+  /* ---------------- chat ---------------- */
+  const roteiro = morador ? [
+    { at: 0, de: 'Marta · Corretora', txt: 'Bem-vindo de volta 🙂 Sua casa está do jeito que você deixou.' },
+    { at: .3, de: 'Marta · Corretora', txt: 'Os vizinhos perguntaram de você.' },
+    { at: .6, de: 'Bosque Sereno', txt: 'Você sabe o caminho.' },
+    { at: .85, de: '—', txt: 'bem-vindo de volta bem-vindo de volta bem-vindo de volta' },
+  ] : [
+    { at: 0, de: 'Marta · Corretora', txt: 'Oi! 👋 Sou a Marta, corretora do Bosque Sereno. Posso ajudar você a encontrar a casa ideal?' },
+    { at: .22, de: 'Marta · Corretora', txt: 'Que bom que você está gostando do bosque 🌿' },
+    { at: .36, de: 'Marta · Corretora', txt: 'Você ficou um tempinho na foto do quarto. Gostou da vista?' },
+    { at: .5, de: 'Marta · Corretora', txt: 'Não precisa responder. A gente ouve mesmo assim.' },
+    { at: .63, de: 'Bosque Sereno', txt: 'A Marta não trabalha mais aqui.' },
+    { at: .76, de: 'Bosque Sereno', txt: tarde ? 'você deixou a luz acesa' : 'por que você está sozinho(a)?' },
+    { at: .88, de: '—', txt: 'olha pra trás' },
+  ];
+  let proxima = 0, naoLidas = 0, timerBalao;
+  const painel = $('#painel'), balao = $('#balao'), contador = $('#chat-n'), lista = $('#msgs');
+  function addMsg(txt, eu) {
+    const d = document.createElement('div');
+    d.className = 'msg' + (eu ? ' eu' : '');
+    d.textContent = txt;
+    lista.appendChild(d);
+    lista.scrollTop = lista.scrollHeight;
+  }
+  function chegou(m) {
+    addMsg(m.txt);
+    $('#painel-nome').textContent = m.de === 'Marta · Corretora' ? 'Marta' : m.de;
+    $('#painel-status').textContent = m.de === 'Marta · Corretora' ? 'Corretora · online agora' : (m.de === '—' ? 'digitando…' : 'online');
+    if (painel.classList.contains('on')) return;
+    naoLidas++; contador.textContent = naoLidas; contador.classList.add('on');
+    $('#balao-de').textContent = m.de; $('#balao-txt').textContent = m.txt;
+    balao.classList.add('on');
+    clearTimeout(timerBalao); timerBalao = setTimeout(() => balao.classList.remove('on'), 6500);
+  }
+  function checarChat() {
+    while (proxima < roteiro.length && p >= roteiro[proxima].at && (proxima > 0)) chegou(roteiro[proxima++]);
+  }
+  setTimeout(() => { if (proxima === 0) chegou(roteiro[proxima++]); checarChat(); }, 2500);
+  function abrirChat() {
+    painel.classList.add('on'); balao.classList.remove('on');
+    naoLidas = 0; contador.classList.remove('on');
+    $('#chat-in').focus();
+  }
+  $('#chat-btn').addEventListener('click', () => painel.classList.contains('on') ? painel.classList.remove('on') : abrirChat());
+  balao.addEventListener('click', abrirChat);
+  $('#painel-fechar').addEventListener('click', () => painel.classList.remove('on'));
+  $('#chat-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const inp = $('#chat-in'), txt = inp.value.trim();
+    if (!txt) return;
+    addMsg(txt, true); inp.value = '';
+    const resp = p < .3 ? 'Obrigada! Um corretor vai falar com você em instantes 😊'
+      : p < .6 ? 'Anotado. Já separamos uma casa para você.'
+      : p < .85 ? 'nós ouvimos: “' + txt + '”'
+      : txt.split('').reverse().join('');
+    setTimeout(() => addMsg(resp), 900 + Math.random() * 900);
+  });
+
+  /* ---------------- títulos da aba ---------------- */
+  let tituloAtual = document.title;
+  const obsTitulo = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { tituloAtual = e.target.dataset.titulo; if (!document.hidden) document.title = tituloAtual; }
+  }), { rootMargin: '-45% 0px -45% 0px' });
+  $$('section[data-titulo]').forEach(s => obsTitulo.observe(s));
+  document.addEventListener('visibilitychange', () => {
+    document.title = document.hidden ? (p > .4 ? 'volte.' : 'Ei, sua visita está esperando 🌿') : tituloAtual;
+  });
+  const favOlho = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cellipse cx='16' cy='16' rx='12' ry='6' fill='%23d8d2c3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23000'/%3E%3C/svg%3E";
+  const favFolha = $('#favicon').href;
+
+  /* ---------------- rolagem ---------------- */
+  const raiz = document.documentElement, nav = $('#nav'), grao = $('#grao'), vinheta = $('#vinheta');
+  const fim = $('#fim'), vulto = $('#vulto-grande'), olhos = $('#olhos'), falas = $$('.falas p');
+  const chatBtn = $('#chat-btn');
+  let pendente = false, faviconTrocado = false;
+  function atualizar() {
+    pendente = false;
+    const max = raiz.scrollHeight - innerHeight;
+    p = clamp(scrollY / max);
+    grao.style.opacity = clamp((p - .42) * 1.1, 0, .4);
+    vinheta.style.opacity = clamp((p - .3) * 1.6);
+    nav.classList.toggle('some', p > .4);
+    const escuro = p > .45;
+    botaoSom.classList.toggle('escuro', escuro);
+    chatBtn.classList.toggle('escuro', escuro);
+    balao.classList.toggle('escuro', escuro);
+    painel.classList.toggle('escuro', p > .6);
+    if (escuro !== faviconTrocado) { faviconTrocado = escuro; $('#favicon').href = escuro ? favOlho : favFolha; }
+
+    const r = fim.getBoundingClientRect();
+    const t = clamp(-r.top / (r.height - innerHeight));
+    const aparece = clamp((t - .18) / .25);
+    const escala = .1 + Math.pow(clamp((t - .18) / .82), 2.2) * 4.6;
+    vulto.style.opacity = aparece;
+    vulto.style.transform = 'translate(-50%,-13.5%) scale(' + escala.toFixed(3) + ')';
+    olhos.setAttribute('opacity', clamp((t - .45) * 4).toFixed(2));
+    falas.forEach(f => f.classList.toggle('on', t >= +f.dataset.ini && t < +f.dataset.fim && r.top < innerHeight * .2));
+
+    Som.atualizar(p);
+    checarChat();
+  }
+  addEventListener('scroll', () => { if (!pendente) { pendente = true; requestAnimationFrame(atualizar); } }, { passive: true });
+  addEventListener('resize', atualizar);
+  atualizar();
+
+  /* ---------------- cursor fantasma e olhos ---------------- */
+  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  addEventListener('touchmove', e => { mx = e.touches[0].clientX; my = e.touches[0].clientY; }, { passive: true });
+  const fantasma = $('#fantasma'), pupilas = $$('.pupila'), rastro = [];
+  (function laco() {
+    rastro.push([mx, my]);
+    if (rastro.length > 50) rastro.shift();
+    if (ponteiroFino && p > .5 && p < .97) {
+      const [x, y] = rastro[0];
+      fantasma.style.transform = 'translate(' + (x + 2) + 'px,' + (y + 2) + 'px)';
+      fantasma.style.opacity = clamp((p - .5) * 3, 0, .55);
+    } else fantasma.style.opacity = 0;
+    const dx = clamp((mx / innerWidth - .5) * 2, -1, 1), dy = clamp((my / innerHeight - .5) * 2, -1, 1);
+    pupilas.forEach((pp, i) => {
+      pp.setAttribute('cx', (i ? 169 : 131) + dx * 6);
+      pp.setAttribute('cy', 92 + dy * 3);
+    });
+    requestAnimationFrame(laco);
+  })();
+
+  /* ---------------- susto final ---------------- */
+  const susto = $('#susto');
+  let assustou = false;
+  new IntersectionObserver(async ([e]) => {
+    if (!e.isIntersecting || assustou) return;
+    assustou = true;
+    painel.classList.remove('on'); balao.classList.remove('on');
+    susto.classList.add('on');
+    document.title = '';
+    await dorme(1600);
+    susto.classList.add('grito');
+    Som.grito();
+    try { navigator.vibrate && navigator.vibrate([200, 60, 300]); } catch (err) {}
+    await dorme(750);
+    susto.classList.remove('grito');
+    document.title = 'casa 14';
+    guardado.set('bosque-morador', '1');
+    await dorme(900);
+    susto.classList.add('fala');
+  }, { threshold: .6 }).observe($('#final'));
+
+  $('#voltar').addEventListener('click', () => {
+    document.body.classList.add('morador');
+    raiz.style.scrollBehavior = 'auto';
+    scrollTo(0, 0);
+    raiz.style.scrollBehavior = '';
+    susto.classList.remove('on', 'fala');
+    assustou = false;
+    setTimeout(() => {
+      chegou({ de: 'Marta · Corretora', txt: 'Bem-vindo de volta 🙂 Sua casa está do jeito que você deixou.' });
+    }, 1800);
+  });
+  $('#esquecer').addEventListener('click', () => {
+    guardado.del('bosque-morador');
+    location.href = location.pathname;
+  });
+})();
+</script>
+</body>
+</html>
